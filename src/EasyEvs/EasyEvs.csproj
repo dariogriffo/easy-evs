@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Id>EasyEvs</Id>
+        <Title>EventStore Application Framework for .NET</Title>
+        <Version>0.1.0</Version>
+        <Authors>https://github.com/griffo-io</Authors>
+        <Company>https://github.com/griffo-io</Company>
+        <Product>EasyEvs</Product>
+        <Copyright>https://github.com/griffo-io</Copyright>
+        <LicenseUrl>https://raw.githubusercontent.com/griffo-io/easy-evs/master/LICENSE</LicenseUrl>
+        <PackageProjectUrl>https://github.com/griffo-io/easy-evs</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/griffo-io/easy-evs</RepositoryUrl>
+        <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+        <ProjectUrl>https://github.com/griffo-ioeasy-evs</ProjectUrl>
+        <Icon>images\icon.png</Icon>
+        <Description>An application framework to start quickly with EventStore</Description>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageIcon>images\icon.png</PackageIcon>
+        <PackageTags>eventstore, publisher, consumer, pub/sub, event-sourcing, event-store</PackageTags>
+        <PackageReleaseNotes>First release</PackageReleaseNotes>
+        <PackageLicenseFile>license\license.txt</PackageLicenseFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Include="license\license.txt" Pack="true" PackagePath="license">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="images\icon.png" Pack="true" PackagePath="images">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[21.2.0,)" />
+        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[21.2.0,)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[5.0.0,)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="[5.0.0,)" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[5.0.0,)" />
+    </ItemGroup>
+
+</Project>
