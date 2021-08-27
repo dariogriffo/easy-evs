@@ -26,6 +26,19 @@ jobs:
     - name: run minver
       id: version
       uses: thefringeninja/action-minver
+      with:
+        # Optional. Specifies which part of the version to auto-increment.
+        auto-increment: patch
+        # Optional. Sets custom build metadata for your semantic version.
+        build-metadata: ${{ github.sha }}
+        # Optional. Specifies the default pre-release phase.
+        default-pre-release-phase: preview
+        # Optional. Specifies the minimum version to use when no tags exist.
+        minimum-major-minor: 2.0.0
+        # Optional. Specifies the prefix of the tags
+        tag-prefix: v
+        # Optional. Specifies the log level.
+        verbosity: trace
     - name: output
       run: |
         echo ${{ steps.version.outputs.version }}
