@@ -27,13 +27,9 @@ jobs:
       id: version
       uses: thefringeninja/action-minver@2.0.0-preview1
       with:
-        # Optional. Specifies which part of the version to auto-increment.
-        auto-increment: patch
-        # Optional. Sets custom build metadata for your semantic version.
+        fetch-depth: 0
         build-metadata: ${{ github.sha }}
-        # Optional. Specifies the default pre-release phase.
         default-pre-release-phase: preview
-        # Optional. Specifies the log level.
         verbosity: trace
     - name: output
       run: |
