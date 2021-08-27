@@ -25,7 +25,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: run minver
       id: version
-      uses: thefringeninja/action-minver
+      uses: thefringeninja/action-minver@2.0.0-preview1
       with:
         # Optional. Specifies which part of the version to auto-increment.
         auto-increment: patch
