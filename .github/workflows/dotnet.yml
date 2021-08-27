@@ -20,6 +20,12 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnebuild --no-restore
+      run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: run minver
+      id: version
+      uses: thefringeninja/action-minver
+    - name: output
+      run: |
+        echo ${{ steps.version.outputs.version }}
