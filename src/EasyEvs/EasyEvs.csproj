@@ -1,34 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
+        <!-- General -->
+        <AssemblyName>EasyEvs</AssemblyName>
+        <Description>An application framework to start quickly with EventStore</Description>
+        <Copyright>Copyright 2021 Dario Griffo</Copyright>
+        <Authors>griffo.io</Authors>
+        <Company>https://github.com/griffo-io</Company>
+        <NeutralLanguage>en-GB</NeutralLanguage>
+
+        <!-- Build settings -->
         <TargetFramework>net5.0</TargetFramework>
+        <DebugType>portable</DebugType>
+        <OutputType>Library</OutputType>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeSymbols>true</IncludeSymbols>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-    </PropertyGroup>
 
-    <PropertyGroup>
-        <Id>EasyEvs</Id>
-        <Title>EventStore Application Framework for .NET</Title>
-        <Version>0.1.0</Version>
-        <Authors>https://github.com/griffo-io</Authors>
-        <Company>https://github.com/griffo-io</Company>
-        <Product>EasyEvs</Product>
-        <Copyright>https://github.com/griffo-io</Copyright>
-        <LicenseUrl>https://raw.githubusercontent.com/griffo-io/easy-evs/master/LICENSE</LicenseUrl>
-        <PackageProjectUrl>https://github.com/griffo-io/easy-evs</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/griffo-io/easy-evs</RepositoryUrl>
-        <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
-        <ProjectUrl>https://github.com/griffo-ioeasy-evs</ProjectUrl>
-        <Icon>images\icon.png</Icon>
-        <Description>An application framework to start quickly with EventStore</Description>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <PackageIcon>images\icon.png</PackageIcon>
+        <!-- NuGet settings -->
+        <PackageId>EasyEvs</PackageId>
         <PackageTags>eventstore, publisher, consumer, pub/sub, event-sourcing, event-store</PackageTags>
-        <PackageReleaseNotes>First release</PackageReleaseNotes>
-        <PackageLicenseFile>license\license.txt</PackageLicenseFile>
+        <PackageReleaseNotes>https://github.com/griffo-io/easy-evs/blob/main/RELEASE_NOTES.md</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/griffo-io/easy-evs</PackageProjectUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageIcon>images\icon.png</PackageIcon>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/griffo-io/easy-evs</RepositoryUrl>
+        <Version>0.2.0</Version>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <!-- SourceLink settings -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <NoWarn>FS2003;FS0044</NoWarn>
     </PropertyGroup>
+
+
     <ItemGroup>
         <None Include="license\license.txt" Pack="true" PackagePath="license">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>

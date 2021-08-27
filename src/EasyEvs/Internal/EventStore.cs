@@ -8,43 +8,60 @@ namespace EasyEvs.Internal
     using System.Threading.Tasks;
     using global::EventStore.Client;
     using Microsoft.Extensions.Logging;
+    using System.Diagnostics.CodeAnalysis;
 
 
-    internal class EventStore : IEventStore, IDisposable
+    internal class EventStore : IEventStore, IAsyncDisposable
     {
         private readonly ISerializer _serializer;
         private readonly IStreamResolver _streamResolver;
-        private readonly IConnectionProvider _connectionProvider;
         private readonly IHandlesFactory _handlesFactory;
-        private readonly ConcurrentBag<IDisposable> _disposables = new ConcurrentBag<IDisposable>();
+        private readonly ConcurrentBag<IDisposable> _disposables = new();
         private readonly ILogger<EventStore> _logger;
         private readonly EventStoreSettings _settings;
+        private readonly Lazy<EventStorePersistentSubscriptionsClient> _persistent;
+        private readonly Lazy<EventStoreClient> _write;
+        private readonly Lazy<EventStoreClient> _read;
 
         public EventStore(
-            IConnectionProvider connectionProvider,
             ISerializer serializer,
             IStreamResolver streamResolver,
             IHandlesFactory handlesFactory,
             ILogger<EventStore> logger,
             EventStoreSettings settings)
         {
-            _connectionProvider = connectionProvider;
             _serializer = serializer;
             _streamResolver = streamResolver;
             _logger = logger;
             _settings = settings;
             _handlesFactory = handlesFactory;
+
+            EventStorePersistentSubscriptionsClient PersistentConnectionFactory()
+            {
+                return new EventStorePersistentSubscriptionsClient(EventStoreClientSettings.Create(settings.ConnectionString));
+            }
+
+            EventStoreClient ClientFactory()
+            {
+                return new EventStoreClient(EventStoreClientSettings.Create(settings.ConnectionString));
+            }
+
+            _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(PersistentConnectionFactory);
+            _write = new Lazy<EventStoreClient>(ClientFactory);
+            _read = new Lazy<EventStoreClient>(ClientFactory);
         }
 
-        public async Task Append<T>(T @event, IReadOnlyDictionary<string, string>? metadata, CancellationToken cancellationToken)
+        public async Task Append<T>(
+            [NotNull] T @event,
+            IReadOnlyDictionary<string, string>? metadata = default,
+            CancellationToken cancellationToken = default)
             where T : IEvent
         {
             var stream = _streamResolver.StreamNameFor(@event);
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream}");
 
             var data = _serializer.Serialize(@event, metadata);
-            await _connectionProvider
-                .GetWriteConnection()
+            await _write.Value
                     .AppendToStreamAsync(
                         stream,
                         StreamState.Any,
@@ -54,7 +71,11 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Event with id {@event.Id} sent to evs");
         }
 
-        public async Task Append<T>(T @event, long position, IReadOnlyDictionary<string, string> metadata = null, CancellationToken cancellationToken = default) where T : IEvent
+        public async Task Append<T>(
+            [NotNull] T @event,
+            long position,
+            IReadOnlyDictionary<string, string>? metadata = default,
+            CancellationToken cancellationToken = default) where T : IEvent
         {
             if (position <= 0)
             {
@@ -65,8 +86,7 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream} at position {position}");
 
             var data = _serializer.Serialize(@event, metadata);
-            await _connectionProvider
-                    .GetWriteConnection()
+            await _write.Value
                     .AppendToStreamAsync(
                         stream,
                         StreamRevision.FromInt64(position),
@@ -75,19 +95,23 @@ namespace EasyEvs.Internal
 
             _logger.LogDebug($"Event with id {@event.Id} sent to evs");
         }
-        public async Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream(string stream, long? position = null, CancellationToken cancellationToken = default)
+
+        public async Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream(
+            [NotNull] string stream,
+            long? position = null,
+            CancellationToken cancellationToken = default)
         {
             var streamPosition =
-                position.HasValue && position.Value > 0 ? 
-                    StreamPosition.FromInt64(position.Value) : 
+                position.HasValue && position.Value > 0 ?
+                    StreamPosition.FromInt64(position.Value) :
                     StreamPosition.Start;
-            
+
             _logger.LogDebug($"Reading events on stream {stream} from position {streamPosition}");
 
             var result = new List<(IEvent, IReadOnlyDictionary<string, string>)>();
             var events =
-                _connectionProvider
-                    .GetReadConnection()
+                _read
+                    .Value
                     .ReadStreamAsync(Direction.Forwards, stream, streamPosition, cancellationToken: cancellationToken);
 
             await foreach (var @event in events)
@@ -99,13 +123,15 @@ namespace EasyEvs.Internal
             return result;
         }
 
-        public async Task SubscribeToStream(string stream, CancellationToken cancellationToken)
+        public async Task SubscribeToStream(
+            [NotNull] string stream,
+            CancellationToken cancellationToken)
         {
             var group = _settings.SubscriptionGroup;
-            var connection = _connectionProvider.GetPersistentReadConnection();
+            var connection = _persistent.Value;
             try
             {
-                var settings = new PersistentSubscriptionSettings(_settings.ResolveLinkTos);
+                var settings = new PersistentSubscriptionSettings(true);
 
                 await connection.CreateAsync(
                     stream,
@@ -134,6 +160,7 @@ namespace EasyEvs.Internal
                 OnEventAppeared,
                 OnSubscriptionDropped(stream),
                 bufferSize: _settings.SubscriptionBufferSize,
+                autoAck: false,
                 cancellationToken: cancellationToken);
 
             _logger.LogDebug($"Subscribed to stream {stream} with group {group} id {sub.SubscriptionId}");
@@ -141,18 +168,18 @@ namespace EasyEvs.Internal
             _disposables.Add(sub);
         }
 
-        private Action<PersistentSubscription, SubscriptionDroppedReason, Exception> OnSubscriptionDropped(string stream)
+        private Action<PersistentSubscription, SubscriptionDroppedReason, Exception?> OnSubscriptionDropped([NotNull] string stream)
         {
             return (subscription, reason, exception) =>
             {
                 if (_settings.ReconnectOnSubscriptionDropped)
                 {
-                    _logger.LogWarning(exception, $"Dropped subscription to stream {stream} with id {subscription.SubscriptionId}");
+                    _logger.LogWarning(exception, $"Dropped subscription to stream {stream} with id {subscription.SubscriptionId}. Reason {reason}");
                     SubscribeToStream(stream, CancellationToken.None).GetAwaiter().GetResult();
                 }
                 else
                 {
-                    _logger.LogError(exception, $"Dropped subscription to stream {stream} with id {subscription.SubscriptionId}");
+                    _logger.LogError(exception, $"Dropped subscription to stream {stream} with id {subscription.SubscriptionId}. Reason {reason}");
                 }
             };
         }
@@ -166,15 +193,23 @@ namespace EasyEvs.Internal
 
                 if (!_handlesFactory.TryGetHandlerFor(@event, out var handler, out var scope))
                 {
-                    _logger.LogDebug($"Handler for event of type {@event.GetType()} not found");
-                    await subscription.Nack(PersistentSubscriptionNakEventAction.Park, $"Handler for event of type {@event.GetType()} not found", resolvedEvent);
+                    if (_settings.TreatMissingHandlersAsErrors)
+                    {
+                        _logger.LogWarning($"Handler for event of type {@event.GetType()} not found");
+                        await subscription.Nack(PersistentSubscriptionNakEventAction.Park, $"Handler for event of type {@event.GetType()} not found", resolvedEvent);
+                    }
+                    else
+                    {
+                        await subscription.Ack(resolvedEvent);
+                    }
+
                     return;
                 }
 
                 var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, metadata, retryCount);
-                Task<OperationResult> task = ((dynamic)handler).Handle((dynamic)@event, context, c);
+                Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
                 var result = await task;
-                scope.Dispose();
+                scope!.Dispose();
                 _logger.LogDebug($"Event with id: {@event.Id} handled with result {result:G}");
                 await (result switch
                 {
@@ -191,12 +226,27 @@ namespace EasyEvs.Internal
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
+            var t0 = _persistent.IsValueCreated
+                ? _persistent.Value.DisposeAsync()
+                : ValueTask.CompletedTask;
+
+            var t1 = _write.IsValueCreated
+                ? _write.Value.DisposeAsync()
+                : ValueTask.CompletedTask;
+
+            var t2 = _read.IsValueCreated
+                ? _read.Value.DisposeAsync()
+                : ValueTask.CompletedTask;
+
             foreach (var disposable in _disposables)
             {
                 disposable.Dispose();
             }
+
+            await t0; await t1; await t2;
+
         }
     }
 }

@@ -15,10 +15,10 @@ namespace EasyEvs.Internal
             _registeredHandlers = handlersAndEventTypes.RegisteredEventsAndHandlers;
         }
 
-        public bool TryGetHandlerFor(IEvent @event, out IHandlesEvent handler, out IDisposable scope)
+        public bool TryGetHandlerFor(IEvent @event, out IHandlesEvent? handler, out IDisposable? scope)
         {
-            handler = null;
-            scope = null;
+            handler = default;
+            scope = default;
             if (!_registeredHandlers.TryGetValue(@event.GetType(), out var type))
             {
                 return false;

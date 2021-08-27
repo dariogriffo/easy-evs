@@ -18,7 +18,7 @@ namespace EasyEvs.Internal
 
             RegisteredEventsAndHandlers = services
                 .Where(x => ImplementsHandler(x.ServiceType))
-                .Where(x => !x.ImplementationType.IsAbstract)
+                .Where(x => !x.ImplementationType!.IsAbstract)
                 .ToDictionary(x => x.ServiceType.GenericTypeArguments.First(), x => x.ServiceType);
         }
 
