@@ -33,7 +33,11 @@ namespace EasyEvs
         /// <param name="metadata">Any metadata required to be saved along with the @event.</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-        Task Append<T>([NotNull] T @event, long position, IReadOnlyDictionary<string, string>? metadata = null, CancellationToken cancellationToken = default)
+        Task Append<T>(
+            [NotNull] T @event, 
+            long position, 
+            IReadOnlyDictionary<string, string>? metadata = null, 
+            CancellationToken cancellationToken = default)
             where T : IEvent;
 
         /// <summary>
@@ -43,14 +47,26 @@ namespace EasyEvs
         /// <param name="position">The optional starting position where to read. If not set, all the available events are returned</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A list of tuples containing the events with their associated (optional) metadata</returns>
-        Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream([NotNull] string stream, long? position = null, CancellationToken cancellationToken = default);
+        Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream(
+            [NotNull] string stream, 
+            long? position = null, 
+            CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Subscribes asynchronously to a stream
+        /// Subscribes asynchronously to a stream.
+        /// Will use <see cref="EventStoreSettings.TreatMissingHandlersAsErrors"/> as value to deal with missing handlers
         /// </summary>
         /// <param name="stream">The stream name</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
         Task SubscribeToStream([NotNull] string stream, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Subscribes asynchronously to a stream
+        /// </summary>
+        /// <param name="command">The <see cref="SubscribeCommand"/>.</param>
+        /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
+        /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
+        Task SubscribeToStream(SubscribeCommand command, CancellationToken cancellationToken = default);
     }
 }

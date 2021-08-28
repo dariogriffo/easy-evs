@@ -123,9 +123,40 @@ namespace EasyEvs.Internal
             return result;
         }
 
-        public async Task SubscribeToStream(
-            [NotNull] string stream,
-            CancellationToken cancellationToken)
+        public Task SubscribeToStream([NotNull] string stream, CancellationToken cancellationToken)
+        {
+            return InnerSubscribe(stream, _settings.TreatMissingHandlersAsErrors, cancellationToken);
+        }
+
+        public Task SubscribeToStream(SubscribeCommand command, CancellationToken cancellationToken)
+        {
+            return InnerSubscribe(command.Stream, command.TreatMissingHandlersAsErrors, cancellationToken);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            var t0 = _persistent.IsValueCreated
+                ? _persistent.Value.DisposeAsync()
+                : ValueTask.CompletedTask;
+
+            var t1 = _write.IsValueCreated
+                ? _write.Value.DisposeAsync()
+                : ValueTask.CompletedTask;
+
+            var t2 = _read.IsValueCreated
+                ? _read.Value.DisposeAsync()
+                : ValueTask.CompletedTask;
+
+            foreach (var disposable in _disposables)
+            {
+                disposable.Dispose();
+            }
+
+            await t0; await t1; await t2;
+
+        }
+
+        private async Task InnerSubscribe(string stream, bool treatMissingHandlersAsErrors, CancellationToken cancellationToken)
         {
             var group = _settings.SubscriptionGroup;
             var connection = _persistent.Value;
@@ -135,11 +166,11 @@ namespace EasyEvs.Internal
 
                 await connection.CreateAsync(
                     stream,
-                    group,
+                    @group,
                     settings,
                     cancellationToken: cancellationToken);
 
-                _logger.LogDebug($"Created subscription for stream {stream} with group {group}");
+                _logger.LogDebug($"Created subscription for stream {stream} with group {@group}");
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("AlreadyExists"))
             {
@@ -147,25 +178,72 @@ namespace EasyEvs.Internal
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while creating subscription to stream {stream} with group {group}");
-                _logger.LogInformation($"Not subscribed to {stream} with group: {group}");
+                _logger.LogError(ex, $"Error while creating subscription to stream {stream} with group {@group}");
+                _logger.LogInformation($"Not subscribed to {stream} with group: {@group}");
                 return;
             }
 
-            _logger.LogDebug($"Subscribing to stream {stream} with group {group}");
+            _logger.LogDebug($"Subscribing to stream {stream} with group {@group}");
+
 
             var sub = await connection.SubscribeAsync(
                 stream,
-                group,
-                OnEventAppeared,
+                @group,
+                OnEventAppeared(treatMissingHandlersAsErrors),
                 OnSubscriptionDropped(stream),
                 bufferSize: _settings.SubscriptionBufferSize,
                 autoAck: false,
                 cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"Subscribed to stream {stream} with group {group} id {sub.SubscriptionId}");
+            _logger.LogDebug($"Subscribed to stream {stream} with group {@group} id {sub.SubscriptionId}");
 
             _disposables.Add(sub);
+        }
+
+        private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> OnEventAppeared(bool treatMissingHandlersAsErrors)
+        {
+            return async (subscription, resolvedEvent, retryCount, c) =>
+            {
+                try
+                {
+                    (IEvent @event, IReadOnlyDictionary<string, string> metadata) = _serializer.Deserialize(resolvedEvent);
+                    _logger.LogDebug($"Event with id: {@event.Id} arrived");
+
+                    if (!_handlesFactory.TryGetHandlerFor(@event, out var handler, out var scope))
+                    {
+                        if (treatMissingHandlersAsErrors)
+                        {
+                            _logger.LogWarning($"Handler for event of type {@event.GetType()} not found");
+                            await subscription.Nack(PersistentSubscriptionNakEventAction.Park,
+                                $"Handler for event of type {@event.GetType()} not found", resolvedEvent);
+                        }
+                        else
+                        {
+                            await subscription.Ack(resolvedEvent);
+                        }
+
+                        return;
+                    }
+
+                    var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, metadata, retryCount);
+                    Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
+                    var result = await task;
+                    scope!.Dispose();
+                    _logger.LogDebug($"Event with id: {@event.Id} handled with result {result:G}");
+                    await (result switch
+                    {
+                        OperationResult.Park => subscription.Nack(PersistentSubscriptionNakEventAction.Park, string.Empty, resolvedEvent),
+                        OperationResult.Retry => subscription.Nack(PersistentSubscriptionNakEventAction.Retry, string.Empty, resolvedEvent),
+                        _ => subscription.Ack(resolvedEvent),
+                    });
+
+                }
+                catch (Exception ex)
+                {
+                    await subscription.Nack(PersistentSubscriptionNakEventAction.Park, ex.Message, resolvedEvent);
+                    _logger.LogError(ex, $"Error processing event {resolvedEvent} retryCount {retryCount}");
+                }
+            };
         }
 
         private Action<PersistentSubscription, SubscriptionDroppedReason, Exception?> OnSubscriptionDropped([NotNull] string stream)
@@ -224,29 +302,6 @@ namespace EasyEvs.Internal
                 await subscription.Nack(PersistentSubscriptionNakEventAction.Park, ex.Message, resolvedEvent);
                 _logger.LogError(ex, $"Error processing event {resolvedEvent} retryCount {retryCount}");
             }
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            var t0 = _persistent.IsValueCreated
-                ? _persistent.Value.DisposeAsync()
-                : ValueTask.CompletedTask;
-
-            var t1 = _write.IsValueCreated
-                ? _write.Value.DisposeAsync()
-                : ValueTask.CompletedTask;
-
-            var t2 = _read.IsValueCreated
-                ? _read.Value.DisposeAsync()
-                : ValueTask.CompletedTask;
-
-            foreach (var disposable in _disposables)
-            {
-                disposable.Dispose();
-            }
-
-            await t0; await t1; await t2;
-
         }
     }
 }
