@@ -9,6 +9,7 @@ namespace EasyEvs.Internal
     using global::EventStore.Client;
     using Microsoft.Extensions.Logging;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
 
 
     internal class EventStore : IEventStore, IAsyncDisposable
@@ -57,7 +58,7 @@ namespace EasyEvs.Internal
             CancellationToken cancellationToken = default)
             where T : IEvent
         {
-            var stream = _streamResolver.StreamNameFor(@event);
+            var stream = _streamResolver.StreamForEvent(@event);
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream}");
 
             var data = _serializer.Serialize(@event, metadata);
@@ -82,7 +83,7 @@ namespace EasyEvs.Internal
                 throw new ArgumentException("position MUST be greater than 0", nameof(position));
             }
 
-            var stream = _streamResolver.StreamNameFor(@event);
+            var stream = _streamResolver.StreamForEvent(@event);
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream} at position {position}");
 
             var data = _serializer.Serialize(@event, metadata);
@@ -94,6 +95,24 @@ namespace EasyEvs.Internal
                         cancellationToken: cancellationToken);
 
             _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+        }
+
+        public async Task Save<T>([NotNull] T aggregateRoot, CancellationToken cancellationToken = default) where T : AggregateRoot
+        {
+            var changes = aggregateRoot.UncommittedChanges;
+            var stream = _streamResolver.StreamForAggregateRoot(aggregateRoot);
+            var data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
+
+            _logger.LogDebug($"Saving {data.Count()} events to stream {stream} for aggregate root {aggregateRoot.Id}");
+
+            await _write.Value
+                .AppendToStreamAsync(
+                    stream,
+                    StreamState.Any,
+                    data,
+                    cancellationToken: cancellationToken);
+
+            _logger.LogDebug($"Aggregate root {aggregateRoot.Id} saved");
         }
 
         public async Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream(
@@ -126,6 +145,26 @@ namespace EasyEvs.Internal
         public Task SubscribeToStream([NotNull] string stream, CancellationToken cancellationToken)
         {
             return InnerSubscribe(stream, _settings.TreatMissingHandlersAsErrors, cancellationToken);
+        }
+
+        public async Task<T> Get<T>(Guid id, CancellationToken cancellationToken = default) where T : AggregateRoot, new()
+        {
+            var streamName = _streamResolver.StreamForAggregateRoot<T>(id);
+
+            _logger.LogDebug($"Loading aggregate root with id {id} from stream {streamName}");
+            var data = await ReadStream(streamName, null, cancellationToken);
+            var result = new T();
+            var history = data.Select(x =>
+            {
+                var enriched = x.Item1 as IEnrichedEvent;
+                enriched!.Metadata = x.Item2;
+                return enriched;
+            }).ToArray();
+
+            result.LoadFromHistory(history);
+
+            _logger.LogDebug($"Aggregate root with id {id} loaded");
+            return result;
         }
 
         public Task SubscribeToStream(SubscribeCommand command, CancellationToken cancellationToken)
@@ -260,48 +299,6 @@ namespace EasyEvs.Internal
                     _logger.LogError(exception, $"Dropped subscription to stream {stream} with id {subscription.SubscriptionId}. Reason {reason}");
                 }
             };
-        }
-
-        private async Task OnEventAppeared(PersistentSubscription subscription, ResolvedEvent resolvedEvent, int? retryCount, CancellationToken c)
-        {
-            try
-            {
-                (IEvent @event, IReadOnlyDictionary<string, string> metadata) = _serializer.Deserialize(resolvedEvent);
-                _logger.LogDebug($"Event with id: {@event.Id} arrived");
-
-                if (!_handlesFactory.TryGetHandlerFor(@event, out var handler, out var scope))
-                {
-                    if (_settings.TreatMissingHandlersAsErrors)
-                    {
-                        _logger.LogWarning($"Handler for event of type {@event.GetType()} not found");
-                        await subscription.Nack(PersistentSubscriptionNakEventAction.Park, $"Handler for event of type {@event.GetType()} not found", resolvedEvent);
-                    }
-                    else
-                    {
-                        await subscription.Ack(resolvedEvent);
-                    }
-
-                    return;
-                }
-
-                var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, metadata, retryCount);
-                Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
-                var result = await task;
-                scope!.Dispose();
-                _logger.LogDebug($"Event with id: {@event.Id} handled with result {result:G}");
-                await (result switch
-                {
-                    OperationResult.Park => subscription.Nack(PersistentSubscriptionNakEventAction.Park, string.Empty, resolvedEvent),
-                    OperationResult.Retry => subscription.Nack(PersistentSubscriptionNakEventAction.Retry, string.Empty, resolvedEvent),
-                    _ => subscription.Ack(resolvedEvent),
-                });
-
-            }
-            catch (Exception ex)
-            {
-                await subscription.Nack(PersistentSubscriptionNakEventAction.Park, ex.Message, resolvedEvent);
-                _logger.LogError(ex, $"Error processing event {resolvedEvent} retryCount {retryCount}");
-            }
         }
     }
 }

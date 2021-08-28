@@ -28,7 +28,7 @@
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/griffo-io/easy-evs</RepositoryUrl>
-        <Version>0.2.0</Version>
+        <Version>0.4.0</Version>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <!-- SourceLink settings -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -49,6 +49,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="ReflectionMagic" Version="[4.1.0,)" />
         <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[21.2.0,)" />
         <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[21.2.0,)" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="[5.0.0,)" />
