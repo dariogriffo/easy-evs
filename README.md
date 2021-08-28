@@ -51,4 +51,3 @@ A Publisher and Subscriber can be found [here](https://github.com/griffo-io/easy
 ## License
 
 [Apache 2.0](https://github.com/griffo-io/easy-evs/blob/main/LICENSE)
-2
