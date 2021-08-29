@@ -248,7 +248,7 @@ namespace EasyEvs.Internal
                     (IEvent @event, IReadOnlyDictionary<string, string> metadata) = _serializer.Deserialize(resolvedEvent);
                     _logger.LogDebug($"Event with id: {@event.Id} arrived");
 
-                    if (!_handlesFactory.TryGetHandlerFor(@event, out var handler, out var scope))
+                    if (!_handlesFactory.TryGetHandlerFor(@event, out var handler, out var scope, out var preActions, out var postActions))
                     {
                         if (treatMissingHandlersAsErrors)
                         {
@@ -265,8 +265,28 @@ namespace EasyEvs.Internal
                     }
 
                     var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, metadata, retryCount);
+
+                    if (preActions != null)
+                    {
+                        foreach (var action in preActions)
+                        {
+                            Task preTask = (((dynamic)action!)!).Execute((dynamic)@event, context, c);
+                            await preTask;
+                        }
+                    }
+
                     Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
                     var result = await task;
+
+                    if (postActions != null)
+                    {
+                        foreach (var action in postActions)
+                        {
+                            Task<OperationResult> postTask = (((dynamic)action!)!).Execute((dynamic)@event, context, result, c);
+                            result = await postTask;
+                        }
+                    }
+
                     scope!.Dispose();
                     _logger.LogDebug($"Event with id: {@event.Id} handled with result {result:G}");
                     await (result switch

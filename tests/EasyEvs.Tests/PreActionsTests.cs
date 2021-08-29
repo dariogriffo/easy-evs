@@ -2,21 +2,19 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Events.Orders;
-    using FluentAssertions;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
-    public class ReadStreamTests
+    public class PreActionsTests
     {
         [Fact]
-        public async Task With_No_Position_All_Events_AreRetrieved()
+        public async Task When_Actions_Are_Registered_They_Are_Executed()
         {
             var services = new ServiceCollection();
             var dict =
@@ -36,6 +34,9 @@
                 Assemblies = new[] { typeof(OrderEventHandler).Assembly }
             };
 
+            services.AddScoped<IPreHandlesEventAction<OrderEvent4>, OrderEventPreAction1>();
+            services.AddScoped<IPreHandlesEventAction<OrderEvent4>, OrderEventPreAction2>();
+
             services.AddEasyEvs(configuration);
             var counter = Mock.Of<ICounter>();
             services.AddSingleton(counter);
@@ -43,21 +44,19 @@
             var eventStore = provider.GetRequiredService<IEventStore>();
             var streamProvider = provider.GetRequiredService<IStreamResolver>();
             var orderId = Guid.NewGuid();
-            var e1 = new OrderEvent1(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e2 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e3 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            await eventStore.Append(e1, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e2, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e3, cancellationToken: CancellationToken.None);
-            var events = await eventStore.ReadStream(streamProvider.StreamForEvent(e1), cancellationToken: CancellationToken.None);
-            events.Count.Should().Be(3);
-            events[0].Item1.Should().BeEquivalentTo(e1);
-            events[1].Item1.Should().BeEquivalentTo(e2);
-            events[2].Item1.Should().BeEquivalentTo(e3);
+            var @event = new OrderEvent4(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            await eventStore.SubscribeToStream(streamProvider.StreamForEvent(@event), CancellationToken.None);
+            await eventStore.Append(@event, cancellationToken: CancellationToken.None);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            var mock = Mock.Get(counter);
+            mock.Verify(x => x.Touch(), Times.Exactly(3));
         }
+    }
 
+    public class PostActionsTests
+    {
         [Fact]
-        public async Task With_Position_Correct_Events_AreRetrieved()
+        public async Task When_Actions_Are_Registered_They_Are_Executed()
         {
             var services = new ServiceCollection();
             var dict =
@@ -77,6 +76,9 @@
                 Assemblies = new[] { typeof(OrderEventHandler).Assembly }
             };
 
+            services.AddScoped<IPostHandlesEventAction<OrderEvent4>, OrderEventPostAction1>();
+            services.AddScoped<IPostHandlesEventAction<OrderEvent4>, OrderEventPostAction2>();
+
             services.AddEasyEvs(configuration);
             var counter = Mock.Of<ICounter>();
             services.AddSingleton(counter);
@@ -84,16 +86,12 @@
             var eventStore = provider.GetRequiredService<IEventStore>();
             var streamProvider = provider.GetRequiredService<IStreamResolver>();
             var orderId = Guid.NewGuid();
-            var e1 = new OrderEvent1(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e2 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e3 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            await eventStore.Append(e1, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e2, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e3, cancellationToken: CancellationToken.None);
-            var events = await eventStore.ReadStream(streamProvider.StreamForEvent(e1), 1, CancellationToken.None);
-            events.Count.Should().Be(2);
-            events[0].Item1.Should().BeEquivalentTo(e2);
-            events[1].Item1.Should().BeEquivalentTo(e3);
+            var @event = new OrderEvent4(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            await eventStore.SubscribeToStream(streamProvider.StreamForEvent(@event), CancellationToken.None);
+            await eventStore.Append(@event, cancellationToken: CancellationToken.None);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            var mock = Mock.Get(counter);
+            mock.Verify(x => x.Touch(), Times.Exactly(3));
         }
     }
 }

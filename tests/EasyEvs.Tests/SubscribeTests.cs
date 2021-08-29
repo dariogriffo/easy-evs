@@ -40,10 +40,10 @@
             var provider = services.BuildServiceProvider();
             var eventStore = provider.GetRequiredService<IEventStore>();
             var streamProvider = provider.GetRequiredService<IStreamResolver>();
-            var OrderId = Guid.NewGuid();
-            var e1 = new OrderEvent1(Guid.NewGuid(), DateTime.UtcNow, "v1", OrderId);
-            var e2 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", OrderId);
-            var e3 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", OrderId);
+            var orderId = Guid.NewGuid();
+            var e1 = new OrderEvent1(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            var e2 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            var e3 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
             await eventStore.SubscribeToStream(streamProvider.StreamForEvent(e1), CancellationToken.None);
             await eventStore.Append(e1, cancellationToken: CancellationToken.None);
             await eventStore.Append(e2, cancellationToken: CancellationToken.None);

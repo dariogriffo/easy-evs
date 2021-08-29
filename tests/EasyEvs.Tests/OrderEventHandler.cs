@@ -4,7 +4,11 @@
     using System.Threading.Tasks;
     using Events.Orders;
 
-    public class OrderEventHandler : IHandlesEvent<OrderEvent1>, IHandlesEvent<OrderEvent2>, IHandlesEvent<OrderEvent3>
+    public class OrderEventHandler : 
+        IHandlesEvent<OrderEvent1>, 
+        IHandlesEvent<OrderEvent2>, 
+        IHandlesEvent<OrderEvent3>,
+        IHandlesEvent<OrderEvent4>
     {
         private readonly ICounter _counter;
 
@@ -26,6 +30,12 @@
         }
 
         public Task<OperationResult> Handle(OrderEvent3 @event, ConsumerContext context, CancellationToken cancellationToken)
+        {
+            _counter.Touch();
+            return Task.FromResult(OperationResult.Ok);
+        }
+
+        public Task<OperationResult> Handle(OrderEvent4 @event, ConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(OperationResult.Ok);

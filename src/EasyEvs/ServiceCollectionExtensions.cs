@@ -21,12 +21,12 @@ namespace EasyEvs
         /// <returns></returns>
         public static IServiceCollection AddEasyEvs(
             this IServiceCollection services,
-            [NotNull]EasyEvsDependencyInjectionConfiguration configuration)
+            [NotNull] EasyEvsDependencyInjectionConfiguration configuration)
         {
             var jsonSerializerOptionsProvider = configuration.JsonSerializerOptionsProvider;
             var streamResolver = configuration.StreamResolver;
             var assemblies = configuration.Assemblies;
-            
+
             if (jsonSerializerOptionsProvider != null &&
                 jsonSerializerOptionsProvider!.GetInterfaces().All(x => x != typeof(IJsonSerializerOptionsProvider)))
             {
@@ -58,11 +58,14 @@ namespace EasyEvs
                 return services;
             }
 
-            var basicType = typeof(IEvent);
+            var eventType = typeof(IEvent);
+            var handlerType = typeof(IHandlesEvent);
 
             bool ImplementsHandler(Type i)
             {
-                return i.GenericTypeArguments.Any(g => g.GetInterfaces().Any(gi => gi == basicType));
+                return
+                    i.GetInterfaces().Any(gi => gi == handlerType) &&
+                    i.GenericTypeArguments.Any(g => g.GetInterfaces().Any(gi => gi == eventType));
             }
 
             var handlers =

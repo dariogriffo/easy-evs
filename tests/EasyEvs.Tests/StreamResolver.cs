@@ -13,6 +13,7 @@
                 OrderEvent1 e => $"Order-{e.OrderId}",
                 OrderEvent2 e => $"Order-{e.OrderId}",
                 OrderEvent3 e => $"Order-{e.OrderId}",
+                OrderEvent4 e => $"Order-{e.OrderId}",
             };
             return stream;
         }

@@ -348,3 +348,10 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# NCrunch
+*.ncrunch*
+_NCrunch_*
+*.crunch.xml
+*.ncrunchsolution*
+nCrunchTemp_*
