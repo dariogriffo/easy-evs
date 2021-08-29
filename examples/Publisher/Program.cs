@@ -21,10 +21,15 @@
             var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
             var fixture = new Fixture();
             var services = new ServiceCollection();
+            var configuration = new EasyEvsDependencyInjectionConfiguration()
+            {
+                Assemblies = new []{typeof(Program).Assembly},
+                StreamResolver = typeof(StreamResolver)
+            };
             services
-                .AddLogging(configure => configure.AddConsole())
+                .AddLogging(configure => configure.SetMinimumLevel(LogLevel.Debug).AddConsole())
                 .AddSingleton((IConfiguration)conf)
-                .AddEasyEvs(typeof(StreamResolver));
+                .AddEasyEvs(configuration);
 
             var provider = services.BuildServiceProvider();
             var eventStore = provider.GetRequiredService<IEventStore>();

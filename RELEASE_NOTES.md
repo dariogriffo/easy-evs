@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+## [1.0.0](https://github.com/griffo-io/easy-evs/releases/tag/1.0.0)
+
+First tested stable version
+Fixed examples
+
+## [0.5.0](https://github.com/griffo-io/easy-evs/releases/tag/0.5.0)
+
+Adding tests and fixing issues
+
 ## [0.4.0](https://github.com/griffo-io/easy-evs/releases/tag/0.4.0)
 
 Added aggregate roots and logic to save/restore from the Event Store
