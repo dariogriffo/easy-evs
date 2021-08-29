@@ -19,6 +19,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+    - name: Run EventStore
+        run: docker-compose up -d
     - name: Restore dependencies
       run: dotnet restore
     - name: Build

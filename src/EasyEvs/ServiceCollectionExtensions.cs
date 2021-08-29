@@ -1,8 +1,8 @@
 namespace EasyEvs
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
-    using System.Reflection;
     using Internal;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,20 +14,19 @@ namespace EasyEvs
     {
         /// <summary>
         /// Add the EventStore to your app.
-        /// If no <paramref name="streamResolver"/> is passed, there will be no way to store events.
         /// This is the scenario for event readers.
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/> where the registration happens.</param>
-        /// <param name="jsonSerializerOptionsProvider">The optional <see cref="IJsonSerializerOptionsProvider"/> type implementation.</param>
-        /// <param name="streamResolver">The optional <see cref="IStreamResolver"/> type implementation.</param>
-        /// <param name="assemblies">An array of <see cref="Assembly"/> where the handlers of events are to be scanned.</param>
+        /// <param name="configuration">The configuration for the Dependency Injection.</param>
         /// <returns></returns>
         public static IServiceCollection AddEasyEvs(
             this IServiceCollection services,
-            Type? jsonSerializerOptionsProvider = null,
-            Type? streamResolver = null,
-            params Assembly[]? assemblies)
+            [NotNull]EasyEvsDependencyInjectionConfiguration configuration)
         {
+            var jsonSerializerOptionsProvider = configuration.JsonSerializerOptionsProvider;
+            var streamResolver = configuration.StreamResolver;
+            var assemblies = configuration.Assemblies;
+            
             if (jsonSerializerOptionsProvider != null &&
                 jsonSerializerOptionsProvider!.GetInterfaces().All(x => x != typeof(IJsonSerializerOptionsProvider)))
             {

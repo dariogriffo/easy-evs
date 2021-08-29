@@ -17,7 +17,7 @@ namespace EasyEvs.Internal
 
         private readonly JsonSerializerOptions _options;
 
-        internal Serializer(IJsonSerializerOptionsProvider provider)
+        public Serializer(IJsonSerializerOptionsProvider provider)
         {
             _options = provider.Options;
         }
