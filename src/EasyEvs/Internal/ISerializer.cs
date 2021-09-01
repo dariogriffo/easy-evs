@@ -1,6 +1,7 @@
 ﻿namespace EasyEvs.Internal
 {
     using System.Collections.Generic;
+    using Contracts;
     using global::EventStore.Client;
 
     internal interface ISerializer

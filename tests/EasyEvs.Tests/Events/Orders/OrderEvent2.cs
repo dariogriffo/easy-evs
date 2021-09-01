@@ -2,6 +2,7 @@
 {
     using System;
     using System.Text.Json.Serialization;
+    using Contracts;
 
     public class OrderEvent2 : IEvent
     {

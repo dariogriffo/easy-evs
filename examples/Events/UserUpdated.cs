@@ -2,7 +2,7 @@
 {
     using System;
     using System.Text.Json.Serialization;
-    using EasyEvs;
+    using EasyEvs.Contracts;
 
     public class UserUpdated: IEvent
     {

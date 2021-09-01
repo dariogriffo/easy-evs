@@ -3,6 +3,7 @@ namespace EasyEvs.Internal
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Contracts;
     using Microsoft.Extensions.DependencyInjection;
 
     internal class HandlesFactory : IHandlesFactory
@@ -11,6 +12,7 @@ namespace EasyEvs.Internal
         private readonly IReadOnlyDictionary<Type, Type> _handlers;
         private readonly IReadOnlyDictionary<Type, Type> _pre;
         private readonly IReadOnlyDictionary<Type, Type> _post;
+        private readonly IReadOnlyDictionary<Type, Type> _pipelines;
 
         public HandlesFactory(IServiceProvider serviceProvider, HandlersAndEventTypes handlersAndEventTypes)
         {
@@ -18,7 +20,7 @@ namespace EasyEvs.Internal
             _handlers = handlersAndEventTypes.RegisteredEventsAndHandlers;
             _pre = handlersAndEventTypes.RegisteredPreActions;
             _post = handlersAndEventTypes.RegisteredPostActions;
-
+            _pipelines = handlersAndEventTypes.RegisteredPipelines;
         }
 
         public bool TryGetHandlerFor(
@@ -26,12 +28,14 @@ namespace EasyEvs.Internal
             out IHandlesEvent? handler,
             out IDisposable? scope,
             out List<IPreHandlesEventAction>? preActions,
-            out List<IPostHandlesEventAction>? postActions)
+            out List<IPostHandlesEventAction>? postActions,
+            out List<IPipelineHandlesEventAction>? pipelines)
         {
             handler = default;
             scope = default;
             preActions = default;
             postActions = default;
+            pipelines = default;
             if (!_handlers.TryGetValue(@event.GetType(), out var type))
             {
                 return false;
@@ -48,11 +52,17 @@ namespace EasyEvs.Internal
                     .ToList();
             }
             
-
             if (_post.TryGetValue(@event.GetType(), out type))
             {
                 postActions = serviceScope
                     .ServiceProvider.GetServices(type).Select(x => (x as IPostHandlesEventAction)!)
+                    .ToList();
+            }
+
+            if (_pipelines.TryGetValue(@event.GetType(), out type))
+            {
+                pipelines = serviceScope
+                    .ServiceProvider.GetServices(type).Select(x => (x as IPipelineHandlesEventAction)!)
                     .ToList();
             }
 

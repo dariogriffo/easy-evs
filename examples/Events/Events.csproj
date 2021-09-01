@@ -10,6 +10,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="EasyEvs" Version="1.0.0" />
+      <PackageReference Include="EasyEvs.Contracts" Version="1.0.0" />
     </ItemGroup>
 </Project>

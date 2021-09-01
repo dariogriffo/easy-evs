@@ -1,6 +1,7 @@
 namespace EasyEvs.Internal
 {
     using System;
+    using Contracts;
 
 #pragma warning disable 1591
     public class NoOpStreamResolver : IStreamResolver

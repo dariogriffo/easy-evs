@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Contracts;
     using Events.Orders;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

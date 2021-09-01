@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using EasyEvs.Contracts;
     using EasyEvs;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;

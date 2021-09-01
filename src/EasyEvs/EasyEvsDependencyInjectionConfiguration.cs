@@ -2,6 +2,7 @@ namespace EasyEvs
 {
     using System;
     using System.Reflection;
+    using Contracts;
     using Internal;
 
     /// <summary>

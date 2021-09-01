@@ -2,6 +2,7 @@
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using Contracts;
     using Events.Orders;
 
     public class OrderEventPreAction1 :
@@ -14,7 +15,7 @@
             _counter = counter;
         }
 
-        public Task Execute(OrderEvent4 @event, ConsumerContext context, CancellationToken cancellationToken)
+        public Task Execute(OrderEvent4 @event, IConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.CompletedTask;

@@ -1,7 +1,7 @@
 ﻿namespace Publisher
 {
     using System;
-    using EasyEvs;
+    using EasyEvs.Contracts;
     using Events;
 
     public class StreamResolver : IStreamResolver

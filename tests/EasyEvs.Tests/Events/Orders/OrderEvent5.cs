@@ -4,10 +4,10 @@
     using System.Text.Json.Serialization;
     using Contracts;
 
-    public class OrderEvent1 : IEvent
+    public class OrderEvent5 : IEvent
     {
         [JsonConstructor]
-        public OrderEvent1(Guid id, DateTime timestamp, string version, Guid orderId)
+        public OrderEvent5(Guid id, DateTime timestamp, string version, Guid orderId)
         {
             Id = id;
             Timestamp = timestamp;
@@ -17,6 +17,7 @@
 
         
         public Guid Id { get; }
+
         
         public Guid OrderId { get; }
         

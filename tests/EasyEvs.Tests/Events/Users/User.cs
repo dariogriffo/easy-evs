@@ -1,6 +1,7 @@
 ﻿namespace EasyEvs.Tests.Events.Users
 {
     using System;
+    using Contracts;
 
     public class User : AggregateRoot
     {

@@ -7,7 +7,7 @@
 
     <ItemGroup>
         <PackageReference Include="AutoFixture" Version="4.17.0" />
-        <PackageReference Include="EasyEvs" Version="1.0.0" />
+        <PackageReference Include="EasyEvs" Version="2.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
@@ -16,6 +16,5 @@
     <ItemGroup>
        <ProjectReference Include="..\Events\Events.csproj" />
     </ItemGroup>
-
 
 </Project>

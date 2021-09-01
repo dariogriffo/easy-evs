@@ -1,7 +1,9 @@
 ﻿namespace EasyEvs.Tests
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Contracts;
     using Events.Orders;
 
     public class OrderEventPostAction1 :
@@ -14,7 +16,7 @@
             _counter = counter;
         }
 
-        public Task<OperationResult> Execute(OrderEvent4 @event, ConsumerContext context, OperationResult result, CancellationToken cancellationToken)
+        public Task<OperationResult> Execute(OrderEvent4 @event, IConsumerContext context, OperationResult result, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(result);

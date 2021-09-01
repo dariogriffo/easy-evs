@@ -1,4 +1,4 @@
-namespace EasyEvs
+namespace EasyEvs.Contracts
 {
     using System.Text.Json;
 
@@ -9,7 +9,7 @@ namespace EasyEvs
     {
         /// <summary>
         /// The options used to serialize the events.
-        /// Defaults to <see cref="Internal.JsonSerializerOptionsProvider"/>
+        /// Defaults to JsonSerializerOptionsProvider/>
         /// </summary>
         JsonSerializerOptions Options { get; }
     }

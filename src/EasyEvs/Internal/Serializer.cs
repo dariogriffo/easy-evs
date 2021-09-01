@@ -8,6 +8,7 @@ namespace EasyEvs.Internal
     using System.Linq;
     using System.Text;
     using System.Text.Json;
+    using Contracts;
     using global::EventStore.Client;
 
     internal class Serializer : ISerializer
@@ -33,6 +34,7 @@ namespace EasyEvs.Internal
             var nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
             var correlationId =
                 metadata.TryGetValue("correlationId", out var value) ? value :
+                metadata.TryGetValue("$correlationId", out value) ? value :
                 metadata.TryGetValue("easy.evs.correlation.id", out value) ? value :
                 Guid.NewGuid().ToString();
 
@@ -52,13 +54,13 @@ namespace EasyEvs.Internal
                 {"easy.evs.assembly.qualified.name", eventType.AssemblyQualifiedName!},
                 {"easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O")}
             };
-
+            
             var hasCorrelationId = false;
             if (eventMetadata != null)
             {
                 foreach (var (key, value) in eventMetadata)
                 {
-                    if (key == "correlationId")
+                    if (key == "correlationId" || key == "$correlationId")
                     {
                         hasCorrelationId = true;
                     }

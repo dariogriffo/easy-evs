@@ -2,6 +2,7 @@ namespace EasyEvs.Internal
 {
     using System.Text.Json;
     using System.Text.Json.Serialization;
+    using Contracts;
 
     internal class JsonSerializerOptionsProvider : IJsonSerializerOptionsProvider
     {

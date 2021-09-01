@@ -1,4 +1,4 @@
-namespace EasyEvs
+namespace EasyEvs.Contracts
 {
     using System;
     using System.Collections.Generic;

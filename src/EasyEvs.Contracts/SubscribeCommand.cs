@@ -1,4 +1,4 @@
-namespace EasyEvs
+namespace EasyEvs.Contracts
 {
     /// <summary>
     /// Command to subscribe to persistent a persistent subscription

@@ -1,4 +1,4 @@
-namespace EasyEvs
+namespace EasyEvs.Contracts
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Threading;
@@ -16,9 +16,9 @@ namespace EasyEvs
         /// Return an <see cref="OperationResult"/> specifying what the event store subscription should do with the event after being processed.
         /// </summary>
         /// <param name="event">The event that appeared on the persistent subscription.</param>
-        /// <param name="context">The context of the event <see cref="ConsumerContext"/>.</param>
+        /// <param name="context">The context of the event <see cref="IConsumerContext"/>.</param>
         /// <param name="cancellationToken">The <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>The task with an <see cref="OperationResult"/> to be awaited</returns>
-        Task<OperationResult> Handle([NotNull]T @event, ConsumerContext context, CancellationToken cancellationToken);
+        Task<OperationResult> Handle([NotNull]T @event, IConsumerContext context, CancellationToken cancellationToken);
     }
 }

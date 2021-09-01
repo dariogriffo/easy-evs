@@ -10,6 +10,7 @@ namespace EasyEvs.Internal
     using Microsoft.Extensions.Logging;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Contracts;
 
 
     internal class EventStore : IEventStore, IAsyncDisposable
@@ -17,7 +18,7 @@ namespace EasyEvs.Internal
         private readonly ISerializer _serializer;
         private readonly IStreamResolver _streamResolver;
         private readonly IHandlesFactory _handlesFactory;
-        private readonly ConcurrentBag<IDisposable> _disposables = new();
+        private readonly ConcurrentBag<IDisposable> _disposables = new ConcurrentBag<IDisposable>();
         private readonly ILogger<EventStore> _logger;
         private readonly EventStoreSettings _settings;
         private readonly Lazy<EventStorePersistentSubscriptionsClient> _persistent;
@@ -248,7 +249,13 @@ namespace EasyEvs.Internal
                     (IEvent @event, IReadOnlyDictionary<string, string> metadata) = _serializer.Deserialize(resolvedEvent);
                     _logger.LogDebug($"Event with id: {@event.Id} arrived");
 
-                    if (!_handlesFactory.TryGetHandlerFor(@event, out var handler, out var scope, out var preActions, out var postActions))
+                    if (!_handlesFactory.TryGetHandlerFor(
+                        @event,
+                        out var handler,
+                        out var scope,
+                        out var preActions,
+                        out var postActions,
+                        out var pipelines))
                     {
                         if (treatMissingHandlersAsErrors)
                         {
@@ -266,25 +273,54 @@ namespace EasyEvs.Internal
 
                     var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, metadata, retryCount);
 
-                    if (preActions != null)
+                    async Task<OperationResult> ExecuteActionsAndHandler()
                     {
-                        foreach (var action in preActions)
+                        if (preActions != null)
                         {
-                            Task preTask = (((dynamic)action!)!).Execute((dynamic)@event, context, c);
-                            await preTask;
+                            foreach (var action in preActions)
+                            {
+                                Task preTask = (((dynamic)action!)!).Execute((dynamic)@event, context, c);
+                                await preTask;
+                            }
                         }
+
+                        Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
+                        var operationResult = await task;
+
+                        if (postActions != null)
+                        {
+                            foreach (var action in postActions)
+                            {
+                                Task<OperationResult> postTask = (((dynamic)action!)!).Execute((dynamic)@event, context, operationResult, c);
+                                operationResult = await postTask;
+                            }
+                        }
+
+                        return operationResult;
                     }
 
-                    Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
-                    var result = await task;
-
-                    if (postActions != null)
+                    OperationResult result = OperationResult.Ok;
+                    if (pipelines != null && pipelines.Count >= 1)
                     {
-                        foreach (var action in postActions)
+                        Func<Task<OperationResult>>[] reversed = new Func<Task<OperationResult>>[pipelines.Count + 1];
+                        pipelines.Reverse();
+                        var length = pipelines.Count;
+                        reversed[length] = ExecuteActionsAndHandler;
+
+                        //Let's build the execution tree
+                        for (var i = 0; i < length; ++i)
                         {
-                            Task<OperationResult> postTask = (((dynamic)action!)!).Execute((dynamic)@event, context, result, c);
-                            result = await postTask;
+                            var current = pipelines[i];
+                            var next = reversed[length - i];
+                            reversed[length - i - 1] = () => (((dynamic)current!)!).Execute((dynamic)@event, context, next, c);
                         }
+
+                        Func<Task<OperationResult>> func = reversed[0];
+                        result = await func();
+                    }
+                    else
+                    {
+                        result = await ExecuteActionsAndHandler();
                     }
 
                     scope!.Dispose();

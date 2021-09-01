@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Contracts;
     using Events.Orders;
     using FluentAssertions;
     using Microsoft.Extensions.Configuration;

@@ -3,6 +3,7 @@ namespace EasyEvs
     using System;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using Contracts;
     using Internal;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.DependencyInjection.Extensions;

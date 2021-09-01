@@ -1,6 +1,7 @@
 ﻿namespace EasyEvs.Tests
 {
     using System;
+    using Contracts;
     using Events.Orders;
     using Events.Users;
 
@@ -14,6 +15,7 @@
                 OrderEvent2 e => $"Order-{e.OrderId}",
                 OrderEvent3 e => $"Order-{e.OrderId}",
                 OrderEvent4 e => $"Order-{e.OrderId}",
+                OrderEvent5 e => $"Order-{e.OrderId}",
             };
             return stream;
         }

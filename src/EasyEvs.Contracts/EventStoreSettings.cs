@@ -1,4 +1,4 @@
-﻿namespace EasyEvs
+﻿namespace EasyEvs.Contracts
 {
     using System;
     using System.Reflection;
@@ -10,14 +10,14 @@
     public class EventStoreSettings
     {
         /// <summary>
-        /// The configuration section name to be provided in the <see cref="IConfiguration"/>
+        /// The configuration section name to be provided in the <see cref="Microsoft.Extensions.Configuration.IConfiguration"/>
         /// </summary>
         public static readonly string ConfigurationSectionName = "EasyEvs";
 
         /// <summary>
         /// The constructor
         /// </summary>
-        /// <param name="configuration">The <see cref="IConfiguration"/> with a section called EasyEvs for this class</param>
+        /// <param name="configuration">The <see cref="Microsoft.Extensions.Configuration.IConfiguration"/> with a section called EasyEvs for this class</param>
         public EventStoreSettings(IConfiguration configuration)
         {
             configuration.GetSection(ConfigurationSectionName).Bind(this);

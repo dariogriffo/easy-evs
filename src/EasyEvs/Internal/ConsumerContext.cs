@@ -1,12 +1,10 @@
-namespace EasyEvs
+namespace EasyEvs.Internal
 {
     using System;
     using System.Collections.Generic;
+    using Contracts;
 
-    /// <summary>
-    /// Context with all the information necessary besides the <see cref="IEvent"/> to be handled
-    /// </summary>
-    public class ConsumerContext
+    internal class ConsumerContext : IConsumerContext
     {
         internal ConsumerContext(Guid correlationId,
             IReadOnlyDictionary<string, string> metadata,

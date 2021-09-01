@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Text.Json.Serialization;
+    using Contracts;
 
     public class UserDeactivated : IEnrichedEvent
     {

@@ -5,18 +5,17 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Contracts;
-    using Events.Users;
-    using FluentAssertions;
+    using Events.Orders;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
-    public class AggregateRootTests
+    public class PipelineActionsTests
     {
         [Fact]
-        public async Task Saved_Aggregate_Is_Correctly_Loaded()
+        public async Task When_Actions_Are_Registered_They_Are_Executed()
         {
             var services = new ServiceCollection();
             var dict =
@@ -32,23 +31,26 @@
 
             var configuration = new EasyEvsDependencyInjectionConfiguration()
             {
-                StreamResolver = typeof(StreamResolver)
+                StreamResolver = typeof(StreamResolver),
+                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
             };
+
+            services.AddScoped<IPipelineHandlesEventAction<OrderEvent5>, OrderEventPipelineAction1>();
+            services.AddScoped<IPipelineHandlesEventAction<OrderEvent5>, OrderEventPipelineAction2>();
 
             services.AddEasyEvs(configuration);
             var counter = Mock.Of<ICounter>();
             services.AddSingleton(counter);
             var provider = services.BuildServiceProvider();
             var eventStore = provider.GetRequiredService<IEventStore>();
-            var userId = Guid.NewGuid();
-
-            var user = new User();
-            user.Create(userId);
-            user.Update();
-            user.Deactivate();
-            await eventStore.Save(user, CancellationToken.None);
-            var user1 = await eventStore.Get<User>(user.Id, CancellationToken.None);
-            user1.Sum.Should().Be(111);
+            var streamProvider = provider.GetRequiredService<IStreamResolver>();
+            var orderId = Guid.NewGuid();
+            var @event = new OrderEvent5(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            await eventStore.SubscribeToStream(streamProvider.StreamForEvent(@event), CancellationToken.None);
+            await eventStore.Append(@event, cancellationToken: CancellationToken.None);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            var mock = Mock.Get(counter);
+            mock.Verify(x => x.Touch(), Times.Exactly(5));
         }
     }
 }

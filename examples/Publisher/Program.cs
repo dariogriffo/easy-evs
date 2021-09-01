@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using AutoFixture;
+    using EasyEvs.Contracts;
     using EasyEvs;
     using Events;
     using Microsoft.Extensions.Configuration;

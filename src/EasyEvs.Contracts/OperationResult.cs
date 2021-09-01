@@ -1,4 +1,4 @@
-namespace EasyEvs
+namespace EasyEvs.Contracts
 {
     /// <summary>
     /// The result of the handling the <see cref="IEvent"/>

@@ -1,4 +1,4 @@
-namespace EasyEvs
+namespace EasyEvs.Contracts
 {
 
 #pragma warning disable 1591
@@ -10,6 +10,10 @@ namespace EasyEvs
 
     public interface IPostHandlesEventAction
     { }
+
+
+    public interface IPipelineHandlesEventAction
+    { } 
 
 #pragma warning restore 1591
 }
