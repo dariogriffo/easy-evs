@@ -345,6 +345,11 @@ namespace EasyEvs.Internal
         {
             return (subscription, reason, exception) =>
             {
+                if (reason == SubscriptionDroppedReason.Disposed)
+                {
+                    return;
+                }
+
                 if (_settings.ReconnectOnSubscriptionDropped)
                 {
                     _logger.LogWarning(exception, $"Dropped subscription to stream {stream} with id {subscription.SubscriptionId}. Reason {reason}");
