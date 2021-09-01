@@ -24,9 +24,13 @@ A lightweight developer driven application framework to work with Greg Young's [
 [EasyEvs](https://www.nuget.org/packages/EasyEvs) is a light application framework for Greg Young's [EventStore](https://eventstore.com/).
 
 After having been working with EventStore for some time now, and finding different issues on the code using it, starting from the Aggregate roots down to connection management, EasyEvs was born as an effort to allow me start new projects quickly on top of EventStore.
+
 The motivation behind it is to allow other developers of different levels to use EventStore with the minimum of effort, making simple to configure the behavior, and allow unit testing of simple things (routing, writing and reading).
+
 Also the framework is split in 2 nuget packages to allow easy unit testing without installing all the EventStore dependencies in domain projects.
+
 ***EasyEvs*** is not meant to evolve to a heavy bloated library, but to keep things simple and working. Is focused on microservices architecture where [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) is not much of an issue.
+
 ***EasyEvs*** main purpose is to allow you to work with EventStore in a few lines, and that's how it will always be.
 
 ### Who is it for?
