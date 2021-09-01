@@ -11,6 +11,7 @@ namespace EasyEvs.Internal
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Contracts;
+    using Grpc.Core;
 
 
     internal class EventStore : IEventStore, IAsyncDisposable
@@ -345,7 +346,12 @@ namespace EasyEvs.Internal
         {
             return (subscription, reason, exception) =>
             {
-                if (reason == SubscriptionDroppedReason.Disposed)
+                if (
+                    reason == SubscriptionDroppedReason.Disposed ||
+                    // https://github.com/EventStore/EventStore-Client-Dotnet/issues/154
+                    (exception?.InnerException is RpcException rpcException &&
+                     rpcException.StatusCode == Grpc.Core.StatusCode.Cancelled)
+                    )
                 {
                     return;
                 }

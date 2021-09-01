@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [2.0.2](https://github.com/griffo-io/easy-evs/releases/tag/2.0.2)
+
+Added another possible condition for disposed error [different from documentation](https://github.com/EventStore/EventStore-Client-Dotnet/issues/154)
+
 ## [2.0.1](https://github.com/griffo-io/easy-evs/releases/tag/2.0.1)
 
 Fixed failure on dropped subscription on client disconnected by the user
