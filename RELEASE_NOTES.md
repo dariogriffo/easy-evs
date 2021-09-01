@@ -3,7 +3,7 @@ Release Notes
 
 ## [2.0.0](https://github.com/griffo-io/easy-evs/releases/tag/2.0.0)
 
-Split (Contracts)[https://www.nuget.org/packages/EasyEvs.Contracts/] and Implementation into different nuget packages to allow easy Unit testing without bloating with dependencies
+Split [Contracts](https://www.nuget.org/packages/EasyEvs.Contracts)] and Implementation into different nuget packages to allow easy Unit testing without bloating with dependencies
 
 ## [1.1.0](https://github.com/griffo-io/easy-evs/releases/tag/1.1.0)
 
