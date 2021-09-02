@@ -250,13 +250,9 @@ namespace EasyEvs.Internal
                     (IEvent @event, IReadOnlyDictionary<string, string> metadata) = _serializer.Deserialize(resolvedEvent);
                     _logger.LogDebug($"Event with id: {@event.Id} arrived");
 
-                    if (!_handlesFactory.TryGetHandlerFor(
+                    if (!_handlesFactory.TryGetScopeFor(
                         @event,
-                        out var handler,
-                        out var scope,
-                        out var preActions,
-                        out var postActions,
-                        out var pipelines))
+                        out var scope))
                     {
                         if (treatMissingHandlersAsErrors)
                         {
@@ -276,21 +272,24 @@ namespace EasyEvs.Internal
 
                     async Task<OperationResult> ExecuteActionsAndHandler()
                     {
-                        if (preActions != null)
+
+                        if (_handlesFactory.TryGetPreActionsFor(@event, scope!, out var preActions))
                         {
-                            foreach (var action in preActions)
+                            foreach (var action in preActions!)
                             {
                                 Task preTask = (((dynamic)action!)!).Execute((dynamic)@event, context, c);
                                 await preTask;
                             }
                         }
 
+                        _handlesFactory.TryGetHandlerFor(@event, scope!, out var handler);
+
                         Task<OperationResult> task = (((dynamic)handler!)!).Handle((dynamic)@event, context, c);
                         var operationResult = await task;
 
-                        if (postActions != null)
+                        if (_handlesFactory.TryGetPostActionsFor(@event, scope!, out var postActions))
                         {
-                            foreach (var action in postActions)
+                            foreach (var action in postActions!)
                             {
                                 Task<OperationResult> postTask = (((dynamic)action!)!).Execute((dynamic)@event, context, operationResult, c);
                                 operationResult = await postTask;
@@ -301,9 +300,9 @@ namespace EasyEvs.Internal
                     }
 
                     OperationResult result = OperationResult.Ok;
-                    if (pipelines != null && pipelines.Count >= 1)
+                    if (_handlesFactory.TryGetPipelinesFor(@event, scope!, out var pipelines))
                     {
-                        Func<Task<OperationResult>>[] reversed = new Func<Task<OperationResult>>[pipelines.Count + 1];
+                        Func<Task<OperationResult>>[] reversed = new Func<Task<OperationResult>>[pipelines!.Count + 1];
                         pipelines.Reverse();
                         var length = pipelines.Count;
                         reversed[length] = ExecuteActionsAndHandler;

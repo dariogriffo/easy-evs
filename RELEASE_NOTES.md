@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [2.1.0](https://github.com/griffo-io/easy-evs/releases/tag/2.1.0)
+
+Ensure pre actions, post actions and the handler are created when required to ensure any previous actions in the pipeline may setup something
+
 ## [2.0.2](https://github.com/griffo-io/easy-evs/releases/tag/2.0.2)
 
 Added another possible condition for disposed error [different from documentation](https://github.com/EventStore/EventStore-Client-Dotnet/issues/154)

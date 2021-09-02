@@ -4,7 +4,7 @@ namespace EasyEvs.Internal
     using System.Collections.Generic;
     using System.Linq;
     using Contracts;
-    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyInjection; 
 
     internal class HandlesFactory : IHandlesFactory
     {
@@ -23,51 +23,93 @@ namespace EasyEvs.Internal
             _pipelines = handlersAndEventTypes.RegisteredPipelines;
         }
 
+
+        public bool TryGetScopeFor(
+            IEvent @event,
+            out IServiceScope? scope)
+        {
+            scope = default;
+            if (!_handlers.TryGetValue(@event.GetType(), out var _))
+            {
+                return false;
+            }
+
+            scope = _serviceProvider.CreateScope();
+            return true;
+        }
+
         public bool TryGetHandlerFor(
             IEvent @event,
-            out IHandlesEvent? handler,
-            out IDisposable? scope,
-            out List<IPreHandlesEventAction>? preActions,
-            out List<IPostHandlesEventAction>? postActions,
-            out List<IPipelineHandlesEventAction>? pipelines)
+            IServiceScope scope,
+            out IHandlesEvent? handler)
         {
             handler = default;
-            scope = default;
-            preActions = default;
-            postActions = default;
-            pipelines = default;
             if (!_handlers.TryGetValue(@event.GetType(), out var type))
             {
                 return false;
             }
 
-            IServiceScope serviceScope = _serviceProvider.CreateScope();
-            handler = serviceScope.ServiceProvider.GetService(type) as IHandlesEvent;
-            scope = serviceScope;
+            handler = scope.ServiceProvider.GetService(type) as IHandlesEvent;
+            return true;
+        }
 
-            if (_pre.TryGetValue(@event.GetType(), out type))
-            {
-                preActions = serviceScope
-                    .ServiceProvider.GetServices(type).Select(x => (x as IPreHandlesEventAction)!)
-                    .ToList();
-            }
+        
+        public bool TryGetPipelinesFor(
+            IEvent @event,
+            IServiceScope scope,
+            out List<IPipelineHandlesEventAction>? pipelines)
+        {
             
-            if (_post.TryGetValue(@event.GetType(), out type))
+            pipelines = default;
+            
+            if (!_pipelines.TryGetValue(@event.GetType(), out var type))
             {
-                postActions = serviceScope
-                    .ServiceProvider.GetServices(type).Select(x => (x as IPostHandlesEventAction)!)
-                    .ToList();
+                return false;
             }
 
-            if (_pipelines.TryGetValue(@event.GetType(), out type))
-            {
-                pipelines = serviceScope
-                    .ServiceProvider.GetServices(type).Select(x => (x as IPipelineHandlesEventAction)!)
-                    .ToList();
-            }
+            pipelines = scope
+                .ServiceProvider.GetServices(type).Select(x => (x as IPipelineHandlesEventAction)!)
+                .ToList();
 
             return true;
         }
+
+        public bool TryGetPreActionsFor(
+            IEvent @event,
+            IServiceScope scope,
+            out List<IPreHandlesEventAction>? preActions)
+        {
+            preActions = default;
+            
+            if (!_pre.TryGetValue(@event.GetType(), out var type))
+            {
+                return false;
+            }
+
+            preActions = scope
+                .ServiceProvider.GetServices(type!).Select(x => (x as IPreHandlesEventAction)!)
+                .ToList();
+            return true;
+        }
+
+        public bool TryGetPostActionsFor(
+            IEvent @event,
+            IServiceScope scope,
+            out List<IPostHandlesEventAction>? postActions)
+        {
+            postActions = default;
+            
+            if (!_post.TryGetValue(@event.GetType(), out var type))
+            {
+                return false;
+            }
+
+            postActions = scope
+                .ServiceProvider.GetServices(type!).Select(x => (x as IPostHandlesEventAction)!)
+                .ToList();
+            return true;
+        }
+
     }
 }
 
