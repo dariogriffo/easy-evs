@@ -10,6 +10,6 @@ namespace EasyEvs.Contracts
         /// <summary>
         /// The metadata associated to the event
         /// </summary>
-        IReadOnlyDictionary<string, string> Metadata { get; set; } 
+        IReadOnlyDictionary<string, string>? Metadata { get; set; } 
     }
 }
