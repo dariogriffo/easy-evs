@@ -47,7 +47,7 @@ It `enforces` the implementation of some interfaces with the aim of having a con
                                                       
 - Define your events and make them implement [IEvent](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IEvent.cs#L8).
 	- Suggestion: place them into a their own project and make a nuget package out of it to share with the other teams.
-- Implement the [`IStreamResolver`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IStreamResolver.cs#L9) interface to allow the [`IEventStore`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IEventStore.cs#L12) know where to append your events
+- Implement the [`IStreamResolver`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IStreamResolver.cs#L9) interface to allow the [`IEventStore`](44#L12) know where to append your events
 - Implement an [`IHandlesEvent`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IHandlesEvent1.cs#L11)
 
 That's it you can start coding, and unit testing... Now you want to see if against a real EventStore instance?
@@ -55,7 +55,7 @@ That's it you can start coding, and unit testing... Now you want to see if again
 ### Integrating with a real instance
 `Install-Package EasyEvs`
 
-- Add a configuration section called `EasyEvs` and configure the EventStore with the settings class [`EventStoreSettings`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs/EventStoreSettings.cs#L10) with the only required property `ConnectionString`
+- Add a configuration section called `EasyEvs` and configure the EventStore with the settings class [`EventStoreSettings`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/EventStoreSettings.cs#L10) with the only required property `ConnectionString`
 - Add EasyEvs to your ServiceCollection (in your writer service and in your reader service) via the extension method [`services.AddEasyEvs(...)`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs/ServiceCollectionExtensions.cs#L25)
 - Subscribe to a stream or projection on the EventStore with [`SubscribeToStream(...)`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IEventStore.cs#L92)
 - Append your events to the EventStore with [`Append(..)`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IEventStore.cs#L22)

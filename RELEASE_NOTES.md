@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [2.1.1](https://github.com/griffo-io/easy-evs/releases/tag/2.1.1)
+
+Don't serialize metadata for IEnrichedEvent if present as part of the data
+
 ## [2.1.0](https://github.com/griffo-io/easy-evs/releases/tag/2.1.0)
 
 Ensure pre actions, post actions and the handler are created when required to ensure any previous actions in the pipeline may setup something

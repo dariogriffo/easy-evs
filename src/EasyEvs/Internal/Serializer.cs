@@ -78,6 +78,11 @@ namespace EasyEvs.Internal
                 metadata["easy.evs.correlation.id"] = correlationId.ToString();
             }
 
+            if (@event is IEnrichedEvent enrichedEvent)
+            {
+                enrichedEvent.Metadata = null;
+            }
+
             var eventBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event, _options));
             var metadataBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(metadata, _options));
             return new EventData(Uuid.FromGuid(@event.Id), eventType.Name, eventBytes, metadataBytes);
