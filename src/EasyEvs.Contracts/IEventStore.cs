@@ -16,12 +16,10 @@ namespace EasyEvs.Contracts
         /// </summary>
         /// <typeparam name="T"><see cref="IEvent"/></typeparam>
         /// <param name="event">The event to be stored.</param>
-        /// <param name="metadata">Any metadata required to be saved along with the @event.</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
         Task Append<T>(
             [NotNull] T @event,
-            IReadOnlyDictionary<string, string>? metadata = null,
             CancellationToken cancellationToken = default)
             where T : IEvent;
 
@@ -31,13 +29,11 @@ namespace EasyEvs.Contracts
         /// <typeparam name="T"><see cref="IEvent"/></typeparam>
         /// <param name="event">The event to be stored.</param>
         /// <param name="position">The position where to store the event in the stream.</param>
-        /// <param name="metadata">Any metadata required to be saved along with the @event.</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
         Task Append<T>(
             [NotNull] T @event,
             long position,
-            IReadOnlyDictionary<string, string>? metadata = null,
             CancellationToken cancellationToken = default)
             where T : IEvent;
 
@@ -60,7 +56,7 @@ namespace EasyEvs.Contracts
         /// <param name="position">The optional starting position where to read. If not set, all the available events are returned</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A list of tuples containing the events with their associated (optional) metadata</returns>
-        Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream(
+        Task<List<IEvent>> ReadStream(
             [NotNull] string stream,
             long? position = null,
             CancellationToken cancellationToken = default);

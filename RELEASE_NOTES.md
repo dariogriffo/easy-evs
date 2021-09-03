@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [3.0.0](https://github.com/griffo-io/easy-evs/releases/tag/3.0.0)
+
+Simplify interfaces including the metadata on the IEvent and removed the IEnrichedEvent
+
 ## [2.1.1](https://github.com/griffo-io/easy-evs/releases/tag/2.1.1)
 
 Don't serialize metadata for IEnrichedEvent if present as part of the data

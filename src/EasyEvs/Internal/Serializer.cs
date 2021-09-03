@@ -23,7 +23,7 @@ namespace EasyEvs.Internal
             _options = provider.Options;
         }
 
-        public (IEvent, IReadOnlyDictionary<string, string>) Deserialize(ResolvedEvent resolvedEvent)
+        public IEvent Deserialize(ResolvedEvent resolvedEvent)
         {
             var eventData = resolvedEvent.Event.Data;
             var metadata = JsonSerializer.Deserialize<Dictionary<string, string>>(resolvedEvent.Event.Metadata.Span)!;
@@ -39,13 +39,28 @@ namespace EasyEvs.Internal
                 Guid.NewGuid().ToString();
 
             Trace.CorrelationManager.ActivityId = Guid.Parse(correlationId);
-            return (@event!, (nonEvsKeys > 0) ? new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(metadata.Where(x => x.Key.StartsWith("easy.evs") == false).ToDictionary(x => x.Key, x => x.Value))) : Empty);
+            
+            if (nonEvsKeys <= 0)
+            {
+                return @event!;
+            }
+
+            {
+                Dictionary<string, string> dictionary = 
+                    metadata
+                        .Where(x => x.Key.StartsWith("easy.evs") == false)
+                        .ToDictionary(x => x.Key, x => x.Value);
+                @event!.Metadata = new ReadOnlyDictionary<string, string>(dictionary);
+            }
+
+            return @event!;
         }
 
-        public EventData Serialize<T>(T @event, IReadOnlyDictionary<string, string>? eventMetadata) where T : IEvent
+        public EventData Serialize<T>(T @event) where T : IEvent
         {
             var eventType = @event.GetType();
             var version = @event.Version;
+            var eventMetadata = @event.Metadata;
 
             var metadata = new Dictionary<string, string>(eventMetadata?.Count + 4 ?? 4)
             {
@@ -67,6 +82,8 @@ namespace EasyEvs.Internal
 
                     metadata.Add(key, value);
                 }
+
+                @event.Metadata = null;
             }
 
             if (!hasCorrelationId)
@@ -76,11 +93,6 @@ namespace EasyEvs.Internal
                     : Guid.NewGuid();
 
                 metadata["easy.evs.correlation.id"] = correlationId.ToString();
-            }
-
-            if (@event is IEnrichedEvent enrichedEvent)
-            {
-                enrichedEvent.Metadata = null;
             }
 
             var eventBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event, _options));

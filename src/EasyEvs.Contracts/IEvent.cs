@@ -1,6 +1,7 @@
 namespace EasyEvs.Contracts
 {
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// An interface that represents an Event
@@ -21,5 +22,10 @@ namespace EasyEvs.Contracts
         /// The version of the event
         /// </summary>
         string Version { get; }
+        
+        /// <summary>
+        /// The metadata associated to the event
+        /// </summary>
+        IReadOnlyDictionary<string, string>? Metadata { get; set; } 
     }
 }

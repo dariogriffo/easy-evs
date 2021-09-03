@@ -1,6 +1,7 @@
 ﻿namespace EasyEvs.Tests.Events.Orders
 {
     using System;
+    using System.Collections.Generic;
     using System.Text.Json.Serialization;
     using Contracts;
 
@@ -24,5 +25,6 @@
         public DateTime Timestamp { get; }
         
         public string Version { get; }
+        public IReadOnlyDictionary<string, string> Metadata { get; set; }
     }
 }

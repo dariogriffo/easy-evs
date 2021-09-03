@@ -5,7 +5,7 @@
     using System.Text.Json.Serialization;
     using Contracts;
 
-    public class UserDeactivated : IEnrichedEvent
+    public class UserDeactivated : IEvent
     {
         [JsonConstructor]
         public UserDeactivated(Guid id, DateTime timestamp, string version, Guid userId)

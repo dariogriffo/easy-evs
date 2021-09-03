@@ -6,8 +6,8 @@
 
     internal interface ISerializer
     {
-        (IEvent, IReadOnlyDictionary<string, string>) Deserialize(ResolvedEvent resolvedEvent);
+        IEvent Deserialize(ResolvedEvent resolvedEvent);
 
-        EventData Serialize<T>(T @event, IReadOnlyDictionary<string, string>? eventMetadata = null) where T : IEvent;
+        EventData Serialize<T>(T @event) where T : IEvent;
     }
 }

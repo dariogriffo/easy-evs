@@ -52,9 +52,8 @@
             await eventStore.Append(e3, cancellationToken: CancellationToken.None);
             var events = await eventStore.ReadStream(streamProvider.StreamForEvent(e1), cancellationToken: CancellationToken.None);
             events.Count.Should().Be(3);
-            events[0].Item1.Should().BeEquivalentTo(e1);
-            events[1].Item1.Should().BeEquivalentTo(e2);
-            events[2].Item1.Should().BeEquivalentTo(e3);
+            events[1].Should().BeEquivalentTo(e2);
+            events[2].Should().BeEquivalentTo(e3);
         }
 
         [Fact]
@@ -93,8 +92,8 @@
             await eventStore.Append(e3, cancellationToken: CancellationToken.None);
             var events = await eventStore.ReadStream(streamProvider.StreamForEvent(e1), 1, CancellationToken.None);
             events.Count.Should().Be(2);
-            events[0].Item1.Should().BeEquivalentTo(e2);
-            events[1].Item1.Should().BeEquivalentTo(e3);
+            events[0].Should().BeEquivalentTo(e2);
+            events[1].Should().BeEquivalentTo(e3);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace EasyEvs.Contracts
     /// </summary>
     public abstract class AggregateRoot
     {
-        private readonly List<IEnrichedEvent> _events = new List<IEnrichedEvent>();
+        private readonly List<IEvent> _events = new List<IEvent>();
 
         /// <summary>
         /// The id of the Aggregate Root
@@ -19,7 +19,7 @@ namespace EasyEvs.Contracts
         /// <summary>
         /// All the Events that haven't been stored
         /// </summary>
-        public IReadOnlyCollection<IEnrichedEvent> UncommittedChanges => _events;
+        public IReadOnlyCollection<IEvent> UncommittedChanges => _events;
 
         /// <summary>
         /// Clear the uncommitted changes 
@@ -33,7 +33,7 @@ namespace EasyEvs.Contracts
         /// Loads an Aggregate Root to its last know state from the history
         /// </summary>
         /// <param name="history">The history of events</param>
-        public void LoadFromHistory(IReadOnlyCollection<IEnrichedEvent> history)
+        public void LoadFromHistory(IReadOnlyCollection<IEvent> history)
         {
             foreach (var e in history)
             {
@@ -45,7 +45,7 @@ namespace EasyEvs.Contracts
         /// Applies a new change of state to the aggregate root, adding the event to the <see cref="UncommittedChanges"/> list.
         /// </summary>
         /// <param name="event"></param>
-        protected void ApplyChange(IEnrichedEvent @event)
+        protected void ApplyChange(IEvent @event)
         {
             ApplyChange(@event, true);
         }
@@ -56,7 +56,7 @@ namespace EasyEvs.Contracts
         /// </summary>
         /// <param name="event"></param>
         /// <param name="isNew"></param>
-        private void ApplyChange(IEnrichedEvent @event, bool isNew)
+        private void ApplyChange(IEvent @event, bool isNew)
         {
             this.AsDynamic().Apply(@event);
             if (isNew)

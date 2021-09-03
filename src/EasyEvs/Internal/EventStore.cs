@@ -55,15 +55,14 @@ namespace EasyEvs.Internal
         }
 
         public async Task Append<T>(
-            [NotNull] T @event,
-            IReadOnlyDictionary<string, string>? metadata = default,
+            [NotNull] T @event, 
             CancellationToken cancellationToken = default)
             where T : IEvent
         {
             var stream = _streamResolver.StreamForEvent(@event);
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream}");
 
-            var data = _serializer.Serialize(@event, metadata);
+            var data = _serializer.Serialize(@event);
             await _write.Value
                     .AppendToStreamAsync(
                         stream,
@@ -77,7 +76,6 @@ namespace EasyEvs.Internal
         public async Task Append<T>(
             [NotNull] T @event,
             long position,
-            IReadOnlyDictionary<string, string>? metadata = default,
             CancellationToken cancellationToken = default) where T : IEvent
         {
             if (position <= 0)
@@ -88,7 +86,7 @@ namespace EasyEvs.Internal
             var stream = _streamResolver.StreamForEvent(@event);
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream} at position {position}");
 
-            var data = _serializer.Serialize(@event, metadata);
+            var data = _serializer.Serialize(@event);
             await _write.Value
                     .AppendToStreamAsync(
                         stream,
@@ -117,7 +115,7 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Aggregate root {aggregateRoot.Id} saved");
         }
 
-        public async Task<List<(IEvent, IReadOnlyDictionary<string, string>)>> ReadStream(
+        public async Task<List<IEvent>> ReadStream(
             [NotNull] string stream,
             long? position = null,
             CancellationToken cancellationToken = default)
@@ -129,7 +127,7 @@ namespace EasyEvs.Internal
 
             _logger.LogDebug($"Reading events on stream {stream} from position {streamPosition}");
 
-            var result = new List<(IEvent, IReadOnlyDictionary<string, string>)>();
+            var result = new List<IEvent>();
             var events =
                 _read
                     .Value
@@ -156,15 +154,7 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Loading aggregate root with id {id} from stream {streamName}");
             var data = await ReadStream(streamName, null, cancellationToken);
             var result = new T();
-            var history = data.Select(x =>
-            {
-                var enriched = x.Item1 as IEnrichedEvent;
-                enriched!.Metadata = x.Item2;
-                return enriched;
-            }).ToArray();
-
-            result.LoadFromHistory(history);
-
+            result.LoadFromHistory(data);
             _logger.LogDebug($"Aggregate root with id {id} loaded");
             return result;
         }
@@ -247,7 +237,7 @@ namespace EasyEvs.Internal
             {
                 try
                 {
-                    (IEvent @event, IReadOnlyDictionary<string, string> metadata) = _serializer.Deserialize(resolvedEvent);
+                    IEvent @event = _serializer.Deserialize(resolvedEvent);
                     _logger.LogDebug($"Event with id: {@event.Id} arrived");
 
                     if (!_handlesFactory.TryGetScopeFor(
@@ -268,7 +258,7 @@ namespace EasyEvs.Internal
                         return;
                     }
 
-                    var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, metadata, retryCount);
+                    var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, retryCount);
 
                     async Task<OperationResult> ExecuteActionsAndHandler()
                     {
