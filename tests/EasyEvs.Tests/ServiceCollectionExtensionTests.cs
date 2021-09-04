@@ -6,16 +6,17 @@
     using System.Threading.Tasks;
     using Contracts;
     using Events.Orders;
+    using FluentAssertions;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
-    public class SubscribeTests
+    public class ServiceCollectionExtensionTests
     {
         [Fact]
-        public async Task All_Events_Handled()
+        public async Task With_No_Parameters_We_Can_Run()
         {
             var services = new ServiceCollection();
             var dict =
@@ -29,29 +30,22 @@
                 .AddLogging(configure => configure.AddConsole())
                 .AddSingleton((IConfiguration)conf);
 
-            var configuration = new EasyEvsDependencyInjectionConfiguration()
-            {
-                StreamResolver = typeof(StreamResolver),
-                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
-            };
-
-            services.AddEasyEvs(configuration);
+            services.AddEasyEvs();
             var counter = Mock.Of<ICounter>();
             services.AddSingleton(counter);
             var provider = services.BuildServiceProvider();
             var eventStore = provider.GetRequiredService<IEventStore>();
-            var streamProvider = provider.GetRequiredService<IStreamResolver>();
             var orderId = Guid.NewGuid();
             var e1 = new OrderCreated(Guid.NewGuid(), DateTime.UtcNow, orderId);
             var e2 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
             var e3 = new OrderRefundRequested(Guid.NewGuid(), DateTime.UtcNow, orderId);
-            await eventStore.SubscribeToStream(streamProvider.StreamForEvent(e1), CancellationToken.None);
-            await eventStore.Append(e1, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e2, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e3, cancellationToken: CancellationToken.None);
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            var mock = Mock.Get(counter);
-            mock.Verify(x => x.Touch(), Times.Exactly(3));
+            await eventStore.SubscribeToStream($"order-{orderId}", CancellationToken.None);
+            await eventStore.Append(e1, $"order-{orderId}", cancellationToken: CancellationToken.None);
+            await eventStore.Append(e2, $"order-{orderId}", cancellationToken: CancellationToken.None);
+            await eventStore.Append(e3, $"order-{orderId}", cancellationToken: CancellationToken.None);
+            var events = await eventStore.ReadStream($"order-{orderId}", cancellationToken: CancellationToken.None);
+            events.Count.Should().Be(3);
         }
     }
 }
+2

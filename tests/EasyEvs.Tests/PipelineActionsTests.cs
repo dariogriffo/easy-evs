@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
     using Contracts;
     using Events.Orders;
+    using Events.Orders.v2;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -35,8 +36,8 @@
                 Assemblies = new[] { typeof(OrderEventHandler).Assembly }
             };
 
-            services.AddScoped<IPipelineHandlesEventAction<OrderEvent5>, OrderEventPipelineAction1>();
-            services.AddScoped<IPipelineHandlesEventAction<OrderEvent5>, OrderEventPipelineAction2>();
+            services.AddScoped<IPipelineHandlesEventAction<OrderEventCancelled>, OrderEventPipelineAction1>();
+            services.AddScoped<IPipelineHandlesEventAction<OrderEventCancelled>, OrderEventPipelineAction2>();
 
             services.AddEasyEvs(configuration);
             var counter = Mock.Of<ICounter>();
@@ -45,7 +46,7 @@
             var eventStore = provider.GetRequiredService<IEventStore>();
             var streamProvider = provider.GetRequiredService<IStreamResolver>();
             var orderId = Guid.NewGuid();
-            var @event = new OrderEvent5(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            var @event = new OrderEventCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId, "No reason");
             await eventStore.SubscribeToStream(streamProvider.StreamForEvent(@event), CancellationToken.None);
             await eventStore.Append(@event, cancellationToken: CancellationToken.None);
             await Task.Delay(TimeSpan.FromSeconds(1));

@@ -4,13 +4,15 @@
     using System.Threading.Tasks;
     using Contracts;
     using Events.Orders;
+    using Events.Orders.v2;
+    using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
     public class OrderEventHandler : 
-        IHandlesEvent<OrderEvent1>, 
-        IHandlesEvent<OrderEvent2>, 
-        IHandlesEvent<OrderEvent3>,
-        IHandlesEvent<OrderEvent4>,
-        IHandlesEvent<OrderEvent5>
+        IHandlesEvent<OrderCreated>, 
+        IHandlesEvent<OrderCancelled>, 
+        IHandlesEvent<Events.Orders.OrderRefundRequested>,
+        IHandlesEvent<OrderRefundRequested>,
+        IHandlesEvent<OrderEventCancelled>
     {
         private readonly ICounter _counter;
 
@@ -19,31 +21,31 @@
             _counter = counter;
         }
 
-        public Task<OperationResult> Handle(OrderEvent1 @event, IConsumerContext context, CancellationToken cancellationToken)
+        public Task<OperationResult> Handle(OrderCreated @event, IConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
-        public Task<OperationResult> Handle(OrderEvent2 @event, IConsumerContext context, CancellationToken cancellationToken)
+        public Task<OperationResult> Handle(OrderCancelled @event, IConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
-        public Task<OperationResult> Handle(OrderEvent3 @event, IConsumerContext context, CancellationToken cancellationToken)
+        public Task<OperationResult> Handle(Events.Orders.OrderRefundRequested @event, IConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
-        public Task<OperationResult> Handle(OrderEvent4 @event, IConsumerContext context, CancellationToken cancellationToken)
+        public Task<OperationResult> Handle(OrderRefundRequested @event, IConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
-        public Task<OperationResult> Handle(OrderEvent5 @event, IConsumerContext context, CancellationToken cancellationToken)
+        public Task<OperationResult> Handle(OrderEventCancelled @event, IConsumerContext context, CancellationToken cancellationToken)
         {
             _counter.Touch();
             return Task.FromResult(OperationResult.Ok);

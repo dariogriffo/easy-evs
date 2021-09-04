@@ -5,14 +5,13 @@
     using System.Text.Json.Serialization;
     using Contracts;
 
-    public class OrderEvent5 : IEvent
+    public class OrderCancelled : IEvent
     {
         [JsonConstructor]
-        public OrderEvent5(Guid id, DateTime timestamp, string version, Guid orderId)
+        public OrderCancelled(Guid id, DateTime timestamp, Guid orderId)
         {
             Id = id;
             Timestamp = timestamp;
-            Version = version;
             OrderId = orderId;
         }
 
@@ -23,8 +22,9 @@
         public Guid OrderId { get; }
         
         public DateTime Timestamp { get; }
-        
-        public string Version { get; }
+
+        public string Version => "v1";
+
         public IReadOnlyDictionary<string, string> Metadata { get; set; }
     }
 }

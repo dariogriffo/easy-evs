@@ -3,7 +3,9 @@
     using System;
     using Contracts;
     using Events.Orders;
+    using Events.Orders.v2;
     using Events.Users;
+    using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
     public class StreamResolver : IStreamResolver
     {
@@ -11,11 +13,11 @@
         {
             var stream = @event switch
             {
-                OrderEvent1 e => $"Order-{e.OrderId}",
-                OrderEvent2 e => $"Order-{e.OrderId}",
-                OrderEvent3 e => $"Order-{e.OrderId}",
-                OrderEvent4 e => $"Order-{e.OrderId}",
-                OrderEvent5 e => $"Order-{e.OrderId}",
+                OrderCreated e => $"Order-{e.OrderId}",
+                OrderCancelled e => $"Order-{e.OrderId}",
+                Events.Orders.OrderRefundRequested e => $"Order-{e.OrderId}",
+                OrderRefundRequested e => $"Order-{e.OrderId}",
+                OrderEventCancelled e => $"Order-{e.OrderId}",
             };
             return stream;
         }

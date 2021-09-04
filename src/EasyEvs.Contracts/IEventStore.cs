@@ -16,6 +16,20 @@ namespace EasyEvs.Contracts
         /// </summary>
         /// <typeparam name="T"><see cref="IEvent"/></typeparam>
         /// <param name="event">The event to be stored.</param>
+        /// <param name="stream">The stream where to append the event.</param>
+        /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
+        /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
+        Task Append<T>(
+            [NotNull] T @event,
+            [NotNull]string stream,
+            CancellationToken cancellationToken = default)
+            where T : IEvent;
+
+        /// <summary>
+        /// Appends the event asynchronously.
+        /// </summary>
+        /// <typeparam name="T"><see cref="IEvent"/></typeparam>
+        /// <param name="event">The event to be stored.</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
         Task Append<T>(

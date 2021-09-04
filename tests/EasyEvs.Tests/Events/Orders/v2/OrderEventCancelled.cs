@@ -1,19 +1,19 @@
-﻿namespace EasyEvs.Tests.Events.Orders
+﻿namespace EasyEvs.Tests.Events.Orders.v2
 {
     using System;
     using System.Collections.Generic;
     using System.Text.Json.Serialization;
     using Contracts;
 
-    public class OrderEvent2 : IEvent
+    public class OrderEventCancelled : IEvent
     {
         [JsonConstructor]
-        public OrderEvent2(Guid id, DateTime timestamp, string version, Guid orderId)
+        public OrderEventCancelled(Guid id, DateTime timestamp, Guid orderId, string? reason = default)
         {
             Id = id;
             Timestamp = timestamp;
-            Version = version;
             OrderId = orderId;
+            Reason = reason;
         }
 
         
@@ -21,10 +21,12 @@
 
         
         public Guid OrderId { get; }
-        
+        public string Reason { get; }
+
         public DateTime Timestamp { get; }
         
-        public string Version { get; }
+        public string Version => "v2";
+        
         public IReadOnlyDictionary<string, string> Metadata { get; set; }
     }
 }

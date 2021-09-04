@@ -5,9 +5,10 @@
     using System.Threading.Tasks;
     using Contracts;
     using Events.Orders;
+    using Events.Orders.v2;
 
     public class OrderEventPipelineAction1 :
-        IPipelineHandlesEventAction<OrderEvent5>
+        IPipelineHandlesEventAction<OrderEventCancelled>
     {
         private readonly ICounter _counter;
 
@@ -16,7 +17,7 @@
             _counter = counter;
         }
 
-        public async Task<OperationResult> Execute(OrderEvent5 @event, IConsumerContext context, Func<Task<OperationResult>> next,
+        public async Task<OperationResult> Execute(OrderEventCancelled @event, IConsumerContext context, Func<Task<OperationResult>> next,
             CancellationToken cancellationToken)
         {
             Console.WriteLine("a");

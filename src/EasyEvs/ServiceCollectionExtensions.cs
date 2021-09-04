@@ -22,11 +22,11 @@ namespace EasyEvs
         /// <returns></returns>
         public static IServiceCollection AddEasyEvs(
             this IServiceCollection services,
-            [NotNull] EasyEvsDependencyInjectionConfiguration configuration)
+            EasyEvsDependencyInjectionConfiguration? configuration = default)
         {
-            var jsonSerializerOptionsProvider = configuration.JsonSerializerOptionsProvider;
-            var streamResolver = configuration.StreamResolver;
-            var assemblies = configuration.Assemblies;
+            var jsonSerializerOptionsProvider = configuration?.JsonSerializerOptionsProvider;
+            var streamResolver = configuration?.StreamResolver;
+            var assemblies = configuration?.Assemblies;
 
             if (jsonSerializerOptionsProvider != null &&
                 jsonSerializerOptionsProvider!.GetInterfaces().All(x => x != typeof(IJsonSerializerOptionsProvider)))

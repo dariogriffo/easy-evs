@@ -44,9 +44,9 @@
             var eventStore = provider.GetRequiredService<IEventStore>();
             var streamProvider = provider.GetRequiredService<IStreamResolver>();
             var orderId = Guid.NewGuid();
-            var e1 = new OrderEvent1(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e2 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e3 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            var e1 = new OrderCreated(Guid.NewGuid(), DateTime.UtcNow, orderId);
+            var e2 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
+            var e3 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
             await eventStore.Append(e1, cancellationToken: CancellationToken.None);
             await eventStore.Append(e2, cancellationToken: CancellationToken.None);
             await eventStore.Append(e3, cancellationToken: CancellationToken.None);
@@ -84,9 +84,9 @@
             var eventStore = provider.GetRequiredService<IEventStore>();
             var streamProvider = provider.GetRequiredService<IStreamResolver>();
             var orderId = Guid.NewGuid();
-            var e1 = new OrderEvent1(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e2 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
-            var e3 = new OrderEvent2(Guid.NewGuid(), DateTime.UtcNow, "v1", orderId);
+            var e1 = new OrderCreated(Guid.NewGuid(), DateTime.UtcNow, orderId);
+            var e2 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
+            var e3 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
             await eventStore.Append(e1, cancellationToken: CancellationToken.None);
             await eventStore.Append(e2, cancellationToken: CancellationToken.None);
             await eventStore.Append(e3, cancellationToken: CancellationToken.None);
