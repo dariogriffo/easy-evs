@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [3.2.1](https://github.com/griffo-io/easy-evs/releases/tag/3.2.1)
+
+Patch Contracts version
+
 ## [3.2.0](https://github.com/griffo-io/easy-evs/releases/tag/3.2.0)
 
 Added Create for AggregateRoots to ensure stream doesn't exist
