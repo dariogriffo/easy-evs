@@ -1,7 +1,11 @@
 Release Notes
 =============
 
-## [3.0.0](https://github.com/griffo-io/easy-evs/releases/tag/3.0.0)
+## [3.2.0](https://github.com/griffo-io/easy-evs/releases/tag/3.2.0)
+
+Added Create for AggregateRoots to ensure stream doesn't exist
+
+## [3.1.0](https://github.com/griffo-io/easy-evs/releases/tag/3.1.0)
 
 Allow simple configuration.
 

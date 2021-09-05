@@ -38,6 +38,9 @@
         <NoWarn>FS2003;FS0044</NoWarn>
     </PropertyGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="EasyEvs" />
+    </ItemGroup>
 
     <ItemGroup>
         <None Include="license\license.txt" Pack="true" PackagePath="license">
@@ -47,7 +50,7 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
-    
+
     <ItemGroup>
         <PackageReference Include="ReflectionMagic" Version="[4.1.0,)" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="[5.0.0,)" />

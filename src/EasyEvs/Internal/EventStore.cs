@@ -54,7 +54,7 @@ namespace EasyEvs.Internal
             _read = new Lazy<EventStoreClient>(ClientFactory);
         }
 
-        public async Task Append<T>([NotNull]T @event, [NotNull]string stream, CancellationToken cancellationToken = default) where T : IEvent
+        public async Task Append<T>([NotNull] T @event, [NotNull] string stream, CancellationToken cancellationToken = default) where T : IEvent
         {
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream}");
 
@@ -70,7 +70,7 @@ namespace EasyEvs.Internal
         }
 
         public async Task Append<T>(
-            [NotNull] T @event, 
+            [NotNull] T @event,
             CancellationToken cancellationToken = default)
             where T : IEvent
         {
@@ -112,6 +112,31 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Event with id {@event.Id} sent to evs");
         }
 
+        public async Task Create<T>([NotNull] T aggregateRoot, CancellationToken cancellationToken = default) where T : AggregateRoot
+        {
+            var changes = aggregateRoot.UncommittedChanges;
+            var stream = _streamResolver.StreamForAggregateRoot(aggregateRoot);
+            var data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
+
+            _logger.LogDebug($"Saving {data.Count()} events to stream {stream} for aggregate root {aggregateRoot.Id}");
+
+            try
+            {
+                await _write.Value
+                .AppendToStreamAsync(
+                    stream,
+                    StreamState.NoStream,
+                    data,
+                    cancellationToken: cancellationToken);
+            }
+            catch (WrongExpectedVersionException ex) when (ex.ExpectedStreamRevision == StreamRevision.None)
+            {
+                throw new StreamAlreadyExists(aggregateRoot, stream);
+            }
+
+            _logger.LogDebug($"Aggregate root {aggregateRoot.Id} created.");
+        }
+
         public async Task Save<T>([NotNull] T aggregateRoot, CancellationToken cancellationToken = default) where T : AggregateRoot
         {
             var changes = aggregateRoot.UncommittedChanges;
@@ -127,7 +152,7 @@ namespace EasyEvs.Internal
                     data,
                     cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"Aggregate root {aggregateRoot.Id} saved");
+            _logger.LogDebug($"Aggregate root {aggregateRoot.Id} saved.");
         }
 
         public async Task<List<IEvent>> ReadStream(

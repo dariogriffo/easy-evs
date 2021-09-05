@@ -52,6 +52,17 @@ namespace EasyEvs.Contracts
             where T : IEvent;
 
         /// <summary>
+        /// Saves the aggregate root to the Event Store, might throw an exception if the stream for the aggregate root exists
+        /// </summary>
+        /// <typeparam name="T"><see cref="AggregateRoot"/></typeparam>
+        /// <param name="aggregateRoot">The aggregate root to be saved.</param>
+        /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
+        /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
+        Task Create<T>([NotNull]T aggregateRoot,
+            CancellationToken cancellationToken = default)
+            where T : AggregateRoot;    
+
+        /// <summary>
         /// Saves the aggregate root to the Event Store
         /// </summary>
         /// <typeparam name="T"><see cref="AggregateRoot"/></typeparam>
