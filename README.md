@@ -61,10 +61,21 @@ That's it you can start coding, and unit testing... Now you want to see if again
 - Append your events to the EventStore with [`Append(..)`](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IEventStore.cs#L22)
  
  That's it, the simplest way to start event sourcing
+
+## Loading aggregates
+
+- Declare a class that inherits from [AggregateRoot](https://github.com/griffo-io/easy-evs/blob/73a46a03ff789139f16c2f662064ca551dc3efc3/src/EasyEvs.Contracts/AggregateRoot.cs#L10)
+- Implement privately methods with the signature `private void Apply(MyEvent1 @event)` or `private void Apply(MyEvent2 @event)`
+- Implement in your StreamResolver `public string StreamForAggregateRoot<T>(System.Guid id) where T : AggregateRoot`
+- Load your aggregate from EventStore ` var user = await _eventStore.Get<User>(id, cancellationToken);`
+
+And that's it! simple aggregate roots.
  
 ## Examples
 
 A Publisher and Subscriber can be found [here](https://github.com/griffo-io/easy-evs/tree/main/examples) 
+You will find how to integrate Pipelines, how to publish events, and how to do simple event sourcing loading aggregates from EventStore.
+
 ## License
 
 [Apache 2.0](https://github.com/griffo-io/easy-evs/blob/main/LICENSE)

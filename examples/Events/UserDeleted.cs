@@ -7,6 +7,7 @@
 namespace Events
 {
     using System;
+    using System.Collections.Generic;
     using System.Text.Json.Serialization;
     using EasyEvs.Contracts;
 
@@ -26,6 +27,7 @@ namespace Events
         public Guid Id { get; internal set; }
         public DateTime Timestamp { get; internal set;}
         public string Version => "v1";
+        public IReadOnlyDictionary<string, string> Metadata { get; set; }
         public Guid UserId { get; internal set;}
     }
 }

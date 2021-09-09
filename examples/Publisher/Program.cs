@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using AutoFixture;
+    using Configuration.Extensions.EnvironmentFile;
     using EasyEvs.Contracts;
     using EasyEvs;
     using Events;
@@ -15,11 +16,7 @@
     {
         static async Task Main(string[] args)
         {
-            var dict = new Dictionary<string, string>()
-            {
-                { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" }
-            };
-            var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+            var conf = new ConfigurationBuilder().AddEnvironmentFile().Build();
             var fixture = new Fixture();
             var services = new ServiceCollection();
             var configuration = new EasyEvsDependencyInjectionConfiguration()
@@ -37,15 +34,23 @@
 
             for (var i = 0; i < 500; ++i)
             {
-                var now = DateTime.UtcNow;
                 var @event = fixture.Create<UserRegistered>();
                 var @event1 = fixture.Create<UserUpdated>();
                 var @event2 = fixture.Create<UserDeleted>();
-                @event1.UserId = @event2.UserId = @event.UserId;
-                @event1.Timestamp = @event2.Timestamp = @event.Timestamp = now;
-                await eventStore.Append(@event, new Dictionary<string, string>() { { "created-by", Guid.NewGuid().ToString() } });
-                await eventStore.Append(@event1, new Dictionary<string, string>() { { "updated-by", Guid.NewGuid().ToString() } });
-                await eventStore.Append(@event2, new Dictionary<string, string>() { { "deleted-by", Guid.NewGuid().ToString() } });
+
+                event1.UserId = event2.UserId = @event.UserId;
+                @event.Timestamp = DateTime.UtcNow;
+                @event.Metadata = new Dictionary<string, string>() {{"created-by", Guid.NewGuid().ToString()}};
+                
+                await eventStore.Append(@event);
+                event1.Timestamp = DateTime.UtcNow;
+                event1.Metadata = new Dictionary<string, string>() {{"updated-by", Guid.NewGuid().ToString()}};
+                
+                await eventStore.Append(@event1);
+                
+                event2.Timestamp = DateTime.UtcNow;
+                event2.Metadata = new Dictionary<string, string>() {{"deleted-by", Guid.NewGuid().ToString()}};
+                await eventStore.Append(@event2);
             }
         }
     }

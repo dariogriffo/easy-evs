@@ -27,7 +27,12 @@
 
         public string StreamForAggregateRoot<T>(System.Guid id) where T : AggregateRoot
         {
-            throw new NotImplementedException();
+            if (typeof(T) == typeof(User))
+            {
+                return "user-" + id;
+            }
+
+            throw new ArgumentException($"Unknown aggregate type {typeof(T).Name}");
         }
     }
 }

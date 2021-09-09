@@ -1,10 +1,12 @@
 ﻿namespace Subscriber
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Actions;
+    using Configuration.Extensions.EnvironmentFile;
     using EasyEvs.Contracts;
     using EasyEvs;
+    using Events;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -13,12 +15,7 @@
     {
         static async Task Main(string[] args)
         {
-            var dict = new Dictionary<string, string>()
-            {
-                {"EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false"}
-            };
-
-            var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+            var conf = new ConfigurationBuilder().AddEnvironmentFile().Build();
             var services = new ServiceCollection();
             var configuration = new EasyEvsDependencyInjectionConfiguration()
             {
@@ -26,6 +23,9 @@
                 StreamResolver = typeof(StreamResolver)
             };
             services
+                .AddScoped<IPipelineHandlesEventAction<UserRegistered>, UserMetricsPipeline>()
+                .AddScoped<IPipelineHandlesEventAction<UserUpdated>, UserMetricsPipeline>()
+                .AddScoped<IPipelineHandlesEventAction<UserDeleted>, UserMetricsPipeline>()
                 .AddLogging(configure => configure.SetMinimumLevel(LogLevel.Debug).AddConsole())
                 .AddSingleton((IConfiguration)conf)
                 .AddEasyEvs(configuration);

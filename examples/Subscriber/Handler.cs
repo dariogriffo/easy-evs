@@ -8,6 +8,13 @@
 
     public class Handler : IHandlesEvent<UserDeleted>, IHandlesEvent<UserRegistered>, IHandlesEvent<UserUpdated>
     {
+        private readonly IEventStore _eventStore;
+
+        public Handler(IEventStore eventStore)
+        {
+            _eventStore = eventStore;
+        }
+
         public Task<OperationResult> Handle(UserDeleted @event, IConsumerContext _, CancellationToken cancellationToken)
         {
             Console.WriteLine($"User Deleted {@event.UserId}");
@@ -20,10 +27,11 @@
             return Task.FromResult(OperationResult.Ok);
         }
 
-        public Task<OperationResult> Handle(UserUpdated @event, IConsumerContext _, CancellationToken cancellationToken)
+        public async Task<OperationResult> Handle(UserUpdated @event, IConsumerContext _, CancellationToken cancellationToken)
         {
-            Console.WriteLine($"User Updated {@event.UserId}");
-            return Task.FromResult(OperationResult.Ok);
+            var user = await _eventStore.Get<User>(@event.UserId, cancellationToken);
+            Console.WriteLine($"User with id {user.Id} status: {user.Status}");
+            return OperationResult.Ok;
         }
     }
 }
