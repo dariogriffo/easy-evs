@@ -28,7 +28,7 @@
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/griffo-io/easy-evs</RepositoryUrl>
-        <Version>3.2.1</Version>
+        <Version>3.2.2</Version>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <!-- SourceLink settings -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>

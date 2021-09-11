@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [3.2.2](https://github.com/griffo-io/easy-evs/releases/tag/3.2.2)
+
+Use polymorphic serialization
+
 ## [3.2.1](https://github.com/griffo-io/easy-evs/releases/tag/3.2.1)
 
 Patch Contracts version
