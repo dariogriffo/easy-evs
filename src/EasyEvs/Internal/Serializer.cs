@@ -6,6 +6,7 @@ namespace EasyEvs.Internal
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Text.Json;
     using Contracts;
@@ -28,8 +29,16 @@ namespace EasyEvs.Internal
             var eventData = resolvedEvent.Event.Data;
             var metadata = JsonSerializer.Deserialize<Dictionary<string, string>>(resolvedEvent.Event.Metadata.Span)!;
             var type = _cachedTypes.GetOrAdd(metadata["easy.evs.assembly.qualified.name"], (s) =>
-                Type.GetType(metadata["easy.evs.assembly.qualified.name"])!
-            );
+            {
+                Type? type1 = Type.GetType(metadata["easy.evs.assembly.qualified.name"]);
+                if (type1 == null)
+                {
+                    var eventFullName = metadata["easy.evs.event.full.name"];
+                    var eventAssembly = metadata["easy.evs.event.assembly.name"];
+                    type1 = Assembly.Load(eventAssembly).GetType(eventFullName);
+                }
+                return type1!;
+            });
             var @event = JsonSerializer.Deserialize(eventData.Span, type, _options) as IEvent;
             var nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
             var correlationId =
@@ -66,6 +75,8 @@ namespace EasyEvs.Internal
             {
                 {"easy.evs.version", version},
                 {"easy.evs.event.type", eventType.Name},
+                {"easy.evs.event.full.name", eventType.FullName!},
+                {"easy.evs.event.assembly.name", eventType.Assembly.GetName().Name!},
                 {"easy.evs.assembly.qualified.name", eventType.AssemblyQualifiedName!},
                 {"easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O")}
             };
