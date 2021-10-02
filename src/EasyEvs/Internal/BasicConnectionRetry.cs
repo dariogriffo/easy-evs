@@ -18,6 +18,12 @@ namespace EasyEvs.Internal
 
         public async Task Subscribe(Func<Task> func, Func<Exception, Task> onException)
         {
+            if (_settings.SubscriptionReconnectionAttempts == 0)
+            {
+                await func();
+                return;
+            }
+
             var forever = _settings.SubscriptionReconnectionAttempts < 0;
             int attempted = 0;
             Exception lastException;
@@ -49,7 +55,14 @@ namespace EasyEvs.Internal
 
         public async Task Write(Func<Task> func, Func<Exception, Task> onException)
         {
-            var forever = _settings.WriteReconnectionAttempts < 0;
+            int reconnectionAttempts = _settings.WriteReconnectionAttempts;
+            if (reconnectionAttempts == 0)
+            {
+                await func();
+                return;
+            }
+
+            var forever = reconnectionAttempts < 0;
             int attempted = 0;
             Exception lastException;
             do
@@ -77,13 +90,19 @@ namespace EasyEvs.Internal
                 }
 
                 attempted++;
-            } while (forever || attempted < _settings.WriteReconnectionAttempts);
+            } while (forever || attempted < reconnectionAttempts);
 
             throw lastException;
         }
 
         public async Task Read(Func<Task> func, Func<Exception, Task> onException)
         {
+            if (_settings.ReadReconnectionAttempts == 0)
+            {
+                await func();
+                return;
+            }
+
             var forever = _settings.ReadReconnectionAttempts < 0;
             int attempted = 0;
             Exception lastException;

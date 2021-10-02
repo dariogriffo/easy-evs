@@ -460,14 +460,14 @@ namespace EasyEvs.Internal
         {
             try
             {
-                await _write.Value.DisposeAsync();
+                await _read.Value.DisposeAsync();
             }
             catch (Exception)
             {
                 // ignored
             }
 
-            _write = new Lazy<EventStoreClient>(ClientFactory);
+            _read = new Lazy<EventStoreClient>(ClientFactory);
         }
 
     }
