@@ -55,5 +55,44 @@
         /// Configure if the events don't have a registered handler to log a warning message and Park them
         /// </summary>
         public bool TreatMissingHandlersAsErrors { get; set; } = false;
+
+        /// <summary>
+        /// The interval between connections to retry upon subscriptions dropped.
+        /// Default value is 1 second
+        /// </summary>
+        public TimeSpan SubscriptionReconnectionInterval { get; set; } = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// The amount of connection retries.
+        /// Default DOES NOT retry.
+        /// Set -1 for infinite retries.
+        /// </summary>
+        public int SubscriptionReconnectionAttempts { get; set; } = 0;
+
+        /// <summary>
+        /// The interval between connections to retry upon write failures.
+        /// Default value is 1 second
+        /// </summary>
+        public TimeSpan WriteReconnectionInterval { get; set; } = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// The amount of connection retries to write.
+        /// Default DOES NOT retry.
+        /// Set -1 for infinite retries.
+        /// </summary>
+        public int WriteReconnectionAttempts { get; set; } = 0;
+
+        /// <summary>
+        /// The interval between connections to retry upon read failures.
+        /// Default value is 1 second
+        /// </summary>
+        public TimeSpan ReadReconnectionInterval { get; set; } = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// The amount of connection retries to write.
+        /// Default DOES NOT retry.
+        /// Set -1 for infinite retries.
+        /// </summary>
+        public int ReadReconnectionAttempts { get; set; } = 0;
     }
 }

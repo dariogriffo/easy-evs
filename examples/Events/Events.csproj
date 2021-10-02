@@ -12,4 +12,8 @@
     <ItemGroup>
       <PackageReference Include="EasyEvs.Contracts" Version="2.1.0" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
+    </ItemGroup>
 </Project>

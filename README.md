@@ -64,7 +64,7 @@ That's it you can start coding, and unit testing... Now you want to see if again
 
 ## Loading aggregates
 
-- Declare a class that inherits from [AggregateRoot](https://github.com/griffo-io/easy-evs/blob/73a46a03ff789139f16c2f662064ca551dc3efc3/src/EasyEvs.Contracts/AggregateRoot.cs#L10)
+- Declare a class that inherits from [AggregateRoot](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/AggregateRoot.cs#L10)
 - Implement privately methods with the signature `private void Apply(MyEvent1 @event)` or `private void Apply(MyEvent2 @event)`
 - Implement in your StreamResolver `public string StreamForAggregateRoot<T>(System.Guid id) where T : AggregateRoot`
 - Load your aggregate from EventStore ` var user = await _eventStore.Get<User>(id, cancellationToken);`
@@ -75,6 +75,17 @@ And that's it! simple aggregate roots.
 
 A Publisher and Subscriber can be found [here](https://github.com/griffo-io/easy-evs/tree/main/examples) 
 You will find how to integrate Pipelines, how to publish events, and how to do simple event sourcing loading aggregates from EventStore.
+ 
+## Retries
+
+By default EasyEvs will not retry anything, but there is a mechanism that can be configured or even better replaced with your own retry mechanism.
+To configure the out of the box retry mechanism, 3 options can be set to retry on subscriptions, reads and write on the settings, the interval en attempts for all:
+
+- [Subscriptions](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/EventStoreSettings.cs#L63)
+- [Writes](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/EventStoreSettings.cs#L76)
+- [Reads](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/EventStoreSettings.cs#L89)
+
+If you want something more powerful, like using [Polly](https://github.com/App-vNext/Polly) just implement [this interface](https://github.com/griffo-io/easy-evs/blob/main/src/EasyEvs.Contracts/IConnectionRetry.cs) and that's it.
 
 ## License
 

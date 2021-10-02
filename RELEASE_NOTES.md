@@ -1,6 +1,10 @@
 Release Notes
 =============
 
+## [4.1.0](https://github.com/griffo-io/easy-evs/releases/tag/4.1.0)
+
+Added basic retry mechanism.
+
 ## [4.0.0](https://github.com/griffo-io/easy-evs/releases/tag/4.0.0)
 
 Load events from assembly without full qualified name

@@ -13,7 +13,6 @@ namespace EasyEvs.Internal
     using Contracts;
     using Grpc.Core;
 
-
     internal class EventStore : IEventStore, IAsyncDisposable
     {
         private readonly ISerializer _serializer;
@@ -21,33 +20,26 @@ namespace EasyEvs.Internal
         private readonly IHandlesFactory _handlesFactory;
         private readonly ConcurrentBag<IDisposable> _disposables = new ConcurrentBag<IDisposable>();
         private readonly ILogger<EventStore> _logger;
+        private readonly IConnectionRetry _retry;
         private readonly EventStoreSettings _settings;
-        private readonly Lazy<EventStorePersistentSubscriptionsClient> _persistent;
-        private readonly Lazy<EventStoreClient> _write;
-        private readonly Lazy<EventStoreClient> _read;
+        private Lazy<EventStorePersistentSubscriptionsClient> _persistent;
+        private Lazy<EventStoreClient> _write;
+        private Lazy<EventStoreClient> _read;
 
         public EventStore(
             ISerializer serializer,
             IStreamResolver streamResolver,
             IHandlesFactory handlesFactory,
             ILogger<EventStore> logger,
+            IConnectionRetry retry,
             EventStoreSettings settings)
         {
             _serializer = serializer;
             _streamResolver = streamResolver;
             _logger = logger;
+            _retry = retry;
             _settings = settings;
             _handlesFactory = handlesFactory;
-
-            EventStorePersistentSubscriptionsClient PersistentConnectionFactory()
-            {
-                return new EventStorePersistentSubscriptionsClient(EventStoreClientSettings.Create(settings.ConnectionString));
-            }
-
-            EventStoreClient ClientFactory()
-            {
-                return new EventStoreClient(EventStoreClientSettings.Create(settings.ConnectionString));
-            }
 
             _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(PersistentConnectionFactory);
             _write = new Lazy<EventStoreClient>(ClientFactory);
@@ -59,14 +51,20 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream}");
 
             var data = _serializer.Serialize(@event);
-            await _write.Value
-                .AppendToStreamAsync(
-                    stream,
-                    StreamState.Any,
-                    new[] { data },
-                    cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+            var client = _write.Value;
+            await _retry.Write(async () =>
+            {
+
+                await client
+                    .AppendToStreamAsync(
+                        stream,
+                        StreamState.Any,
+                        new[] { data },
+                        cancellationToken: cancellationToken);
+
+                _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+            }, ReconnectWrite);
         }
 
         public async Task Append<T>(
@@ -78,14 +76,18 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream}");
 
             var data = _serializer.Serialize(@event);
-            await _write.Value
+            await _retry.Write(async () =>
+            {
+                var client = _write.Value;
+                await client
                     .AppendToStreamAsync(
                         stream,
                         StreamState.Any,
                         new[] { data },
                         cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+                _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+            }, ReconnectWrite);
         }
 
         public async Task Append<T>(
@@ -102,14 +104,18 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Appending event with id {@event.Id} of type {@event.GetType()} to stream {stream} at position {position}");
 
             var data = _serializer.Serialize(@event);
-            await _write.Value
+            await _retry.Write(async () =>
+            {
+                var client = _write.Value;
+                await client
                     .AppendToStreamAsync(
                         stream,
                         StreamRevision.FromInt64(position),
                         new[] { data },
                         cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+                _logger.LogDebug($"Event with id {@event.Id} sent to evs");
+            }, ReconnectWrite);
         }
 
         public async Task Create<T>([NotNull] T aggregateRoot, CancellationToken cancellationToken = default) where T : AggregateRoot
@@ -120,21 +126,24 @@ namespace EasyEvs.Internal
 
             _logger.LogDebug($"Saving {data.Count()} events to stream {stream} for aggregate root {aggregateRoot.Id}");
 
-            try
+            await _retry.Write(async () =>
             {
-                await _write.Value
-                .AppendToStreamAsync(
-                    stream,
-                    StreamState.NoStream,
-                    data,
-                    cancellationToken: cancellationToken);
-            }
-            catch (WrongExpectedVersionException ex) when (ex.ExpectedStreamRevision == StreamRevision.None)
-            {
-                throw new StreamAlreadyExists(aggregateRoot, stream);
-            }
+                try
+                {
+                    var client = _write.Value;
+                    await client.AppendToStreamAsync(
+                        stream,
+                        StreamState.NoStream,
+                        data,
+                        cancellationToken: cancellationToken);
+                }
+                catch (WrongExpectedVersionException ex) when (ex.ExpectedStreamRevision == StreamRevision.None)
+                {
+                    throw new StreamAlreadyExists(aggregateRoot, stream);
+                }
 
-            _logger.LogDebug($"Aggregate root {aggregateRoot.Id} created.");
+                _logger.LogDebug($"Aggregate root {aggregateRoot.Id} created.");
+            }, ReconnectWrite);
         }
 
         public async Task Save<T>([NotNull] T aggregateRoot, CancellationToken cancellationToken = default) where T : AggregateRoot
@@ -145,14 +154,18 @@ namespace EasyEvs.Internal
 
             _logger.LogDebug($"Saving {data.Count()} events to stream {stream} for aggregate root {aggregateRoot.Id}");
 
-            await _write.Value
-                .AppendToStreamAsync(
-                    stream,
-                    StreamState.Any,
-                    data,
-                    cancellationToken: cancellationToken);
+            await _retry.Write(async () =>
+            {
+                var client = _write.Value;
+                await client
+                    .AppendToStreamAsync(
+                        stream,
+                        StreamState.Any,
+                        data,
+                        cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"Aggregate root {aggregateRoot.Id} saved.");
+                _logger.LogDebug($"Aggregate root {aggregateRoot.Id} saved.");
+            }, ReconnectWrite);
         }
 
         public async Task<List<IEvent>> ReadStream(
@@ -168,17 +181,23 @@ namespace EasyEvs.Internal
             _logger.LogDebug($"Reading events on stream {stream} from position {streamPosition}");
 
             var result = new List<IEvent>();
-            var events =
-                _read
-                    .Value
-                    .ReadStreamAsync(Direction.Forwards, stream, streamPosition, cancellationToken: cancellationToken);
-
-            await foreach (var @event in events)
+            await _retry.Read(async () =>
             {
-                result.Add(_serializer.Deserialize(@event));
-            }
+                var client = _read.Value;
+                var events = client
+                    .ReadStreamAsync(
+                        Direction.Forwards, 
+                        stream, 
+                        streamPosition,
+                        cancellationToken: cancellationToken);
 
-            _logger.LogDebug($"{result.Count} events found on stream {stream}");
+                await foreach (var @event in events)
+                {
+                    result.Add(_serializer.Deserialize(@event));
+                }
+
+                _logger.LogDebug($"{result.Count} events found on stream {stream}");
+            }, ReconnectRead);
             return result;
         }
 
@@ -229,46 +248,48 @@ namespace EasyEvs.Internal
 
         private async Task InnerSubscribe(string stream, bool treatMissingHandlersAsErrors, CancellationToken cancellationToken)
         {
-            var group = _settings.SubscriptionGroup;
-            var connection = _persistent.Value;
-            try
+            await _retry.Subscribe(async () =>
             {
-                var settings = new PersistentSubscriptionSettings(true);
+                var group = _settings.SubscriptionGroup;
+                var connection = _persistent.Value;
+                try
+                {
+                    var settings = new PersistentSubscriptionSettings(true);
 
-                await connection.CreateAsync(
+                    await connection.CreateAsync(
+                        stream,
+                        @group,
+                        settings,
+                        cancellationToken: cancellationToken);
+
+                    _logger.LogDebug($"Created subscription for stream {stream} with group {@group}");
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("AlreadyExists"))
+                {
+                    // Nothing to do here
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Error while creating subscription to stream {stream} with group {@group}");
+                    _logger.LogInformation($"Not subscribed to {stream} with group: {@group}");
+                    throw;
+                }
+
+                _logger.LogDebug($"Subscribing to stream {stream} with group {@group}");
+
+                var sub = await connection.SubscribeAsync(
                     stream,
                     @group,
-                    settings,
+                    OnEventAppeared(treatMissingHandlersAsErrors),
+                    OnSubscriptionDropped(stream),
+                    bufferSize: _settings.SubscriptionBufferSize,
+                    autoAck: false,
                     cancellationToken: cancellationToken);
 
-                _logger.LogDebug($"Created subscription for stream {stream} with group {@group}");
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("AlreadyExists"))
-            {
-                // Nothing to do here
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error while creating subscription to stream {stream} with group {@group}");
-                _logger.LogInformation($"Not subscribed to {stream} with group: {@group}");
-                return;
-            }
+                _logger.LogDebug($"Subscribed to stream {stream} with group {@group} id {sub.SubscriptionId}");
 
-            _logger.LogDebug($"Subscribing to stream {stream} with group {@group}");
-
-
-            var sub = await connection.SubscribeAsync(
-                stream,
-                @group,
-                OnEventAppeared(treatMissingHandlersAsErrors),
-                OnSubscriptionDropped(stream),
-                bufferSize: _settings.SubscriptionBufferSize,
-                autoAck: false,
-                cancellationToken: cancellationToken);
-
-            _logger.LogDebug($"Subscribed to stream {stream} with group {@group} id {sub.SubscriptionId}");
-
-            _disposables.Add(sub);
+                _disposables.Add(sub);
+            }, ReconnectSubscription);
         }
 
         private Func<PersistentSubscription, ResolvedEvent, int?, CancellationToken, Task> OnEventAppeared(bool treatMissingHandlersAsErrors)
@@ -396,5 +417,58 @@ namespace EasyEvs.Internal
                 }
             };
         }
+
+        private EventStorePersistentSubscriptionsClient PersistentConnectionFactory()
+        {
+            return new EventStorePersistentSubscriptionsClient(EventStoreClientSettings.Create(_settings.ConnectionString));
+        }
+
+        private EventStoreClient ClientFactory()
+        {
+            return new EventStoreClient(EventStoreClientSettings.Create(_settings.ConnectionString));
+        }
+
+        private async Task ReconnectWrite(Exception ex)
+        {
+            try
+            {
+                await _write.Value.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            _write = new Lazy<EventStoreClient>(ClientFactory);
+        }
+
+        private async Task ReconnectSubscription(Exception ex)
+        {
+            try
+            {
+                await _persistent.Value.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(PersistentConnectionFactory);
+        }
+
+        private async Task ReconnectRead(Exception ex)
+        {
+            try
+            {
+                await _write.Value.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            _write = new Lazy<EventStoreClient>(ClientFactory);
+        }
+
     }
 }
