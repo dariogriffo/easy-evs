@@ -8,7 +8,7 @@
     public class UserCreated : IEvent
     {
         [JsonConstructor]
-        public UserCreated(Guid id, DateTime timestamp, string version, Guid userId)
+        public UserCreated(Guid id, DateTime timestamp, string version, string userId)
         {
             Id = id;
             Timestamp = timestamp;
@@ -19,12 +19,14 @@
 
         public Guid Id { get; }
 
-        public Guid UserId { get; }
+        public string UserId { get; }
 
         public DateTime Timestamp { get; }
 
         public string Version { get; }
 
         public IReadOnlyDictionary<string, string> Metadata { get; set; }
+
+        public Tester? Tester { get; }
     }
 }

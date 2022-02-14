@@ -8,7 +8,7 @@
     public class UserUpdated : IEvent
     {
         [JsonConstructor]
-        public UserUpdated(Guid id, DateTime timestamp, string version, Guid userId)
+        public UserUpdated(Guid id, DateTime timestamp, string version, string userId)
         {
             Id = id;
             Timestamp = timestamp;
@@ -19,8 +19,7 @@
         
         public Guid Id { get; }
 
-        
-        public Guid UserId { get; }
+        public string UserId { get; }
         
         public DateTime Timestamp { get; }
         

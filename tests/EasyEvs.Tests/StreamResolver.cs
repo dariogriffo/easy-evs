@@ -31,7 +31,7 @@
             return stream;
         }
 
-        public string StreamForAggregateRoot<T>(Guid id) where T : AggregateRoot
+        public string StreamForAggregateRoot<T>(string id) where T : AggregateRoot
         {
             var suffix = typeof(T).Name;
             return $"{suffix}-{id}";

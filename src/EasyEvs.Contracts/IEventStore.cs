@@ -101,7 +101,7 @@ namespace EasyEvs.Contracts
         /// <param name="id">The aggregate root's id.</param>
         /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
         /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-        Task<T> Get<T>(Guid id, CancellationToken cancellationToken = default)
+        Task<T> Get<T>(string id, CancellationToken cancellationToken = default)
             where T : AggregateRoot, new();
 
         /// <summary>

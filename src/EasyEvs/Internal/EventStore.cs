@@ -174,7 +174,7 @@ namespace EasyEvs.Internal
             CancellationToken cancellationToken = default)
         {
             var streamPosition =
-                position.HasValue && position.Value > 0 ?
+                position is > 0 ?
                     StreamPosition.FromInt64(position.Value) :
                     StreamPosition.Start;
 
@@ -206,7 +206,7 @@ namespace EasyEvs.Internal
             return InnerSubscribe(stream, _settings.TreatMissingHandlersAsErrors, cancellationToken);
         }
 
-        public async Task<T> Get<T>(Guid id, CancellationToken cancellationToken = default) where T : AggregateRoot, new()
+        public async Task<T> Get<T>(string id, CancellationToken cancellationToken = default) where T : AggregateRoot, new()
         {
             var streamName = _streamResolver.StreamForAggregateRoot<T>(id);
 

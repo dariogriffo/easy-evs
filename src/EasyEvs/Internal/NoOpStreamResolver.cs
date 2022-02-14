@@ -16,7 +16,7 @@ namespace EasyEvs.Internal
             throw new NotImplementedException();
         }
 
-        public string StreamForAggregateRoot<T>(Guid id) where T : AggregateRoot
+        public string StreamForAggregateRoot<T>(string id) where T : AggregateRoot
         {
             throw new NotImplementedException();
         }

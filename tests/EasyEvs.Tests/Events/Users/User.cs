@@ -25,7 +25,7 @@
 
         public void Create(Guid id)
         {
-            ApplyChange(new UserCreated(Guid.NewGuid(), DateTime.UtcNow, "v1", id));
+            ApplyChange(new UserCreated(Guid.NewGuid(), DateTime.UtcNow, "v1", id.ToString()));
         }
 
         public void Update()

@@ -9,7 +9,11 @@ namespace EasyEvs.Internal
         public JsonSerializerOptions Options => new()
         {
             Converters = { new JsonStringEnumConverter() },
+#if NET5_0
             IgnoreNullValues = true,
+#else
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+#endif
         };
     }
 }

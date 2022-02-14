@@ -29,6 +29,6 @@ namespace EasyEvs.Contracts
         /// </summary>
         /// <param name="id">The aggregate root's id.</param>
         /// <returns>The name of the stream.</returns>
-        string StreamForAggregateRoot<T>(Guid id) where T : AggregateRoot;
+        string StreamForAggregateRoot<T>(string id) where T : AggregateRoot;
     }
 }

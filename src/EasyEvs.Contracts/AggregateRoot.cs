@@ -14,7 +14,7 @@ namespace EasyEvs.Contracts
         /// <summary>
         /// The id of the Aggregate Root
         /// </summary>
-        public Guid Id { get; protected set; }
+        public string Id { get; protected set; } = string.Empty;
 
         /// <summary>
         /// All the Events that haven't been stored
