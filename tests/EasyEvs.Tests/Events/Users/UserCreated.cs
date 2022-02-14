@@ -26,7 +26,5 @@
         public string Version { get; }
 
         public IReadOnlyDictionary<string, string> Metadata { get; set; }
-
-        public Tester? Tester { get; }
     }
 }
