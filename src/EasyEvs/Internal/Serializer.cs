@@ -86,7 +86,7 @@ namespace EasyEvs.Internal
             {
                 foreach (var (key, value) in eventMetadata)
                 {
-                    if (key == "correlationId" || key == "$correlationId")
+                    if (key is "correlationId" or "$correlationId")
                     {
                         hasCorrelationId = true;
                     }

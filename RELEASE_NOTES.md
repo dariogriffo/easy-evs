@@ -1,5 +1,9 @@
 Release Notes
-=============
+
+
+## [5.0.1](https://github.com/dariogriffo/easy-evs/releases/tag/5.0.1)
+
+Fix scope for DI registration
 
 ## [5.0.0](https://github.com/dariogriffo/easy-evs/releases/tag/5.0.0)
 

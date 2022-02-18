@@ -44,7 +44,7 @@ namespace EasyEvs
             }
 
             services.AddSingleton(typeof(IJsonSerializerOptionsProvider), jsonSerializerOptionsProvider ?? typeof(JsonSerializerOptionsProvider));
-            services.AddScoped(typeof(IStreamResolver), streamResolver ?? typeof(NoOpStreamResolver));
+            services.AddSingleton(typeof(IStreamResolver), streamResolver ?? typeof(NoOpStreamResolver));
             services.AddSingleton<EventStoreSettings>();
             services.AddSingleton<IConnectionRetry, BasicConnectionRetry>();
             services.AddSingleton<ISerializer, Serializer>();
