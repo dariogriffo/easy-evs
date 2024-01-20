@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Contracts;
 using global::EventStore.Client;
 using Grpc.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 internal class EventStore : IEventStore, IAsyncDisposable
@@ -64,9 +65,9 @@ internal class EventStore : IEventStore, IAsyncDisposable
             stream
         );
 
-        var data = _serializer.Serialize(@event);
+        EventData data = _serializer.Serialize(@event);
 
-        var client = _write.Value;
+        EventStoreClient client = _write.Value;
         await _retry.Write(
             async () =>
             {
@@ -90,7 +91,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
     )
         where T : IEvent
     {
-        var stream = _streamResolver.StreamForEvent<T>(aggregateId);
+        string stream = _streamResolver.StreamForEvent<T>(aggregateId);
         _logger.LogDebug(
             "Appending event with id {EventId} of type {EventType} to stream {Stream}",
             @event.Id,
@@ -98,11 +99,11 @@ internal class EventStore : IEventStore, IAsyncDisposable
             stream
         );
 
-        var data = _serializer.Serialize(@event);
+        EventData data = _serializer.Serialize(@event);
         await _retry.Write(
             async () =>
             {
-                var client = _write.Value;
+                EventStoreClient client = _write.Value;
                 await client.AppendToStreamAsync(
                     stream,
                     StreamState.Any,
@@ -129,7 +130,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
             throw new ArgumentException("position MUST be greater than 0", nameof(position));
         }
 
-        var stream = _streamResolver.StreamForEvent<T>(aggregateId);
+        string stream = _streamResolver.StreamForEvent<T>(aggregateId);
         _logger.LogDebug(
             "Appending event with id {EventId} of type {EventType} to stream {Stream} at position {Position}",
             @event.Id,
@@ -138,11 +139,11 @@ internal class EventStore : IEventStore, IAsyncDisposable
             position
         );
 
-        var data = _serializer.Serialize(@event);
+        EventData data = _serializer.Serialize(@event);
         await _retry.Write(
             async () =>
             {
-                var client = _write.Value;
+                EventStoreClient client = _write.Value;
                 await client.AppendToStreamAsync(
                     stream,
                     StreamRevision.FromInt64(position),
@@ -162,12 +163,12 @@ internal class EventStore : IEventStore, IAsyncDisposable
     )
         where T : Aggregate
     {
-        var changes = aggregate.UncommittedChanges;
-        var stream = _streamResolver.StreamForAggregateRootId(aggregate);
-        var data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
+        IReadOnlyCollection<IEvent> changes = aggregate.UncommittedChanges;
+        string stream = _streamResolver.StreamForAggregateRootId(aggregate);
+        EventData[] data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
 
         _logger.LogDebug(
-            "Saving {EventsCount} events to stream {Stream} for aggregate{AggregateId}",
+            "Saving {EventsCount} events to stream {Stream} for aggregate {AggregateId}",
             data.Count(),
             stream,
             aggregate.Id
@@ -178,7 +179,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
             {
                 try
                 {
-                    var client = _write.Value;
+                    EventStoreClient client = _write.Value;
                     await client.AppendToStreamAsync(
                         stream,
                         StreamState.NoStream,
@@ -201,12 +202,12 @@ internal class EventStore : IEventStore, IAsyncDisposable
     public async Task Save<T>([NotNull] T aggregate, CancellationToken cancellationToken = default)
         where T : Aggregate
     {
-        var changes = aggregate.UncommittedChanges;
-        var stream = _streamResolver.StreamForAggregateRootId(aggregate);
-        var data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
+        IReadOnlyCollection<IEvent> changes = aggregate.UncommittedChanges;
+        string stream = _streamResolver.StreamForAggregateRootId(aggregate);
+        EventData[] data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
 
         _logger.LogDebug(
-            "Saving {EventsCount} events to stream {Stream} for aggregate{AggregateId}",
+            "Saving {EventsCount} events to stream {Stream} for aggregate {AggregateId}",
             data.Count(),
             stream,
             aggregate.Id
@@ -215,7 +216,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
         await _retry.Write(
             async () =>
             {
-                var client = _write.Value;
+                EventStoreClient client = _write.Value;
                 await client.AppendToStreamAsync(
                     stream,
                     StreamState.Any,
@@ -235,7 +236,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
         CancellationToken cancellationToken = default
     )
     {
-        var streamPosition = position is > 0
+        StreamPosition streamPosition = position is > 0
             ? StreamPosition.FromInt64(position.Value)
             : StreamPosition.Start;
 
@@ -245,19 +246,19 @@ internal class EventStore : IEventStore, IAsyncDisposable
             streamPosition
         );
 
-        var result = new List<IEvent>();
+        List<IEvent> result = new();
         await _retry.Read(
             async () =>
             {
-                var client = _read.Value;
-                var events = client.ReadStreamAsync(
+                EventStoreClient client = _read.Value;
+                EventStoreClient.ReadStreamResult events = client.ReadStreamAsync(
                     Direction.Forwards,
                     stream,
                     streamPosition,
                     cancellationToken: cancellationToken
                 );
 
-                await foreach (var @event in events)
+                await foreach (ResolvedEvent @event in events)
                 {
                     result.Add(_serializer.Deserialize(@event));
                 }
@@ -278,9 +279,9 @@ internal class EventStore : IEventStore, IAsyncDisposable
         where T : Aggregate
     {
         string id = aggregate.Id;
-        var streamName = _streamResolver.StreamForAggregateRootId(aggregate);
+        string streamName = _streamResolver.StreamForAggregateRootId(aggregate);
         _logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamName);
-        var data = await ReadStream(streamName, null, cancellationToken);
+        List<IEvent> data = await ReadStream(streamName, null, cancellationToken);
         aggregate.LoadFromHistory(data);
         _logger.LogDebug("Aggregate with id {Id} loaded", id);
         return aggregate;
@@ -289,10 +290,10 @@ internal class EventStore : IEventStore, IAsyncDisposable
     public async Task<T> Get<T>(string id, CancellationToken cancellationToken = default)
         where T : Aggregate, new()
     {
-        var streamName = _streamResolver.StreamForAggregateRoot<T>(id);
+        string streamName = _streamResolver.StreamForAggregateRoot<T>(id);
         _logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamName);
-        var data = await ReadStream(streamName, null, cancellationToken);
-        var result = new T();
+        List<IEvent> data = await ReadStream(streamName, null, cancellationToken);
+        T result = new();
         result.LoadFromHistory(data);
         _logger.LogDebug("Aggregate with id {Id} loaded", id);
         return result;
@@ -309,15 +310,17 @@ internal class EventStore : IEventStore, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        var t0 = _persistent.IsValueCreated
+        ValueTask t0 = _persistent.IsValueCreated
             ? _persistent.Value.DisposeAsync()
             : ValueTask.CompletedTask;
 
-        var t1 = _write.IsValueCreated ? _write.Value.DisposeAsync() : ValueTask.CompletedTask;
+        ValueTask t1 = _write.IsValueCreated
+            ? _write.Value.DisposeAsync()
+            : ValueTask.CompletedTask;
 
-        var t2 = _read.IsValueCreated ? _read.Value.DisposeAsync() : ValueTask.CompletedTask;
+        ValueTask t2 = _read.IsValueCreated ? _read.Value.DisposeAsync() : ValueTask.CompletedTask;
 
-        foreach (var disposable in _disposables)
+        foreach (IDisposable disposable in _disposables)
         {
             disposable.Dispose();
         }
@@ -336,11 +339,11 @@ internal class EventStore : IEventStore, IAsyncDisposable
         await _retry.Subscribe(
             async () =>
             {
-                var group = _settings.SubscriptionGroup;
-                var connection = _persistent.Value;
+                string group = _settings.SubscriptionGroup;
+                EventStorePersistentSubscriptionsClient connection = _persistent.Value;
                 try
                 {
-                    var settings = new PersistentSubscriptionSettings(true);
+                    PersistentSubscriptionSettings settings = new(true);
 
                     await connection.CreateAsync(
                         stream,
@@ -381,7 +384,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
                     group
                 );
 
-                var sub = await connection.SubscribeAsync(
+                PersistentSubscription sub = await connection.SubscribeAsync(
                     stream,
                     group,
                     OnEventAppeared(treatMissingHandlersAsErrors),
@@ -419,7 +422,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
                 IEvent @event = _serializer.Deserialize(resolvedEvent);
                 _logger.LogDebug("Event with id {EventId} arrived", @event.Id);
 
-                if (!_handlesFactory.TryGetScopeFor(@event, out var scope))
+                if (!_handlesFactory.TryGetScopeFor(@event, out IServiceScope? scope))
                 {
                     if (treatMissingHandlersAsErrors)
                     {
@@ -441,13 +444,19 @@ internal class EventStore : IEventStore, IAsyncDisposable
                     return;
                 }
 
-                var context = new ConsumerContext(Trace.CorrelationManager.ActivityId, retryCount);
+                ConsumerContext context = new(Trace.CorrelationManager.ActivityId, retryCount);
 
                 dynamic dynamicEvent = @event;
 
                 async Task<OperationResult> ExecuteActionsAndHandler()
                 {
-                    if (_handlesFactory.TryGetPreActionsFor(@event, scope!, out var preActions))
+                    if (
+                        _handlesFactory.TryGetPreActionsFor(
+                            @event,
+                            scope!,
+                            out List<dynamic>? preActions
+                        )
+                    )
                     {
                         foreach (var action in preActions!)
                         {
@@ -456,12 +465,18 @@ internal class EventStore : IEventStore, IAsyncDisposable
                         }
                     }
 
-                    _handlesFactory.TryGetHandlerFor(@event, scope!, out var handler);
+                    _handlesFactory.TryGetHandlerFor(@event, scope!, out dynamic? handler);
 
                     Task<OperationResult> task = (handler!).Handle(dynamicEvent, context, c);
-                    var operationResult = await task;
+                    OperationResult operationResult = await task;
 
-                    if (_handlesFactory.TryGetPostActionsFor(@event, scope!, out var postActions))
+                    if (
+                        _handlesFactory.TryGetPostActionsFor(
+                            @event,
+                            scope!,
+                            out List<dynamic>? postActions
+                        )
+                    )
                     {
                         foreach (var action in postActions!)
                         {
@@ -479,20 +494,22 @@ internal class EventStore : IEventStore, IAsyncDisposable
                 }
 
                 OperationResult result = OperationResult.Ok;
-                if (_handlesFactory.TryGetPipelinesFor(@event, scope!, out var pipelines))
+                if (
+                    _handlesFactory.TryGetPipelinesFor(@event, scope!, out List<dynamic>? pipelines)
+                )
                 {
                     Func<Task<OperationResult>>[] reversed = new Func<Task<OperationResult>>[
                         pipelines!.Count + 1
                     ];
                     pipelines.Reverse();
-                    var length = pipelines.Count;
+                    int length = pipelines.Count;
                     reversed[length] = ExecuteActionsAndHandler;
 
                     //Let's build the execution tree
-                    for (var i = 0; i < length; ++i)
+                    for (int i = 0; i < length; ++i)
                     {
-                        var current = pipelines[i];
-                        var next = reversed[length - i];
+                        dynamic current = pipelines[i];
+                        Func<Task<OperationResult>> next = reversed[length - i];
                         reversed[length - i - 1] = () =>
                             current.Execute(dynamicEvent, context, next, c);
                     }

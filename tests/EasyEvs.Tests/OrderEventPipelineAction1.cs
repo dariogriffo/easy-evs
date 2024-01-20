@@ -24,7 +24,7 @@ public class OrderEventPipelineAction1 : IPipelineHandlesEventAction<OrderEventC
     {
         Console.WriteLine("a");
         _counter.Touch();
-        var result = await next();
+        OperationResult result = await next();
         _counter.Touch();
         return result;
     }

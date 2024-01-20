@@ -23,7 +23,7 @@ public class OrderEventPipelineAction2 : IPipelineHandlesEventAction<OrderEventC
     )
     {
         _counter.Touch();
-        var result = await next();
+        OperationResult result = await next();
         _counter.Touch();
         return result;
     }

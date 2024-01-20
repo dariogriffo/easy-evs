@@ -9,12 +9,12 @@ internal class AggregateRootAttributeResolver : IStreamResolver
     public string StreamForEvent<T>(string aggregateId)
         where T : IEvent
     {
-        var genericType = typeof(AggregateAttribute<>);
-        var firstOrDefault = typeof(T)
+        Type genericType = typeof(AggregateAttribute<>);
+        Type? firstOrDefault = typeof(T)
             .GetCustomAttributes(true)
             .Where(a =>
             {
-                var type = a.GetType();
+                Type type = a.GetType();
                 return type.IsGenericType && type.Name == genericType.Name;
             })
             .Select(a => a.GetType().GenericTypeArguments[0])
@@ -31,14 +31,14 @@ internal class AggregateRootAttributeResolver : IStreamResolver
     public string StreamForAggregateRoot<T>(string aggregateId)
         where T : Aggregate
     {
-        var suffix = typeof(T).Name.ToSnakeCase('-');
+        string suffix = typeof(T).Name.ToSnakeCase('-');
         return $"{suffix}_{aggregateId}";
     }
 
     public string StreamForAggregateRootId<T>(T aggregate)
         where T : Aggregate
     {
-        var suffix = aggregate.GetType().Name;
+        string suffix = aggregate.GetType().Name;
         return $"{suffix.ToSnakeCase('-')}_{aggregate.Id}";
     }
 }

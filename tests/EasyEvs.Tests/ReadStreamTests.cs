@@ -18,35 +18,34 @@ public class ReadStreamTests
     [Fact]
     public async Task With_No_Position_All_Events_AreRetrieved()
     {
-        var services = new ServiceCollection();
-        var dict = new Dictionary<string, string>()
-        {
-            { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" }
-        };
+        ServiceCollection services = new();
+        Dictionary<string, string> dict =
+            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
 
-        var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
         services.AddLogging(configure => configure.AddConsole()).AddSingleton((IConfiguration)conf);
 
-        var configuration = new EasyEvsDependencyInjectionConfiguration()
-        {
-            DefaultStreamResolver = true,
-            Assemblies = new[] { typeof(OrderEventHandler).Assembly }
-        };
+        EasyEvsDependencyInjectionConfiguration configuration =
+            new()
+            {
+                DefaultStreamResolver = true,
+                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
+            };
 
         services.AddEasyEvs(configuration);
-        var counter = Mock.Of<ICounter>();
+        ICounter counter = Mock.Of<ICounter>();
         services.AddSingleton(counter);
-        var provider = services.BuildServiceProvider();
-        var eventStore = provider.GetRequiredService<IEventStore>();
-        var streamProvider = provider.GetRequiredService<IStreamResolver>();
-        var orderId = Guid.NewGuid();
-        var e1 = new OrderCreated(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        var e2 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        var e3 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IStreamResolver streamProvider = provider.GetRequiredService<IStreamResolver>();
+        Guid orderId = Guid.NewGuid();
+        OrderCreated e1 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderCancelled e2 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderCancelled e3 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
         await eventStore.Append(orderId.ToString(), e1, cancellationToken: CancellationToken.None);
         await eventStore.Append(orderId.ToString(), e2, cancellationToken: CancellationToken.None);
         await eventStore.Append(orderId.ToString(), e3, cancellationToken: CancellationToken.None);
-        var events = await eventStore.ReadStream(
+        List<IEvent> events = await eventStore.ReadStream(
             streamProvider.StreamForEvent<OrderCancelled>(orderId.ToString()),
             cancellationToken: CancellationToken.None
         );
@@ -58,35 +57,34 @@ public class ReadStreamTests
     [Fact]
     public async Task With_Position_Correct_Events_AreRetrieved()
     {
-        var services = new ServiceCollection();
-        var dict = new Dictionary<string, string>()
-        {
-            { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" }
-        };
+        ServiceCollection services = new();
+        Dictionary<string, string> dict =
+            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
 
-        var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
         services.AddLogging(configure => configure.AddConsole()).AddSingleton((IConfiguration)conf);
 
-        var configuration = new EasyEvsDependencyInjectionConfiguration()
-        {
-            DefaultStreamResolver = true,
-            Assemblies = new[] { typeof(OrderEventHandler).Assembly }
-        };
+        EasyEvsDependencyInjectionConfiguration configuration =
+            new()
+            {
+                DefaultStreamResolver = true,
+                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
+            };
 
         services.AddEasyEvs(configuration);
-        var counter = Mock.Of<ICounter>();
+        ICounter counter = Mock.Of<ICounter>();
         services.AddSingleton(counter);
-        var provider = services.BuildServiceProvider();
-        var eventStore = provider.GetRequiredService<IEventStore>();
-        var streamProvider = provider.GetRequiredService<IStreamResolver>();
-        var orderId = Guid.NewGuid();
-        var e1 = new OrderCreated(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        var e2 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        var e3 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IStreamResolver streamProvider = provider.GetRequiredService<IStreamResolver>();
+        Guid orderId = Guid.NewGuid();
+        OrderCreated e1 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderCancelled e2 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderCancelled e3 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
         await eventStore.Append(orderId.ToString(), e1, cancellationToken: CancellationToken.None);
         await eventStore.Append(orderId.ToString(), e2, cancellationToken: CancellationToken.None);
         await eventStore.Append(orderId.ToString(), e3, cancellationToken: CancellationToken.None);
-        var events = await eventStore.ReadStream(
+        List<IEvent> events = await eventStore.ReadStream(
             streamProvider.StreamForEvent<OrderCreated>(orderId.ToString()),
             1,
             CancellationToken.None

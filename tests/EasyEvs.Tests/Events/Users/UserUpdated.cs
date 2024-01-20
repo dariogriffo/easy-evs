@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using AggregateRoots;
+using Aggregates;
 using Contracts;
 
 [Aggregate<User>]

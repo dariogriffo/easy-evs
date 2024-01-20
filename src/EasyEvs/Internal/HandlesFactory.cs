@@ -29,7 +29,7 @@ internal class HandlesFactory : IHandlesFactory
     public bool TryGetScopeFor(IEvent @event, out IServiceScope? scope)
     {
         scope = default;
-        if (!_handlers.TryGetValue(@event.GetType(), out var _))
+        if (!_handlers.TryGetValue(@event.GetType(), out Type _))
         {
             return false;
         }
@@ -41,7 +41,7 @@ internal class HandlesFactory : IHandlesFactory
     public bool TryGetHandlerFor(IEvent @event, IServiceScope scope, out dynamic? handler)
     {
         handler = default;
-        if (!_handlers.TryGetValue(@event.GetType(), out var type))
+        if (!_handlers.TryGetValue(@event.GetType(), out Type? type))
         {
             return false;
         }
@@ -54,7 +54,7 @@ internal class HandlesFactory : IHandlesFactory
     {
         pipelines = default;
 
-        if (!_pipelines.TryGetValue(@event.GetType(), out var type))
+        if (!_pipelines.TryGetValue(@event.GetType(), out Type? type))
         {
             return false;
         }
@@ -72,7 +72,7 @@ internal class HandlesFactory : IHandlesFactory
     {
         preActions = default;
 
-        if (!_pre.TryGetValue(@event.GetType(), out var type))
+        if (!_pre.TryGetValue(@event.GetType(), out Type? type))
         {
             return false;
         }
@@ -89,7 +89,7 @@ internal class HandlesFactory : IHandlesFactory
     {
         postActions = default;
 
-        if (!_post.TryGetValue(@event.GetType(), out var type))
+        if (!_post.TryGetValue(@event.GetType(), out Type? type))
         {
             return false;
         }

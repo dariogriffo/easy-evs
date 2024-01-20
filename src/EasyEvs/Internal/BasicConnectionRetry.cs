@@ -24,7 +24,7 @@ internal class BasicConnectionRetry : IConnectionRetry
             return;
         }
 
-        var forever = _settings.SubscriptionReconnectionAttempts < 0;
+        bool forever = _settings.SubscriptionReconnectionAttempts < 0;
         int attempt = 0;
         Exception lastException;
         do
@@ -62,7 +62,7 @@ internal class BasicConnectionRetry : IConnectionRetry
             return;
         }
 
-        var forever = reconnectionAttempts < 0;
+        bool forever = reconnectionAttempts < 0;
         int attempt = 0;
         Exception lastException;
         do
@@ -103,7 +103,7 @@ internal class BasicConnectionRetry : IConnectionRetry
             return;
         }
 
-        var forever = _settings.ReadReconnectionAttempts < 0;
+        bool forever = _settings.ReadReconnectionAttempts < 0;
         int attempt = 0;
         Exception lastException;
         do

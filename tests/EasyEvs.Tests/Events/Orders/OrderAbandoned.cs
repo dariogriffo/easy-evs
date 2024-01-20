@@ -3,7 +3,7 @@ namespace EasyEvs.Tests.Events.Orders;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using AggregateRoots;
+using Aggregates;
 using Contracts;
 
 [Aggregate<Order>]

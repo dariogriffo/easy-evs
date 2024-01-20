@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using AggregateRoots;
+using Aggregates;
 using Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
@@ -18,66 +18,58 @@ public class AggregateTests
     [Fact]
     public async Task Saved_Aggregate_Is_Correctly_Loaded()
     {
-        var services = new ServiceCollection();
-        var dict = new Dictionary<string, string>()
-        {
-            { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" }
-        };
+        ServiceCollection services = new();
+        Dictionary<string, string> dict =
+            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
 
-        var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
         services
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Debug))
             .AddSingleton((IConfiguration)conf);
 
-        var configuration = new EasyEvsDependencyInjectionConfiguration()
-        {
-            DefaultStreamResolver = true,
-        };
+        EasyEvsDependencyInjectionConfiguration configuration =
+            new() { DefaultStreamResolver = true, };
 
         services.AddEasyEvs(configuration);
-        var counter = Mock.Of<ICounter>();
+        ICounter counter = Mock.Of<ICounter>();
         services.AddSingleton(counter);
-        var provider = services.BuildServiceProvider();
-        var eventStore = provider.GetRequiredService<IEventStore>();
-        var userId = Guid.NewGuid();
-        var user = new User();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        Guid userId = Guid.NewGuid();
+        User user = new();
         user.Create(userId);
         user.Update();
         user.Deactivate();
         await eventStore.Save(user, CancellationToken.None);
-        var user1 = await eventStore.Get<User>(user.Id, CancellationToken.None);
+        User user1 = await eventStore.Get<User>(user.Id, CancellationToken.None);
         user1.Sum.Should().Be(111);
     }
 
     [Fact]
     public async Task Create_Fails_On_Existing_Stream()
     {
-        var services = new ServiceCollection();
-        var dict = new Dictionary<string, string>()
-        {
-            { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" }
-        };
+        ServiceCollection services = new();
+        Dictionary<string, string> dict =
+            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
 
-        var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
         services
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Debug))
             .AddSingleton((IConfiguration)conf);
 
-        var configuration = new EasyEvsDependencyInjectionConfiguration()
-        {
-            DefaultStreamResolver = true
-        };
+        EasyEvsDependencyInjectionConfiguration configuration =
+            new() { DefaultStreamResolver = true };
 
         services.AddEasyEvs(configuration);
-        var counter = Mock.Of<ICounter>();
+        ICounter counter = Mock.Of<ICounter>();
         services.AddSingleton(counter);
-        var provider = services.BuildServiceProvider();
-        var eventStore = provider.GetRequiredService<IEventStore>();
-        var userId = Guid.NewGuid();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        Guid userId = Guid.NewGuid();
 
-        var user = new User();
+        User user = new();
         user.Create(userId);
-        var user1 = new User();
+        User user1 = new();
         user1.Create(userId);
         await eventStore.Create(user, CancellationToken.None);
         Func<Task> act = async () => await eventStore.Create(user1, CancellationToken.None);
@@ -87,34 +79,30 @@ public class AggregateTests
     [Fact]
     public async Task Save_And_Load_WorkAsExpected()
     {
-        var services = new ServiceCollection();
-        var dict = new Dictionary<string, string>()
-        {
-            { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" }
-        };
+        ServiceCollection services = new();
+        Dictionary<string, string> dict =
+            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
 
-        var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
+        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
         services
             .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Debug))
             .AddSingleton((IConfiguration)conf);
 
-        var configuration = new EasyEvsDependencyInjectionConfiguration()
-        {
-            DefaultStreamResolver = true
-        };
+        EasyEvsDependencyInjectionConfiguration configuration =
+            new() { DefaultStreamResolver = true };
 
         services.AddEasyEvs(configuration);
-        var counter = Mock.Of<ICounter>();
+        ICounter counter = Mock.Of<ICounter>();
         services.AddSingleton(counter);
-        var provider = services.BuildServiceProvider();
-        var eventStore = provider.GetRequiredService<IEventStore>();
-        var userId = Guid.NewGuid();
-        var user = new User();
+        ServiceProvider provider = services.BuildServiceProvider();
+        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        Guid userId = Guid.NewGuid();
+        User user = new();
         user.Create(userId);
         user.Update();
         user.Deactivate();
         await user.Save(eventStore, CancellationToken.None);
-        var user1 = new User(user.Id);
+        User user1 = new(user.Id);
         await user1.Load(eventStore, CancellationToken.None);
         user1.Should().BeEquivalentTo(user);
     }

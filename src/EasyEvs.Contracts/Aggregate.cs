@@ -37,7 +37,7 @@ public abstract class Aggregate
     /// <param name="history">The history of events</param>
     public void LoadFromHistory(IReadOnlyCollection<IEvent> history)
     {
-        foreach (var e in history)
+        foreach (IEvent e in history)
         {
             ApplyChange(e, false);
         }
@@ -61,7 +61,7 @@ public abstract class Aggregate
     /// <returns>The <see cref="Task"/></returns>
     public async Task Save(IEventStore eventStore, CancellationToken cancellationToken = default)
     {
-        var save = _new
+        Task save = _new
             ? eventStore.Create(this, cancellationToken)
             : eventStore.Save(this, cancellationToken);
         await save;

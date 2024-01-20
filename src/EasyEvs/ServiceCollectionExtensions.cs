@@ -1,6 +1,7 @@
 namespace EasyEvs;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Contracts;
@@ -28,9 +29,9 @@ public static class ServiceCollectionExtensions
         EasyEvsDependencyInjectionConfiguration? configuration = default
     )
     {
-        var jsonSerializerOptionsProvider = configuration?.JsonSerializerOptionsProvider;
-        var streamResolver = configuration?.StreamResolver;
-        var assemblies = configuration?.Assemblies;
+        Type? jsonSerializerOptionsProvider = configuration?.JsonSerializerOptionsProvider;
+        Type? streamResolver = configuration?.StreamResolver;
+        Assembly[]? assemblies = configuration?.Assemblies;
 
         if (
             jsonSerializerOptionsProvider != null
@@ -122,15 +123,15 @@ public static class ServiceCollectionExtensions
         ServiceLifetime lifetime = ServiceLifetime.Scoped
     )
     {
-        var pipeline = typeof(T);
-        var attributeType = typeof(PipelineHandlerAttribute);
+        Type pipeline = typeof(T);
+        Type attributeType = typeof(PipelineHandlerAttribute);
         foreach (
-            var target in pipeline
+            Type target in pipeline
                 .GetInterfaces()
                 .Where(i => i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType))
         )
         {
-            var descriptor = new ServiceDescriptor(target, pipeline, lifetime);
+            ServiceDescriptor descriptor = new(target, pipeline, lifetime);
             services.Add(descriptor);
         }
 
@@ -145,7 +146,7 @@ public static class ServiceCollectionExtensions
         ServiceLifetime lifetime = ServiceLifetime.Scoped
     )
     {
-        var handlers = assemblies
+        IEnumerable<Type> handlers = assemblies
             .Distinct()
             .SelectMany(x =>
                 x.GetExportedTypes()
@@ -159,15 +160,15 @@ public static class ServiceCollectionExtensions
                     .ToList()
             );
 
-        foreach (var handler in handlers)
+        foreach (Type handler in handlers)
         {
             foreach (
-                var target in handler
+                Type target in handler
                     .GetInterfaces()
                     .Where(i => i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType))
             )
             {
-                var descriptor = new ServiceDescriptor(target, handler, lifetime);
+                ServiceDescriptor descriptor = new(target, handler, lifetime);
                 services.Add(descriptor);
             }
         }

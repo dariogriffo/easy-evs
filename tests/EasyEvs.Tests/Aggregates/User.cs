@@ -1,4 +1,4 @@
-namespace EasyEvs.Tests.AggregateRoots;
+namespace EasyEvs.Tests.Aggregates;
 
 using System;
 using Contracts;
