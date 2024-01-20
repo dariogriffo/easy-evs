@@ -1,25 +1,27 @@
-namespace EasyEvs.Internal
-{
-    using System;
-    using Contracts;
+namespace EasyEvs.Internal;
+
+using System;
+using Contracts;
 
 #pragma warning disable 1591
-    public class NoOpStreamResolver : IStreamResolver
+public class NoOpStreamResolver : IStreamResolver
+{
+    public string StreamForEvent<T>(string aggregateId)
+        where T : IEvent
     {
-        public string StreamForEvent<T>(T @event) where T : IEvent
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public string StreamForAggregateRoot<T>(T aggregateRoot) where T : AggregateRoot
-        {
-            throw new NotImplementedException();
-        }
-
-        public string StreamForAggregateRoot<T>(string id) where T : AggregateRoot
-        {
-            throw new NotImplementedException();
-        }
+        throw new NotImplementedException();
     }
-#pragma warning restore 1591
+
+    public string StreamForAggregateRoot<T>(string aggregateId)
+        where T : Aggregate
+    {
+        throw new NotImplementedException();
+    }
+
+    public string StreamForAggregateRootId<T>(T aggregate)
+        where T : Aggregate
+    {
+        throw new NotImplementedException();
+    }
 }
+#pragma warning restore 1591

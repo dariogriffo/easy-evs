@@ -1,34 +1,41 @@
-namespace EasyEvs.Internal
+namespace EasyEvs.Internal;
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.Json;
+using Contracts;
+using global::EventStore.Client;
+
+internal class Serializer : ISerializer
 {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Reflection;
-    using System.Text;
-    using System.Text.Json;
-    using Contracts;
-    using global::EventStore.Client;
+    private static readonly IReadOnlyDictionary<string, string> Empty = new ReadOnlyDictionary<
+        string,
+        string
+    >(new Dictionary<string, string>());
+    private readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
 
-    internal class Serializer : ISerializer
+    private readonly JsonSerializerOptions _options;
+
+    public Serializer(IJsonSerializerOptionsProvider provider)
     {
-        private static readonly IReadOnlyDictionary<string, string> Empty = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
-        private readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
+        _options = provider.Options;
+    }
 
-        private readonly JsonSerializerOptions _options;
-
-        public Serializer(IJsonSerializerOptionsProvider provider)
-        {
-            _options = provider.Options;
-        }
-
-        public IEvent Deserialize(ResolvedEvent resolvedEvent)
-        {
-            var eventData = resolvedEvent.Event.Data;
-            var metadata = JsonSerializer.Deserialize<Dictionary<string, string>>(resolvedEvent.Event.Metadata.Span)!;
-            var type = _cachedTypes.GetOrAdd(metadata["easy.evs.assembly.qualified.name"], (s) =>
+    public IEvent Deserialize(ResolvedEvent resolvedEvent)
+    {
+        var eventData = resolvedEvent.Event.Data;
+        var metadata = JsonSerializer.Deserialize<Dictionary<string, string>>(
+            resolvedEvent.Event.Metadata.Span
+        )!;
+        var type = _cachedTypes.GetOrAdd(
+            metadata["easy.evs.assembly.qualified.name"],
+            (s) =>
             {
                 Type? type1 = Type.GetType(metadata["easy.evs.assembly.qualified.name"]);
                 if (type1 == null)
@@ -38,77 +45,82 @@ namespace EasyEvs.Internal
                     type1 = Assembly.Load(eventAssembly).GetType(eventFullName);
                 }
                 return type1!;
-            });
-            var @event = JsonSerializer.Deserialize(eventData.Span, type, _options) as IEvent;
-            var nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
-            var correlationId =
-                metadata.TryGetValue("correlationId", out var value) ? value :
-                metadata.TryGetValue("$correlationId", out value) ? value :
-                metadata.TryGetValue("easy.evs.correlation.id", out value) ? value :
-                Guid.NewGuid().ToString();
-
-            Trace.CorrelationManager.ActivityId = Guid.Parse(correlationId);
-            
-            if (nonEvsKeys <= 0)
-            {
-                return @event!;
             }
+        );
+        var @event = JsonSerializer.Deserialize(eventData.Span, type, _options) as IEvent;
+        var nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
+        var correlationId = metadata.TryGetValue("correlationId", out var value)
+            ? value
+            : metadata.TryGetValue("$correlationId", out value)
+                ? value
+                : metadata.TryGetValue("easy.evs.correlation.id", out value)
+                    ? value
+                    : Guid.NewGuid().ToString();
 
-            {
-                Dictionary<string, string> dictionary = 
-                    metadata
-                        .Where(x => x.Key.StartsWith("easy.evs") == false)
-                        .ToDictionary(x => x.Key, x => x.Value);
-                @event!.Metadata = new ReadOnlyDictionary<string, string>(dictionary);
-            }
+        Trace.CorrelationManager.ActivityId = Guid.Parse(correlationId);
 
+        if (nonEvsKeys <= 0)
+        {
             return @event!;
         }
 
-        public EventData Serialize<T>(T @event) where T : IEvent
         {
-            var eventType = @event.GetType();
-            var version = @event.Version;
-            var eventMetadata = @event.Metadata;
+            Dictionary<string, string> dictionary = metadata
+                .Where(x => x.Key.StartsWith("easy.evs") == false)
+                .ToDictionary(x => x.Key, x => x.Value);
+            @event!.Metadata = new ReadOnlyDictionary<string, string>(dictionary);
+        }
 
-            var metadata = new Dictionary<string, string>(eventMetadata?.Count + 4 ?? 4)
+        return @event!;
+    }
+
+    public EventData Serialize<T>(T @event)
+        where T : IEvent
+    {
+        var eventType = @event.GetType();
+        var version = @event.Version;
+        var eventMetadata = @event.Metadata;
+
+        var metadata = new Dictionary<string, string>(eventMetadata?.Count + 4 ?? 4)
+        {
+            { "easy.evs.version", version },
+            { "easy.evs.event.type", eventType.Name },
+            { "easy.evs.event.full.name", eventType.FullName! },
+            { "easy.evs.event.assembly.name", eventType.Assembly.GetName().Name! },
+            { "easy.evs.assembly.qualified.name", eventType.AssemblyQualifiedName! },
+            { "easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O") }
+        };
+
+        var hasCorrelationId = false;
+        if (eventMetadata != null)
+        {
+            foreach (var (key, value) in eventMetadata)
             {
-                {"easy.evs.version", version},
-                {"easy.evs.event.type", eventType.Name},
-                {"easy.evs.event.full.name", eventType.FullName!},
-                {"easy.evs.event.assembly.name", eventType.Assembly.GetName().Name!},
-                {"easy.evs.assembly.qualified.name", eventType.AssemblyQualifiedName!},
-                {"easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O")}
-            };
-            
-            var hasCorrelationId = false;
-            if (eventMetadata != null)
-            {
-                foreach (var (key, value) in eventMetadata)
+                if (key is "correlationId" or "$correlationId")
                 {
-                    if (key is "correlationId" or "$correlationId")
-                    {
-                        hasCorrelationId = true;
-                    }
-
-                    metadata.Add(key, value);
+                    hasCorrelationId = true;
                 }
 
-                @event.Metadata = null;
+                metadata.Add(key, value);
             }
 
-            if (!hasCorrelationId)
-            {
-                var correlationId = Trace.CorrelationManager.ActivityId != Guid.Empty
+            @event.Metadata = null;
+        }
+
+        if (!hasCorrelationId)
+        {
+            var correlationId =
+                Trace.CorrelationManager.ActivityId != Guid.Empty
                     ? Trace.CorrelationManager.ActivityId
                     : Guid.NewGuid();
 
-                metadata["easy.evs.correlation.id"] = correlationId.ToString();
-            }
-
-            var eventBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event, @event.GetType(), _options));
-            var metadataBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(metadata, _options));
-            return new EventData(Uuid.FromGuid(@event.Id), eventType.Name, eventBytes, metadataBytes);
+            metadata["easy.evs.correlation.id"] = correlationId.ToString();
         }
+
+        var eventBytes = Encoding.UTF8.GetBytes(
+            JsonSerializer.Serialize(@event, @event.GetType(), _options)
+        );
+        var metadataBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(metadata, _options));
+        return new EventData(Uuid.FromGuid(@event.Id), eventType.Name, eventBytes, metadataBytes);
     }
 }

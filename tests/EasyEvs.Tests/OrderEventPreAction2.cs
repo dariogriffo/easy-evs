@@ -1,26 +1,26 @@
-﻿namespace EasyEvs.Tests
+﻿namespace EasyEvs.Tests;
+
+using System.Threading;
+using System.Threading.Tasks;
+using Contracts;
+using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
+
+public class OrderEventPreAction2 : IPreHandlesEventAction<OrderRefundRequested>
 {
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Contracts;
-    using Events.Orders;
-    using Events.Orders.v2;
-    using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
+    private readonly ICounter _counter;
 
-    public class OrderEventPreAction2 :
-        IPreHandlesEventAction<OrderRefundRequested>
+    public OrderEventPreAction2(ICounter counter)
     {
-        private readonly ICounter _counter;
+        _counter = counter;
+    }
 
-        public OrderEventPreAction2(ICounter counter)
-        {
-            _counter = counter;
-        }
-
-        public Task Execute(OrderRefundRequested @event, IConsumerContext context, CancellationToken cancellationToken)
-        {
-            _counter.Touch();
-            return Task.CompletedTask;
-        }
+    public Task Execute(
+        OrderRefundRequested @event,
+        IConsumerContext context,
+        CancellationToken cancellationToken
+    )
+    {
+        _counter.Touch();
+        return Task.CompletedTask;
     }
 }

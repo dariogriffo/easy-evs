@@ -4,8 +4,8 @@
     using System.Threading.Tasks;
     using Actions;
     using Configuration.Extensions.EnvironmentFile;
-    using EasyEvs.Contracts;
     using EasyEvs;
+    using EasyEvs.Contracts;
     using Events;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +19,7 @@
             var services = new ServiceCollection();
             var configuration = new EasyEvsDependencyInjectionConfiguration()
             {
-                Assemblies = new []{typeof(Program).Assembly},
+                Assemblies = new[] { typeof(Program).Assembly },
                 StreamResolver = typeof(StreamResolver)
             };
             services
@@ -32,7 +32,7 @@
 
             var provider = services.BuildServiceProvider();
             var eventStore = provider.GetRequiredService<IEventStore>();
-            //This assumes 
+            //This assumes
             await eventStore.SubscribeToStream("$ce-user");
             Console.ReadKey();
         }

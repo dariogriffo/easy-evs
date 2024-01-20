@@ -15,7 +15,12 @@
             IPipelineHandlesEventAction<UserUpdated>,
             IPipelineHandlesEventAction<UserDeleted>
     {
-        public async Task<OperationResult> Execute(UserRegistered @event, IConsumerContext context, Func<Task<OperationResult>> next, CancellationToken cancellationToken)
+        public async Task<OperationResult> Execute(
+            UserRegistered @event,
+            IConsumerContext context,
+            Func<Task<OperationResult>> next,
+            CancellationToken cancellationToken
+        )
         {
             var time = new Stopwatch();
             time.Start();
@@ -25,7 +30,12 @@
             return result;
         }
 
-        public async Task<OperationResult> Execute(UserUpdated @event, IConsumerContext context, Func<Task<OperationResult>> next, CancellationToken cancellationToken)
+        public async Task<OperationResult> Execute(
+            UserUpdated @event,
+            IConsumerContext context,
+            Func<Task<OperationResult>> next,
+            CancellationToken cancellationToken
+        )
         {
             var time = new Stopwatch();
             time.Start();
@@ -35,7 +45,12 @@
             return result;
         }
 
-        public async Task<OperationResult> Execute(UserDeleted @event, IConsumerContext context, Func<Task<OperationResult>> next, CancellationToken cancellationToken)
+        public async Task<OperationResult> Execute(
+            UserDeleted @event,
+            IConsumerContext context,
+            Func<Task<OperationResult>> next,
+            CancellationToken cancellationToken
+        )
         {
             var time = new Stopwatch();
             time.Start();

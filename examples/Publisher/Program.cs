@@ -5,8 +5,8 @@
     using System.Threading.Tasks;
     using AutoFixture;
     using Configuration.Extensions.EnvironmentFile;
-    using EasyEvs.Contracts;
     using EasyEvs;
+    using EasyEvs.Contracts;
     using Events;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +21,7 @@
             var services = new ServiceCollection();
             var configuration = new EasyEvsDependencyInjectionConfiguration()
             {
-                Assemblies = new []{typeof(Program).Assembly},
+                Assemblies = new[] { typeof(Program).Assembly },
                 StreamResolver = typeof(StreamResolver)
             };
             services
@@ -40,16 +40,25 @@
 
                 event1.UserId = event2.UserId = @event.UserId;
                 @event.Timestamp = DateTime.UtcNow;
-                @event.Metadata = new Dictionary<string, string>() {{"created-by", Guid.NewGuid().ToString()}};
-                
+                @event.Metadata = new Dictionary<string, string>()
+                {
+                    { "created-by", Guid.NewGuid().ToString() }
+                };
+
                 await eventStore.Append(@event);
                 event1.Timestamp = DateTime.UtcNow;
-                event1.Metadata = new Dictionary<string, string>() {{"updated-by", Guid.NewGuid().ToString()}};
-                
+                event1.Metadata = new Dictionary<string, string>()
+                {
+                    { "updated-by", Guid.NewGuid().ToString() }
+                };
+
                 await eventStore.Append(@event1);
-                
+
                 event2.Timestamp = DateTime.UtcNow;
-                event2.Metadata = new Dictionary<string, string>() {{"deleted-by", Guid.NewGuid().ToString()}};
+                event2.Metadata = new Dictionary<string, string>()
+                {
+                    { "deleted-by", Guid.NewGuid().ToString() }
+                };
                 await eventStore.Append(@event2);
             }
         }

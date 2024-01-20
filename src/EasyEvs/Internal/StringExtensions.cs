@@ -1,12 +1,14 @@
-namespace EasyEvs.Internal
-{
-    using System.Text.RegularExpressions;
+namespace EasyEvs.Internal;
 
-    internal static class StringExtensions
+using System.Text.RegularExpressions;
+
+internal static class StringExtensions
+{
+    internal static string ToSnakeCase(this string s, char separator = '_')
     {
-        internal static string ToSnakeCase(this string s)
-        {
-            return Regex.Replace(s.Replace(" ", string.Empty), "[A-Z]", "_$0").ToLower().TrimStart('_');
-        }
+        return Regex
+            .Replace(s.Replace(" ", string.Empty), "[A-Z]", $"{separator}$0")
+            .ToLower()
+            .TrimStart(separator);
     }
 }

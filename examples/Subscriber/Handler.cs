@@ -6,7 +6,10 @@
     using EasyEvs.Contracts;
     using Events;
 
-    public class Handler : IHandlesEvent<UserDeleted>, IHandlesEvent<UserRegistered>, IHandlesEvent<UserUpdated>
+    public class Handler
+        : IHandlesEvent<UserDeleted>,
+            IHandlesEvent<UserRegistered>,
+            IHandlesEvent<UserUpdated>
     {
         private readonly IEventStore _eventStore;
 
@@ -15,19 +18,31 @@
             _eventStore = eventStore;
         }
 
-        public Task<OperationResult> Handle(UserDeleted @event, IConsumerContext _, CancellationToken cancellationToken)
+        public Task<OperationResult> Handle(
+            UserDeleted @event,
+            IConsumerContext _,
+            CancellationToken cancellationToken
+        )
         {
             Console.WriteLine($"User Deleted {@event.UserId}");
             return Task.FromResult(OperationResult.Ok);
         }
-        
-        public Task<OperationResult> Handle(UserRegistered @event, IConsumerContext _, CancellationToken cancellationToken)
+
+        public Task<OperationResult> Handle(
+            UserRegistered @event,
+            IConsumerContext _,
+            CancellationToken cancellationToken
+        )
         {
             Console.WriteLine($"User Registered {@event.UserId}");
             return Task.FromResult(OperationResult.Ok);
         }
 
-        public async Task<OperationResult> Handle(UserUpdated @event, IConsumerContext _, CancellationToken cancellationToken)
+        public async Task<OperationResult> Handle(
+            UserUpdated @event,
+            IConsumerContext _,
+            CancellationToken cancellationToken
+        )
         {
             var user = await _eventStore.Get<User>(@event.UserId, cancellationToken);
             Console.WriteLine($"User with id {user.Id} status: {user.Status}");

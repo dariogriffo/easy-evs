@@ -1,12 +1,13 @@
-namespace EasyEvs.Internal
-{
-    using System.Text.Json;
-    using System.Text.Json.Serialization;
-    using Contracts;
+namespace EasyEvs.Internal;
 
-    internal class JsonSerializerOptionsProvider : IJsonSerializerOptionsProvider
-    {
-        public JsonSerializerOptions Options => new()
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Contracts;
+
+internal class JsonSerializerOptionsProvider : IJsonSerializerOptionsProvider
+{
+    public JsonSerializerOptions Options =>
+        new()
         {
             Converters = { new JsonStringEnumConverter() },
 #if NET5_0
@@ -15,5 +16,4 @@ namespace EasyEvs.Internal
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
 #endif
         };
-    }
 }

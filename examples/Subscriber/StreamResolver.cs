@@ -6,8 +6,8 @@
 
     public class StreamResolver : IStreamResolver
     {
-        
-        public string StreamForEvent<T>(T @event) where T : IEvent
+        public string StreamForEvent<T>(T @event)
+            where T : IEvent
         {
             var userId = @event switch
             {
@@ -20,12 +20,14 @@
             return "user-" + userId;
         }
 
-        public string StreamForAggregateRoot<T>(T aggregateRoot) where T : AggregateRoot
+        public string StreamForAggregateRoot<T>(T aggregateRoot)
+            where T : AggregateRoot
         {
             throw new NotImplementedException();
         }
 
-        public string StreamForAggregateRoot<T>(System.Guid id) where T : AggregateRoot
+        public string StreamForAggregateRoot<T>(System.Guid id)
+            where T : AggregateRoot
         {
             if (typeof(T) == typeof(User))
             {

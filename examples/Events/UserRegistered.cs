@@ -9,12 +9,13 @@
     {
         [JsonConstructor]
         public UserRegistered(
-            Guid id, 
-            DateTime timestamp, 
-            Guid userId, 
-            string firstName, 
-            string lastName, 
-            string emailAddress)
+            Guid id,
+            DateTime timestamp,
+            Guid userId,
+            string firstName,
+            string lastName,
+            string emailAddress
+        )
         {
             Id = id;
             Timestamp = timestamp;
@@ -24,13 +25,13 @@
             UserId = userId;
         }
 
-        public Guid Id { get; internal set;}
-        public DateTime Timestamp { get; internal set;}
+        public Guid Id { get; internal set; }
+        public DateTime Timestamp { get; internal set; }
         public string Version => "v1";
         public IReadOnlyDictionary<string, string> Metadata { get; set; }
-        public Guid UserId { get; internal set;}
-        public string FirstName { get; internal set;}
-        public string LastName { get; internal set;}
-        public string EmailAddress { get; internal set;}
+        public Guid UserId { get; internal set; }
+        public string FirstName { get; internal set; }
+        public string LastName { get; internal set; }
+        public string EmailAddress { get; internal set; }
     }
 }

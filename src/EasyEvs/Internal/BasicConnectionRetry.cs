@@ -1,135 +1,134 @@
-namespace EasyEvs.Internal
+namespace EasyEvs.Internal;
+
+using System;
+using System.Threading.Tasks;
+using Contracts;
+using Microsoft.Extensions.Logging;
+
+internal class BasicConnectionRetry : IConnectionRetry
 {
-    using System;
-    using System.Threading.Tasks;
-    using Contracts;
-    using Microsoft.Extensions.Logging;
+    private readonly EventStoreSettings _settings;
+    private readonly ILogger<BasicConnectionRetry> _logger;
 
-    internal class BasicConnectionRetry : IConnectionRetry
+    public BasicConnectionRetry(EventStoreSettings settings, ILogger<BasicConnectionRetry> logger)
     {
-        private readonly EventStoreSettings _settings;
-        private readonly ILogger<BasicConnectionRetry> _logger;
+        _settings = settings;
+        _logger = logger;
+    }
 
-        public BasicConnectionRetry(EventStoreSettings settings, ILogger<BasicConnectionRetry> logger)
+    public async Task Subscribe(Func<Task> func, Func<Exception, Task> onException)
+    {
+        if (_settings.SubscriptionReconnectionAttempts == 0)
         {
-            _settings = settings;
-            _logger = logger;
+            await func();
+            return;
         }
 
-        public async Task Subscribe(Func<Task> func, Func<Exception, Task> onException)
+        var forever = _settings.SubscriptionReconnectionAttempts < 0;
+        int attempt = 0;
+        Exception lastException;
+        do
         {
-            if (_settings.SubscriptionReconnectionAttempts == 0)
+            try
             {
+                if (attempt > 0)
+                {
+                    await Task.Delay(_settings.SubscriptionReconnectionInterval);
+                    _logger.LogDebug("Retrying to subscribe attempt {Attempt}", attempt);
+                }
+
                 await func();
                 return;
             }
-
-            var forever = _settings.SubscriptionReconnectionAttempts < 0;
-            int attempted = 0;
-            Exception lastException;
-            do
+            catch (Exception ex)
             {
-                try
-                {
-                    if (attempted > 0)
-                    {
-                        await Task.Delay(_settings.SubscriptionReconnectionInterval);
-                        _logger.LogDebug($"Retrying to subscribe attempt {attempted}");
-                    }
+                _logger.LogWarning(ex, "Error subscribing");
+                lastException = ex;
+                await onException(ex);
+            }
 
-                    await func();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error subscribing");
-                    lastException = ex;
-                    await onException(ex);
-                }
+            attempt++;
+        } while (forever || attempt < _settings.SubscriptionReconnectionAttempts);
 
-                attempted++;
-            } while (forever || attempted < _settings.SubscriptionReconnectionAttempts);
+        throw lastException;
+    }
 
-            throw lastException;
+    public async Task Write(Func<Task> func, Func<Exception, Task> onException)
+    {
+        int reconnectionAttempts = _settings.WriteReconnectionAttempts;
+        if (reconnectionAttempts == 0)
+        {
+            await func();
+            return;
         }
 
-        public async Task Write(Func<Task> func, Func<Exception, Task> onException)
+        var forever = reconnectionAttempts < 0;
+        int attempt = 0;
+        Exception lastException;
+        do
         {
-            int reconnectionAttempts = _settings.WriteReconnectionAttempts;
-            if (reconnectionAttempts == 0)
+            try
             {
+                if (attempt > 0)
+                {
+                    await Task.Delay(_settings.WriteReconnectionInterval);
+                    _logger.LogDebug("Retrying to write attempt {WriteAttempt}", attempt);
+                }
+
                 await func();
                 return;
             }
-
-            var forever = reconnectionAttempts < 0;
-            int attempted = 0;
-            Exception lastException;
-            do
+            catch (StreamAlreadyExists)
             {
-                try
-                {
-                    if (attempted > 0)
-                    {
-                        await Task.Delay(_settings.WriteReconnectionInterval);
-                        _logger.LogDebug($"Retrying to write attempt {attempted}");
-                    }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error writing to Event Store");
+                lastException = ex;
+                await onException(ex);
+            }
 
-                    await func();
-                    return;
-                }
-                catch (StreamAlreadyExists)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error writing to Event Store");
-                    lastException = ex;
-                    await onException(ex);
-                }
+            attempt++;
+        } while (forever || attempt < reconnectionAttempts);
 
-                attempted++;
-            } while (forever || attempted < reconnectionAttempts);
+        throw lastException;
+    }
 
-            throw lastException;
+    public async Task Read(Func<Task> func, Func<Exception, Task> onException)
+    {
+        if (_settings.ReadReconnectionAttempts == 0)
+        {
+            await func();
+            return;
         }
 
-        public async Task Read(Func<Task> func, Func<Exception, Task> onException)
+        var forever = _settings.ReadReconnectionAttempts < 0;
+        int attempt = 0;
+        Exception lastException;
+        do
         {
-            if (_settings.ReadReconnectionAttempts == 0)
+            try
             {
+                if (attempt > 0)
+                {
+                    await Task.Delay(_settings.ReadReconnectionInterval);
+                    _logger.LogDebug("Retrying to read attempt {RetryAttempt}", attempt);
+                }
+
                 await func();
                 return;
             }
-
-            var forever = _settings.ReadReconnectionAttempts < 0;
-            int attempted = 0;
-            Exception lastException;
-            do
+            catch (Exception ex)
             {
-                try
-                {
-                    if (attempted > 0)
-                    {
-                        await Task.Delay(_settings.ReadReconnectionInterval);
-                        _logger.LogDebug($"Retrying to read attempt {attempted}");
-                    }
+                _logger.LogWarning(ex, "Error reading to Event Store");
+                lastException = ex;
+                await onException(ex);
+            }
 
-                    await func();
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Error reading to Event Store");
-                    lastException = ex;
-                    await onException(ex);
-                }
+            attempt++;
+        } while (forever || attempt < _settings.ReadReconnectionAttempts);
 
-                attempted++;
-            } while (forever || attempted < _settings.ReadReconnectionAttempts);
-
-            throw lastException;
-        }
+        throw lastException;
     }
 }

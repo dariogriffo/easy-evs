@@ -14,10 +14,7 @@ namespace Events
     public class UserDeleted : IEvent
     {
         [JsonConstructor]
-        public UserDeleted(
-            Guid id,
-            DateTime timestamp,
-            Guid userId)
+        public UserDeleted(Guid id, DateTime timestamp, Guid userId)
         {
             Id = id;
             Timestamp = timestamp;
@@ -25,10 +22,9 @@ namespace Events
         }
 
         public Guid Id { get; internal set; }
-        public DateTime Timestamp { get; internal set;}
+        public DateTime Timestamp { get; internal set; }
         public string Version => "v1";
         public IReadOnlyDictionary<string, string> Metadata { get; set; }
-        public Guid UserId { get; internal set;}
+        public Guid UserId { get; internal set; }
     }
 }
-

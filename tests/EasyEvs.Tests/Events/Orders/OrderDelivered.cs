@@ -7,10 +7,10 @@ using AggregateRoots;
 using Contracts;
 
 [Aggregate<Order>]
-public class OrderRefundRequested : IEvent
+public class OrderDelivered : IEvent
 {
     [JsonConstructor]
-    public OrderRefundRequested(Guid id, DateTime timestamp, Guid orderId)
+    public OrderDelivered(Guid id, DateTime timestamp, Guid orderId)
     {
         Id = id;
         Timestamp = timestamp;
@@ -24,6 +24,5 @@ public class OrderRefundRequested : IEvent
     public DateTime Timestamp { get; }
 
     public string Version => "v1";
-
     public IReadOnlyDictionary<string, string> Metadata { get; set; }
 }
