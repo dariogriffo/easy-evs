@@ -37,7 +37,7 @@ Also the framework is split in 2 nuget packages to allow easy unit testing witho
 
 [EasyEvs](https://www.nuget.org/packages/EasyEvs) is intended for developers who want to work with [event sourcing](https://www.eventstore.com/blog/what-is-event-sourcing) and a reliable event store, simplifying their code and life.
 
-It is not designed to be deal with every case, but the simple ones, the ones you will be doing 99% of the time.
+It is not designed to deal with every case, but the simple ones, the ones you will be doing 99% of the time.
 It `enforces` the implementation of some interfaces with the aim of having a consistent development experience, so nobody has to worry about the basics of your event store.
 
 ## Getting Started
@@ -47,8 +47,11 @@ It `enforces` the implementation of some interfaces with the aim of having a con
                                                       
 - Define your events and make them implement [IEvent](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/IEvent.cs#L8).
 	- Suggestion: place them into a their own project and make a nuget package out of it to share with the other teams.
-- Implement the [`IStreamResolver`](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/IStreamResolver.cs#L9) interface to allow the [`IEventStore`](44#L12) know where to append your events
 - Implement an [`IHandlesEvent`](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/IHandlesEvent1.cs#L11)
+- [Optional] Implement the [`IStreamResolver`](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/IStreamResolver.cs#L9) interface to allow the [`IEventStore`](44#L12) know where to append your events.
+  - If you use Aggregates you can use the [`Aggregate Attribute`](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/AggregateAttribute.cs#L10) and out of the box EasyEvs will do the work for you.
+  - If you don't use Aggregates all you need is to  [`Save the Aggregate`](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/Aggregate.cs#L62) you MUST implement the StreamResolver and configure EasyEvs with it.
+
 
 That's it you can start coding, and unit testing... Now you want to see if against a real EventStore instance?
 
@@ -64,12 +67,12 @@ That's it you can start coding, and unit testing... Now you want to see if again
 
 ## Loading aggregates
 
-- Declare a class that inherits from [AggregateRoot](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/AggregateRoot.cs#L10)
+- Declare a class that inherits from [Aggregate](https://github.com/dariogriffo/easy-evs/blob/main/src/EasyEvs.Contracts/Aggregate.cs#L10)
 - Implement privately methods with the signature `private void Apply(MyEvent1 @event)` or `private void Apply(MyEvent2 @event)`
-- Implement in your StreamResolver `public string StreamForAggregateRoot<T>(System.Guid id) where T : AggregateRoot`
+- Implement in your StreamResolver `public string StreamForAggregate<T>(System.Guid id) where T : Aggregate`
 - Load your aggregate from EventStore ` var user = await _eventStore.Get<User>(id, cancellationToken);`
 
-And that's it! simple aggregate roots.
+And that's it! simple Aggregates.
  
 ## Examples
 
