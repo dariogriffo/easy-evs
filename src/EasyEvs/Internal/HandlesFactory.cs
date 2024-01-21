@@ -29,7 +29,7 @@ internal class HandlesFactory : IHandlesFactory
     public bool TryGetScopeFor(IEvent @event, out IServiceScope? scope)
     {
         scope = default;
-        if (!_handlers.TryGetValue(@event.GetType(), out Type _))
+        if (!_handlers.TryGetValue(@event.GetType(), out Type? _))
         {
             return false;
         }
