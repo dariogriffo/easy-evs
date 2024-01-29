@@ -26,6 +26,6 @@ public interface IPipelineHandlesEventAction<in T>
         T @event,
         IConsumerContext context,
         Func<Task<OperationResult>> next,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     );
 }

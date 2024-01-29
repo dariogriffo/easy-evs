@@ -25,6 +25,6 @@ public interface IPostHandlesEventAction<in T>
         T @event,
         IConsumerContext context,
         OperationResult result,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     );
 }

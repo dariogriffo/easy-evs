@@ -13,7 +13,13 @@ internal static class EventStoreConfigurationExtensions
             new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
 
         IConfiguration conf = new ConfigurationBuilder().AddInMemoryCollection(dict!).Build();
-        services.AddLogging(configure => configure.AddConsole()).AddSingleton(conf);
+        services
+            .AddLogging(configure =>
+            {
+                configure.SetMinimumLevel(LogLevel.Trace);
+                configure.AddConsole();
+            })
+            .AddSingleton(conf);
 
         return services;
     }

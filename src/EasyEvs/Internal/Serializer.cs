@@ -13,12 +13,7 @@ using global::EventStore.Client;
 
 internal class Serializer : ISerializer
 {
-    private static readonly IReadOnlyDictionary<string, string> Empty = new ReadOnlyDictionary<
-        string,
-        string
-    >(new Dictionary<string, string>());
     private readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
-
     private readonly JsonSerializerOptions _options;
 
     public Serializer(IJsonSerializerOptionsProvider provider)
@@ -31,7 +26,7 @@ internal class Serializer : ISerializer
         ReadOnlyMemory<byte> eventData = resolvedEvent.Event.Data;
         Dictionary<string, string>? metadata = JsonSerializer.Deserialize<
             Dictionary<string, string>
-        >(resolvedEvent.Event.Metadata.Span)!;
+        >(resolvedEvent.Event.Metadata.Span, _options)!;
         Type type = _cachedTypes.GetOrAdd(
             metadata["easy.evs.assembly.qualified.name"],
             _ =>
@@ -43,14 +38,21 @@ internal class Serializer : ISerializer
                     string eventAssembly = metadata["easy.evs.event.assembly.name"];
                     type1 = Assembly.Load(eventAssembly).GetType(eventFullName);
                 }
+
                 return type1!;
             }
         );
+        
         IEvent? @event = JsonSerializer.Deserialize(eventData.Span, type, _options) as IEvent;
         int nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
-
-        if (nonEvsKeys <= 0)
+        
+        if (nonEvsKeys == 0)
         {
+            if (metadata.ContainsKey("easy.evs.empty.metadata"))
+            {
+                @event!.Metadata = new Dictionary<string, string>();
+            }
+            
             return @event!;
         }
 
@@ -81,14 +83,21 @@ internal class Serializer : ISerializer
                 { "easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O") }
             };
 
+        bool emptyMetadata = false;
         if (eventMetadata is not null)
         {
+            emptyMetadata = eventMetadata.Any() == false;
             foreach ((string key, string value) in eventMetadata)
             {
                 metadata.Add(key, value);
             }
 
             @event.Metadata = null;
+        }
+
+        if (emptyMetadata)
+        {
+            metadata.Add("easy.evs.empty.metadata", "true");
         }
 
         byte[] eventBytes = Encoding.UTF8.GetBytes(

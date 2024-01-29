@@ -23,6 +23,6 @@ public interface IHandlesEvent<in T>
     Task<OperationResult> Handle(
         T @event,
         IConsumerContext context,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     );
 }

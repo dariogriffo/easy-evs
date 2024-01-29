@@ -20,5 +20,5 @@ public interface IPreHandlesEventAction<in T>
     /// <param name="context">The context of the event <see cref="IConsumerContext"/>.</param>
     /// <param name="cancellationToken">The <see cref="System.Threading"/>.</param>
     /// <returns>The task with an <see cref="IHandlesEvent{T}"/> to be awaited</returns>
-    Task Execute(T @event, IConsumerContext context, CancellationToken cancellationToken);
+    Task Execute(T @event, IConsumerContext context, CancellationToken cancellationToken = default);
 }

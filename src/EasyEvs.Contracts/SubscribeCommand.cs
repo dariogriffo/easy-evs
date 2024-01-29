@@ -3,7 +3,7 @@ namespace EasyEvs.Contracts;
 /// <summary>
 /// Command to subscribe to persistent a persistent subscription
 /// </summary>
-public class SubscribeCommand
+public struct SubscribeCommand
 {
     /// <summary>
     /// The constructor
