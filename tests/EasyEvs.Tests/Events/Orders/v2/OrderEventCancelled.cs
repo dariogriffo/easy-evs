@@ -21,11 +21,10 @@ public class OrderEventCancelled : IEvent
     public Guid Id { get; }
 
     public Guid OrderId { get; }
-    public string Reason { get; }
+    public string? Reason { get; }
 
     public DateTime Timestamp { get; }
 
-    public string Version => "v2";
-
-    public IReadOnlyDictionary<string, string> Metadata { get; set; }
+    public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
+        new Dictionary<string, string>();
 }

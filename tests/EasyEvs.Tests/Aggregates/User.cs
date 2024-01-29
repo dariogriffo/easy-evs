@@ -33,16 +33,16 @@ public class User : Aggregate
 
     public void Create(Guid id)
     {
-        ApplyChange(new UserCreated(Guid.NewGuid(), DateTime.UtcNow, "v1", id.ToString()));
+        ApplyChange(new UserCreated(Guid.NewGuid(), DateTime.UtcNow, id.ToString()));
     }
 
     public void Update()
     {
-        ApplyChange(new UserUpdated(Guid.NewGuid(), DateTime.UtcNow, "v1", Id));
+        ApplyChange(new UserUpdated(Guid.NewGuid(), DateTime.UtcNow, Id));
     }
 
     public void Deactivate()
     {
-        ApplyChange(new UserDeactivated(Guid.NewGuid(), DateTime.UtcNow, "v1", Id));
+        ApplyChange(new UserDeactivated(Guid.NewGuid(), DateTime.UtcNow, Id));
     }
 }

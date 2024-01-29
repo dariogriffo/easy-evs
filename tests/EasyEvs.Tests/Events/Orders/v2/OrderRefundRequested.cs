@@ -35,7 +35,6 @@ public class OrderRefundRequested : IEvent
 
     public DateTime Timestamp { get; }
 
-    public string Version => "v2";
-
-    public IReadOnlyDictionary<string, string> Metadata { get; set; }
+    public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
+        new Dictionary<string, string>();
 }

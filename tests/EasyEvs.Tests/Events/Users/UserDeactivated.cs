@@ -10,11 +10,10 @@ using Contracts;
 public class UserDeactivated : IEvent
 {
     [JsonConstructor]
-    public UserDeactivated(Guid id, DateTime timestamp, string version, string userId)
+    public UserDeactivated(Guid id, DateTime timestamp, string userId)
     {
         Id = id;
         Timestamp = timestamp;
-        Version = version;
         UserId = userId;
     }
 
@@ -24,6 +23,6 @@ public class UserDeactivated : IEvent
 
     public DateTime Timestamp { get; }
 
-    public string Version { get; }
-    public IReadOnlyDictionary<string, string> Metadata { get; set; }
+    public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
+        new Dictionary<string, string>();
 }

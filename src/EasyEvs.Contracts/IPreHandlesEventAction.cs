@@ -1,6 +1,5 @@
 namespace EasyEvs.Contracts;
 
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Internal;
@@ -21,5 +20,5 @@ public interface IPreHandlesEventAction<in T>
     /// <param name="context">The context of the event <see cref="IConsumerContext"/>.</param>
     /// <param name="cancellationToken">The <see cref="System.Threading"/>.</param>
     /// <returns>The task with an <see cref="IHandlesEvent{T}"/> to be awaited</returns>
-    Task Execute([NotNull] T @event, IConsumerContext context, CancellationToken cancellationToken);
+    Task Execute(T @event, IConsumerContext context, CancellationToken cancellationToken);
 }

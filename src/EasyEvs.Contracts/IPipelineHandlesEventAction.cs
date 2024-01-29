@@ -1,7 +1,6 @@
 namespace EasyEvs.Contracts;
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Internal;
@@ -24,7 +23,7 @@ public interface IPipelineHandlesEventAction<in T>
     /// <param name="cancellationToken">The <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>The task with an <see cref="OperationResult"/> to be awaited</returns>
     Task<OperationResult> Execute(
-        [NotNull] T @event,
+        T @event,
         IConsumerContext context,
         Func<Task<OperationResult>> next,
         CancellationToken cancellationToken

@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using Contracts;
 
-internal class AggregateRootAttributeResolver : IStreamResolver
+internal class AggregateAttributeResolver : IStreamResolver
 {
     public string StreamForEvent<T>(string aggregateId)
         where T : IEvent

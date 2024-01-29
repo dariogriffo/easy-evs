@@ -23,6 +23,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> where the registration happens.</param>
     /// <param name="configuration">The configuration for the Dependency Injection.</param>
+    /// <exception cref="ArgumentException">The <see cref="IJsonSerializerOptionsProvider"/> type provided does not implement the <see cref="IJsonSerializerOptionsProvider"/> interface.</exception>
+    /// <exception cref="ArgumentException">The <see cref="IStreamResolver"/> type provided does not implement the <see cref="IStreamResolver"/> interface.</exception>
     /// <returns></returns>
     public static IServiceCollection AddEasyEvs(
         this IServiceCollection services,
@@ -34,7 +36,7 @@ public static class ServiceCollectionExtensions
         Assembly[]? assemblies = configuration?.Assemblies;
 
         if (
-            jsonSerializerOptionsProvider != null
+            jsonSerializerOptionsProvider is not null
             && jsonSerializerOptionsProvider!
                 .GetInterfaces()
                 .All(x => x != typeof(IJsonSerializerOptionsProvider))
@@ -47,7 +49,7 @@ public static class ServiceCollectionExtensions
         }
 
         if (
-            streamResolver != null
+            streamResolver is not null
             && streamResolver!.GetInterfaces().All(x => x != typeof(IStreamResolver))
         )
         {
@@ -57,27 +59,29 @@ public static class ServiceCollectionExtensions
             );
         }
 
-        services.AddSingleton(
+        services.TryAddSingleton(
             typeof(IJsonSerializerOptionsProvider),
             jsonSerializerOptionsProvider ?? typeof(JsonSerializerOptionsProvider)
         );
-        services.AddSingleton(
+
+        services.TryAddSingleton(
             typeof(IStreamResolver),
             streamResolver
                 ?? (
                     (configuration?.DefaultStreamResolver ?? false)
-                        ? typeof(AggregateRootAttributeResolver)
+                        ? typeof(AggregateAttributeResolver)
                         : typeof(NoOpStreamResolver)
                 )
         );
-        services.AddSingleton<EventStoreSettings>();
-        services.AddSingleton<IConnectionRetry, BasicConnectionRetry>();
-        services.AddSingleton<ISerializer, Serializer>();
-        services.AddSingleton<IHandlesFactory, HandlesFactory>();
-        services.AddSingleton<IEventStore, EventStore>();
+
+        services.TryAddSingleton<EventStoreSettings>();
+        services.TryAddSingleton<IConnectionRetry, BasicConnectionRetry>();
+        services.TryAddSingleton<ISerializer, Serializer>();
+        services.TryAddSingleton<IHandlesFactory, HandlesFactory>();
+        services.TryAddSingleton<IEventStore, EventStore>();
         services.TryAddSingleton(services);
         HandlersAndEventTypes handlersAndTypes;
-        if (assemblies == null || assemblies.Length == 0)
+        if (assemblies is null || assemblies.Length == 0)
         {
             _handlersAndTypes = handlersAndTypes = new HandlersAndEventTypes(services);
             services.AddSingleton(handlersAndTypes);

@@ -4,7 +4,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -38,7 +37,7 @@ internal class Serializer : ISerializer
             _ =>
             {
                 Type? type1 = Type.GetType(metadata["easy.evs.assembly.qualified.name"]);
-                if (type1 == null)
+                if (type1 is null)
                 {
                     string eventFullName = metadata["easy.evs.event.full.name"];
                     string eventAssembly = metadata["easy.evs.event.assembly.name"];
@@ -49,15 +48,6 @@ internal class Serializer : ISerializer
         );
         IEvent? @event = JsonSerializer.Deserialize(eventData.Span, type, _options) as IEvent;
         int nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
-        string correlationId = metadata.TryGetValue("correlationId", out string? value)
-            ? value
-            : metadata.TryGetValue("$correlationId", out value)
-                ? value
-                : metadata.TryGetValue("easy.evs.correlation.id", out value)
-                    ? value
-                    : Guid.NewGuid().ToString();
-
-        Trace.CorrelationManager.ActivityId = Guid.Parse(correlationId);
 
         if (nonEvsKeys <= 0)
         {
@@ -78,7 +68,7 @@ internal class Serializer : ISerializer
         where T : IEvent
     {
         Type eventType = @event.GetType();
-        
+
         IReadOnlyDictionary<string, string>? eventMetadata = @event.Metadata;
 
         Dictionary<string, string> metadata =
@@ -91,30 +81,14 @@ internal class Serializer : ISerializer
                 { "easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O") }
             };
 
-        bool hasCorrelationId = false;
-        if (eventMetadata != null)
+        if (eventMetadata is not null)
         {
             foreach ((string key, string value) in eventMetadata)
             {
-                if (key is "correlationId" or "$correlationId")
-                {
-                    hasCorrelationId = true;
-                }
-
                 metadata.Add(key, value);
             }
 
             @event.Metadata = null;
-        }
-
-        if (!hasCorrelationId)
-        {
-            Guid correlationId =
-                Trace.CorrelationManager.ActivityId != Guid.Empty
-                    ? Trace.CorrelationManager.ActivityId
-                    : Guid.NewGuid();
-
-            metadata["easy.evs.correlation.id"] = correlationId.ToString();
         }
 
         byte[] eventBytes = Encoding.UTF8.GetBytes(

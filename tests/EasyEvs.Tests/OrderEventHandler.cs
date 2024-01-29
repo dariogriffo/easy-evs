@@ -1,5 +1,6 @@
 ﻿namespace EasyEvs.Tests
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.Threading;
     using System.Threading.Tasks;
     using Contracts;
@@ -24,7 +25,7 @@
         }
 
         public Task<OperationResult> Handle(
-            OrderCreated @event,
+            [NotNull] OrderCreated @event,
             IConsumerContext context,
             CancellationToken cancellationToken
         )
