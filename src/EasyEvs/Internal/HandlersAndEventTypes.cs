@@ -3,7 +3,6 @@ namespace EasyEvs.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Contracts;
 using Contracts.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,8 +23,8 @@ internal class HandlersAndEventTypes
         Type[] interfaces = i.GetInterfaces()
             .Where(x => x.Namespace == "EasyEvs.Contracts")
             .ToArray();
-        return interfaces.Any(i =>
-            i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType)
+        return interfaces.Any(
+            i => i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType)
         );
     }
 
@@ -34,9 +33,10 @@ internal class HandlersAndEventTypes
         _handlers = new Lazy<IReadOnlyDictionary<Type, Type>>(
             () =>
                 services
-                    .Where(x =>
-                        x.ImplementationType is not null
-                        && Implements(x.ImplementationType, typeof(HandlesEventAttribute))
+                    .Where(
+                        x =>
+                            x.ImplementationType is not null
+                            && Implements(x.ImplementationType, typeof(HandlesEventAttribute))
                     )
                     .Where(i => !i.ImplementationType!.IsAbstract)
                     .ToDictionary(
@@ -48,9 +48,10 @@ internal class HandlersAndEventTypes
         _pre = new Lazy<IReadOnlyDictionary<Type, Type>>(
             () =>
                 services
-                    .Where(x =>
-                        x.ImplementationType is not null
-                        && Implements(x.ImplementationType, typeof(PreActionEventAttribute))
+                    .Where(
+                        x =>
+                            x.ImplementationType is not null
+                            && Implements(x.ImplementationType, typeof(PreActionEventAttribute))
                     )
                     .Where(i => !i.ImplementationType!.IsAbstract)
                     .GroupBy(x => x.ServiceType.GenericTypeArguments.First())
@@ -60,9 +61,10 @@ internal class HandlersAndEventTypes
         _post = new Lazy<IReadOnlyDictionary<Type, Type>>(
             () =>
                 services
-                    .Where(x =>
-                        x.ImplementationType is not null
-                        && Implements(x.ImplementationType, typeof(PostHandlerEventAttribute))
+                    .Where(
+                        x =>
+                            x.ImplementationType is not null
+                            && Implements(x.ImplementationType, typeof(PostHandlerEventAttribute))
                     )
                     .Where(i => !i.ImplementationType!.IsAbstract)
                     .GroupBy(x => x.ServiceType.GenericTypeArguments.First())
@@ -77,9 +79,10 @@ internal class HandlersAndEventTypes
         _pipelines = new Lazy<IReadOnlyDictionary<Type, Type>>(
             () =>
                 services
-                    .Where(x =>
-                        x.ImplementationType is not null
-                        && Implements(x.ImplementationType, typeof(PipelineHandlerAttribute))
+                    .Where(
+                        x =>
+                            x.ImplementationType is not null
+                            && Implements(x.ImplementationType, typeof(PipelineHandlerAttribute))
                     )
                     .Where(i => !i.ImplementationType!.IsAbstract)
                     .GroupBy(x => x.ServiceType.GenericTypeArguments.First())

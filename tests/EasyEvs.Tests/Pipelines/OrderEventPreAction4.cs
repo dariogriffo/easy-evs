@@ -1,27 +1,26 @@
-namespace EasyEvs.Tests;
+namespace EasyEvs.Tests.Pipelines;
 
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
 
-public class OrderEventPostAction3 : IPostHandlesEventAction<OrderDelivered>
+public class OrderEventPreAction4 : IPreHandlesEventAction<OrderAbandoned>
 {
     private readonly ICounter _counter;
 
-    public OrderEventPostAction3(ICounter counter)
+    public OrderEventPreAction4(ICounter counter)
     {
         _counter = counter;
     }
 
-    public Task<OperationResult> Execute(
-        OrderDelivered @event,
+    public Task Execute(
+        OrderAbandoned @event,
         IConsumerContext context,
-        OperationResult result,
         CancellationToken cancellationToken
     )
     {
         _counter.Touch();
-        return Task.FromResult(result);
+        return Task.CompletedTask;
     }
 }

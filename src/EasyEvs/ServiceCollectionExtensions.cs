@@ -148,16 +148,20 @@ public static class ServiceCollectionExtensions
     {
         IEnumerable<Type> handlers = assemblies
             .Distinct()
-            .SelectMany(x =>
-                x.GetExportedTypes()
-                    .Where(y => !y.IsAbstract)
-                    .Where(y =>
-                        y.GetInterfaces()
-                            .Any(i =>
-                                i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType)
-                            )
-                    )
-                    .ToList()
+            .SelectMany(
+                x =>
+                    x.GetExportedTypes()
+                        .Where(y => !y.IsAbstract)
+                        .Where(
+                            y =>
+                                y.GetInterfaces()
+                                    .Any(
+                                        i =>
+                                            i.GetCustomAttributes(true)
+                                                .Any(a => a.GetType() == attributeType)
+                                    )
+                        )
+                        .ToList()
             );
 
         foreach (Type handler in handlers)

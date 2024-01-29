@@ -1,4 +1,4 @@
-namespace EasyEvs.Tests;
+namespace EasyEvs.Tests.Pipelines;
 
 using System.Threading;
 using System.Threading.Tasks;

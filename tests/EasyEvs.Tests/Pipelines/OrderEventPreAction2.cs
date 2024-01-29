@@ -1,21 +1,21 @@
-namespace EasyEvs.Tests;
+﻿namespace EasyEvs.Tests.Pipelines;
 
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
-using Events.Orders;
+using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
-public class OrderEventPreAction4 : IPreHandlesEventAction<OrderAbandoned>
+public class OrderEventPreAction2 : IPreHandlesEventAction<OrderRefundRequested>
 {
     private readonly ICounter _counter;
 
-    public OrderEventPreAction4(ICounter counter)
+    public OrderEventPreAction2(ICounter counter)
     {
         _counter = counter;
     }
 
     public Task Execute(
-        OrderAbandoned @event,
+        OrderRefundRequested @event,
         IConsumerContext context,
         CancellationToken cancellationToken
     )

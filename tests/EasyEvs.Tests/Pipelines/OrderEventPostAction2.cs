@@ -1,26 +1,27 @@
-﻿namespace EasyEvs.Tests;
+﻿namespace EasyEvs.Tests.Pipelines;
 
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
-public class OrderEventPreAction1 : IPreHandlesEventAction<OrderRefundRequested>
+public class OrderEventPostAction2 : IPostHandlesEventAction<OrderRefundRequested>
 {
     private readonly ICounter _counter;
 
-    public OrderEventPreAction1(ICounter counter)
+    public OrderEventPostAction2(ICounter counter)
     {
         _counter = counter;
     }
 
-    public Task Execute(
+    public Task<OperationResult> Execute(
         OrderRefundRequested @event,
         IConsumerContext context,
+        OperationResult result,
         CancellationToken cancellationToken
     )
     {
         _counter.Touch();
-        return Task.CompletedTask;
+        return Task.FromResult(result);
     }
 }

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using global::EventStore.Client;
-using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

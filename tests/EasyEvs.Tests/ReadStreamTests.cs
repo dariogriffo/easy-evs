@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -18,23 +16,18 @@ public class ReadStreamTests
     [Fact]
     public async Task With_No_Position_All_Events_AreRetrieved()
     {
-        ServiceCollection services = new();
-        Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
-
-        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-        services.AddLogging(configure => configure.AddConsole()).AddSingleton((IConfiguration)conf);
-
         EasyEvsDependencyInjectionConfiguration configuration =
             new()
             {
                 DefaultStreamResolver = true,
-                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
+                Assemblies = [typeof(OrderEventHandler).Assembly]
             };
 
-        services.AddEasyEvs(configuration);
+        ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
-        services.AddSingleton(counter);
+
+        services.AddSingleton(counter).ConfigureEventStoreDb().AddEasyEvs(configuration);
+
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         IStreamResolver streamProvider = provider.GetRequiredService<IStreamResolver>();
@@ -57,23 +50,18 @@ public class ReadStreamTests
     [Fact]
     public async Task With_Position_Correct_Events_AreRetrieved()
     {
-        ServiceCollection services = new();
-        Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
-
-        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-        services.AddLogging(configure => configure.AddConsole()).AddSingleton((IConfiguration)conf);
-
         EasyEvsDependencyInjectionConfiguration configuration =
             new()
             {
                 DefaultStreamResolver = true,
-                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
+                Assemblies = [typeof(OrderEventHandler).Assembly]
             };
 
-        services.AddEasyEvs(configuration);
+        ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
-        services.AddSingleton(counter);
+
+        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         IStreamResolver streamProvider = provider.GetRequiredService<IStreamResolver>();

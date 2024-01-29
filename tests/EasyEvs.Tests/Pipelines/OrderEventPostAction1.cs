@@ -1,15 +1,15 @@
-﻿namespace EasyEvs.Tests;
+﻿namespace EasyEvs.Tests.Pipelines;
 
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
-public class OrderEventPostAction2 : IPostHandlesEventAction<OrderRefundRequested>
+public class OrderEventPostAction1 : IPostHandlesEventAction<OrderRefundRequested>
 {
     private readonly ICounter _counter;
 
-    public OrderEventPostAction2(ICounter counter)
+    public OrderEventPostAction1(ICounter counter)
     {
         _counter = counter;
     }

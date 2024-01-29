@@ -7,9 +7,7 @@ using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -19,15 +17,10 @@ public class ServiceCollectionExtensionTests
     public async Task With_No_Parameters_We_Can_Run()
     {
         ServiceCollection services = new();
-        Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
-
-        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-        services.AddLogging(configure => configure.AddConsole()).AddSingleton((IConfiguration)conf);
-
-        services.AddEasyEvs();
         ICounter counter = Mock.Of<ICounter>();
-        services.AddSingleton(counter);
+
+        services.ConfigureEventStoreDb().AddEasyEvs().AddSingleton(counter);
+
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid orderId = Guid.NewGuid();

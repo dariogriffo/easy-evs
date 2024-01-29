@@ -1,4 +1,4 @@
-﻿namespace EasyEvs.Tests;
+﻿namespace EasyEvs.Tests.Pipelines;
 
 using System;
 using System.Threading;
@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Contracts;
 using Events.Orders.v2;
 
-public class OrderEventPipelineAction2 : IPipelineHandlesEventAction<OrderEventCancelled>
+public class OrderEventPipelineAction1 : IPipelineHandlesEventAction<OrderEventCancelled>
 {
     private readonly ICounter _counter;
 
-    public OrderEventPipelineAction2(ICounter counter)
+    public OrderEventPipelineAction1(ICounter counter)
     {
         _counter = counter;
     }
@@ -22,6 +22,7 @@ public class OrderEventPipelineAction2 : IPipelineHandlesEventAction<OrderEventC
         CancellationToken cancellationToken
     )
     {
+        Console.WriteLine("a");
         _counter.Touch();
         OperationResult result = await next();
         _counter.Touch();

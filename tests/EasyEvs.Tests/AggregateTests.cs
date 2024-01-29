@@ -1,15 +1,12 @@
 ﻿namespace EasyEvs.Tests;
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Aggregates;
 using Contracts;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -18,21 +15,13 @@ public class AggregateTests
     [Fact]
     public async Task Saved_Aggregate_Is_Correctly_Loaded()
     {
-        ServiceCollection services = new();
-        Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
-
-        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-        services
-            .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Debug))
-            .AddSingleton((IConfiguration)conf);
-
         EasyEvsDependencyInjectionConfiguration configuration =
             new() { DefaultStreamResolver = true, };
-
-        services.AddEasyEvs(configuration);
+        ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
-        services.AddSingleton(counter);
+
+        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid userId = Guid.NewGuid();
@@ -48,21 +37,13 @@ public class AggregateTests
     [Fact]
     public async Task Create_Fails_On_Existing_Stream()
     {
-        ServiceCollection services = new();
-        Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
-
-        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-        services
-            .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Debug))
-            .AddSingleton((IConfiguration)conf);
-
         EasyEvsDependencyInjectionConfiguration configuration =
-            new() { DefaultStreamResolver = true };
-
-        services.AddEasyEvs(configuration);
+            new() { DefaultStreamResolver = true, };
+        ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
-        services.AddSingleton(counter);
+
+        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid userId = Guid.NewGuid();
@@ -79,21 +60,13 @@ public class AggregateTests
     [Fact]
     public async Task Save_And_Load_WorkAsExpected()
     {
-        ServiceCollection services = new();
-        Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
-
-        IConfigurationRoot conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-        services
-            .AddLogging(configure => configure.AddConsole().SetMinimumLevel(LogLevel.Debug))
-            .AddSingleton((IConfiguration)conf);
-
         EasyEvsDependencyInjectionConfiguration configuration =
-            new() { DefaultStreamResolver = true };
-
-        services.AddEasyEvs(configuration);
+            new() { DefaultStreamResolver = true, };
+        ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
-        services.AddSingleton(counter);
+
+        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid userId = Guid.NewGuid();
