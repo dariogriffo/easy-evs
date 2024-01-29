@@ -35,7 +35,7 @@ internal class Serializer : ISerializer
         >(resolvedEvent.Event.Metadata.Span)!;
         Type type = _cachedTypes.GetOrAdd(
             metadata["easy.evs.assembly.qualified.name"],
-            (s) =>
+            _ =>
             {
                 Type? type1 = Type.GetType(metadata["easy.evs.assembly.qualified.name"]);
                 if (type1 == null)
@@ -78,13 +78,12 @@ internal class Serializer : ISerializer
         where T : IEvent
     {
         Type eventType = @event.GetType();
-        string version = @event.Version;
+        
         IReadOnlyDictionary<string, string>? eventMetadata = @event.Metadata;
 
         Dictionary<string, string> metadata =
             new(eventMetadata?.Count + 4 ?? 4)
             {
-                { "easy.evs.version", version },
                 { "easy.evs.event.type", eventType.Name },
                 { "easy.evs.event.full.name", eventType.FullName! },
                 { "easy.evs.event.assembly.name", eventType.Assembly.GetName().Name! },

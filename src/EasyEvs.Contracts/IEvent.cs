@@ -19,11 +19,6 @@ public interface IEvent
     DateTime Timestamp { get; }
 
     /// <summary>
-    /// The version of the event
-    /// </summary>
-    string Version { get; }
-
-    /// <summary>
     /// The metadata associated to the event
     /// </summary>
     IReadOnlyDictionary<string, string>? Metadata { get; set; }
