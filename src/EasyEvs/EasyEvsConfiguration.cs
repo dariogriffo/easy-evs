@@ -43,7 +43,7 @@ public class EasyEvsConfiguration
     /// <summary>
     /// The assemblies to scan for <see cref="IHandlesEvent{T}"/>
     /// </summary>
-    public Assembly[]? Assemblies { get; set; }
+    public Assembly[]? AssembliesToScanForHandlers { get; set; }
 
     /// <summary>
     /// The default life time for auto registered <see cref="IHandlesEvent{T}"/>

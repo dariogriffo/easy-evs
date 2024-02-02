@@ -124,7 +124,7 @@ public static class ServiceCollectionExtensions
 
         HandlersAndEventTypes handlersAndTypes;
 
-        Assembly[]? assemblies = configuration.Assemblies;
+        Assembly[]? assemblies = configuration.AssembliesToScanForHandlers;
 
         if (assemblies is null || assemblies.Length == 0)
         {

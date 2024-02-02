@@ -27,7 +27,7 @@ public class ReadStreamTests
                 sp => sp.GetEventStoreSettings(),
                 c =>
                 {
-                    c.Assemblies = [typeof(OrderEventHandler).Assembly];
+                    c.AssembliesToScanForHandlers = [typeof(OrderEventHandler).Assembly];
                 }
             );
 

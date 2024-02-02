@@ -26,7 +26,7 @@ public class PipelineActionsTests
                 sp => sp.GetEventStoreSettings(),
                 c =>
                 {
-                    c.Assemblies = [typeof(OrderEventHandler).Assembly];
+                    c.AssembliesToScanForHandlers = [typeof(OrderEventHandler).Assembly];
                 }
             )
             .WithPipeline<OrderEventPipelineAction1>()

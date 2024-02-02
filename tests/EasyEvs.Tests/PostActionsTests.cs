@@ -24,7 +24,7 @@ public class PostActionsTests
                 sp => sp.GetEventStoreSettings(),
                 c =>
                 {
-                    c.Assemblies = [typeof(OrderEventHandler).Assembly];
+                    c.AssembliesToScanForHandlers = [typeof(OrderEventHandler).Assembly];
                 }
             )
             .AddSingleton(counter);
