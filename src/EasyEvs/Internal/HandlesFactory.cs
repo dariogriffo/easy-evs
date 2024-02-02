@@ -6,7 +6,7 @@ using System.Linq;
 using Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
-internal class HandlesFactory : IHandlesFactory
+internal sealed class HandlesFactory : IHandlesFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IReadOnlyDictionary<Type, Type> _handlers;
@@ -77,7 +77,7 @@ internal class HandlesFactory : IHandlesFactory
             return false;
         }
 
-        preActions = scope.ServiceProvider.GetServices(type!).Select(x => (x as dynamic)!).ToList();
+        preActions = scope.ServiceProvider.GetServices(type).Select(x => (x as dynamic)!).ToList();
         return true;
     }
 
@@ -94,10 +94,7 @@ internal class HandlesFactory : IHandlesFactory
             return false;
         }
 
-        postActions = scope
-            .ServiceProvider.GetServices(type!)
-            .Select(x => (x as dynamic)!)
-            .ToList();
+        postActions = scope.ServiceProvider.GetServices(type).Select(x => (x as dynamic)!).ToList();
         return true;
     }
 }

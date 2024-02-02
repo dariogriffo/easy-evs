@@ -10,7 +10,11 @@ internal static class EventStoreConfigurationExtensions
     internal static IServiceCollection ConfigureEventStoreDb(this IServiceCollection services)
     {
         Dictionary<string, string> dict =
-            new() { { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" } };
+            new()
+            {
+                { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" },
+                { "EasyEvs:SubscriptionGroup", "easy-evs-tests" }
+            };
 
         IConfiguration conf = new ConfigurationBuilder().AddInMemoryCollection(dict!).Build();
         services

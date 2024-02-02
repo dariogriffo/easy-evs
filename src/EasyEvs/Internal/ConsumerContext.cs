@@ -3,7 +3,7 @@ namespace EasyEvs.Internal;
 using System;
 using Contracts;
 
-internal class ConsumerContext : IConsumerContext
+internal sealed class ConsumerContext : IConsumerContext
 {
     internal ConsumerContext(Guid correlationId, int? retryCount = null)
     {

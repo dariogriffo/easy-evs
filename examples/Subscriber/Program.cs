@@ -17,7 +17,7 @@
         {
             var conf = new ConfigurationBuilder().AddEnvironmentFile().Build();
             var services = new ServiceCollection();
-            var configuration = new EasyEvsDependencyInjectionConfiguration()
+            var configuration = new EasyEvsConfiguration()
             {
                 Assemblies = new[] { typeof(Program).Assembly },
                 StreamResolver = typeof(StreamResolver)

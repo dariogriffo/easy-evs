@@ -44,7 +44,7 @@
             CancellationToken cancellationToken
         )
         {
-            var user = await _eventStore.Get<User>(@event.UserId, cancellationToken);
+            var user = await _eventStore.Get<User>(@event.UserId.ToString(), cancellationToken);
             Console.WriteLine($"User with id {user.Id} status: {user.Status}");
             return OperationResult.Ok;
         }

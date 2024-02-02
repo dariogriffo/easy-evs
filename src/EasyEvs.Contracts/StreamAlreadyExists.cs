@@ -10,18 +10,15 @@ public class StreamAlreadyExists : Exception
     /// <summary>
     /// The constructor
     /// </summary>
-    /// <param name="aggregate"></param>
     /// <param name="stream"></param>
-    internal StreamAlreadyExists(Aggregate aggregate, string stream)
-        : base(
-            $"Trying to create stream {stream} for aggregate root {aggregate.GetType()} with id {aggregate.Id}"
-        )
+    internal StreamAlreadyExists(string stream)
+        : base($"Trying to create stream {stream} but already exists")
     {
-        Aggregate = aggregate;
+        Stream = stream;
     }
 
     /// <summary>
-    /// The aggregate root that triggered the exception
+    /// The name of the stream
     /// </summary>
-    public Aggregate Aggregate { get; }
+    public string Stream { get; }
 }

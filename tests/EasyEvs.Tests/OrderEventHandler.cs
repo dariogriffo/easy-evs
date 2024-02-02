@@ -25,7 +25,7 @@
         }
 
         public Task<OperationResult> Handle(
-            [NotNull] OrderCreated @event,
+            OrderCreated @event,
             IConsumerContext context,
             CancellationToken cancellationToken
         )

@@ -11,7 +11,7 @@ using System.Text.Json;
 using Contracts;
 using global::EventStore.Client;
 
-internal class Serializer : ISerializer
+internal sealed class Serializer : ISerializer
 {
     private readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
     private readonly JsonSerializerOptions _options;
@@ -21,12 +21,12 @@ internal class Serializer : ISerializer
         _options = provider.Options;
     }
 
-    public IEvent Deserialize(ResolvedEvent resolvedEvent)
+    public IEvent Deserialize(EventRecord record)
     {
-        ReadOnlyMemory<byte> eventData = resolvedEvent.Event.Data;
+        ReadOnlyMemory<byte> eventData = record.Data;
         Dictionary<string, string>? metadata = JsonSerializer.Deserialize<
             Dictionary<string, string>
-        >(resolvedEvent.Event.Metadata.Span, _options)!;
+        >(record.Metadata.Span, _options)!;
         Type type = _cachedTypes.GetOrAdd(
             metadata["easy.evs.assembly.qualified.name"],
             _ =>
@@ -42,17 +42,17 @@ internal class Serializer : ISerializer
                 return type1!;
             }
         );
-        
+
         IEvent? @event = JsonSerializer.Deserialize(eventData.Span, type, _options) as IEvent;
         int nonEvsKeys = metadata.Count(x => x.Key.StartsWith("easy.evs") == false);
-        
+
         if (nonEvsKeys == 0)
         {
             if (metadata.ContainsKey("easy.evs.empty.metadata"))
             {
                 @event!.Metadata = new Dictionary<string, string>();
             }
-            
+
             return @event!;
         }
 
@@ -63,7 +63,7 @@ internal class Serializer : ISerializer
             @event!.Metadata = new ReadOnlyDictionary<string, string>(dictionary);
         }
 
-        return @event!;
+        return @event;
     }
 
     public EventData Serialize<T>(T @event)

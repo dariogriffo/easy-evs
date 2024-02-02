@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -16,10 +17,19 @@ public class ServiceCollectionExtensionTests
     [Fact]
     public async Task With_No_Parameters_We_Can_Run()
     {
+        CancellationToken cancellationToken = CancellationToken.None;
         ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
 
-        services.ConfigureEventStoreDb().AddEasyEvs().AddSingleton(counter);
+        services
+            .ConfigureEventStoreDb()
+            .AddEasyEvs(
+                sp =>
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetSection("EasyEvs")
+                        .Get<EventStoreSettings>()!
+            )
+            .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
@@ -27,28 +37,14 @@ public class ServiceCollectionExtensionTests
         OrderCreated e1 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
         OrderCancelled e2 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
         OrderRefundRequested e3 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        await eventStore.SubscribeToStream($"order-{orderId}", CancellationToken.None);
-        await eventStore.Append(
-            orderId.ToString(),
-            e1,
-            $"order-{orderId}",
-            cancellationToken: CancellationToken.None
-        );
-        await eventStore.Append(
-            orderId.ToString(),
-            e2,
-            $"order-{orderId}",
-            cancellationToken: CancellationToken.None
-        );
-        await eventStore.Append(
-            orderId.ToString(),
-            e3,
-            $"order-{orderId}",
-            cancellationToken: CancellationToken.None
-        );
+        string stream = $"order-{orderId}";
+        await eventStore.SubscribeToStream(stream, cancellationToken);
+        await eventStore.Append(stream, e1, cancellationToken: cancellationToken);
+        await eventStore.Append(stream, e2, cancellationToken: cancellationToken);
+        await eventStore.Append(stream, e3, cancellationToken: cancellationToken);
         List<IEvent> events = await eventStore.ReadStream(
-            $"order-{orderId}",
-            cancellationToken: CancellationToken.None
+            stream,
+            cancellationToken: cancellationToken
         );
         events.Count.Should().Be(3);
     }

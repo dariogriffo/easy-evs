@@ -3,7 +3,7 @@ namespace EasyEvs.Contracts;
 using System;
 
 /// <summary>
-/// A class to easily dehydrate events into Aggregates
+/// A attribute class to easily hydrate and dehydrate events from Aggregates
 /// </summary>
 /// <typeparam name="T">An Aggregate for your Events</typeparam>
 [AttributeUsage(AttributeTargets.Class)]

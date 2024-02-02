@@ -1,35 +1,25 @@
 ﻿namespace Publisher
 {
-    using System;
     using EasyEvs.Contracts;
-    using Events;
 
     public class StreamResolver : IStreamResolver
     {
-        public string StreamForEvent<T>(T @event)
+        public string StreamForEvent<T>(string aggregateId)
             where T : IEvent
         {
-            var userId = @event switch
-            {
-                UserUpdated e => e.UserId,
-                UserRegistered e => e.UserId,
-                UserDeleted e => e.UserId,
-                _ => throw new ArgumentException($"Unknown event {@event.GetType().Name}")
-            };
-
-            return "user-" + userId;
+            return aggregateId;
         }
 
-        public string StreamForAggregateRoot<T>(T aggregateRoot)
-            where T : AggregateRoot
+        public string StreamForAggregate<T>(string aggregateId)
+            where T : Aggregate
         {
-            throw new NotImplementedException();
+            return aggregateId;
         }
 
-        public string StreamForAggregateRoot<T>(System.Guid id)
-            where T : AggregateRoot
+        public string StreamForAggregate<T>(T aggregate)
+            where T : Aggregate
         {
-            throw new NotImplementedException();
+            return aggregate.Id;
         }
     }
 }

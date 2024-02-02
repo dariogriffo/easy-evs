@@ -1,16 +1,19 @@
 namespace EasyEvs.Contracts;
 
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using ReflectionMagic;
 
 /// <summary>
-/// A base Aggregate Root
+/// A base Aggregate NOT thread safe
 /// </summary>
 public abstract class Aggregate
 {
     private readonly List<IEvent> _events = new();
+
     private bool _new = true;
 
     /// <summary>
@@ -21,7 +24,7 @@ public abstract class Aggregate
     /// <summary>
     /// All the Events that haven't been stored
     /// </summary>
-    public IReadOnlyCollection<IEvent> UncommittedChanges => _events;
+    public IImmutableList<IEvent> UncommittedChanges => _events.ToImmutableList();
 
     /// <summary>
     /// Clear the uncommitted changes
@@ -35,7 +38,7 @@ public abstract class Aggregate
     /// Loads an Aggregate Root to its last know state from the history
     /// </summary>
     /// <param name="history">The history of events</param>
-    public void LoadFromHistory(IReadOnlyCollection<IEvent> history)
+    public void LoadFromHistory(IEnumerable<IEvent> history)
     {
         foreach (IEvent e in history)
         {
@@ -48,7 +51,10 @@ public abstract class Aggregate
     /// </summary>
     /// <param name="eventStore">The event store</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/></param>
-    public async Task Load(IEventStore eventStore, CancellationToken cancellationToken = default)
+    public async Task Load(
+        IAggregateStore eventStore,
+        CancellationToken cancellationToken = default
+    )
     {
         await eventStore.Load(this, cancellationToken);
     }
@@ -59,14 +65,17 @@ public abstract class Aggregate
     /// <param name="eventStore">The event store</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/></param>
     /// <returns>The <see cref="Task"/></returns>
-    public async Task Save(IEventStore eventStore, CancellationToken cancellationToken = default)
+    public async Task Save(
+        IAggregateStore eventStore,
+        CancellationToken cancellationToken = default
+    )
     {
-        Task save = _new
-            ? eventStore.Create(this, cancellationToken)
-            : eventStore.Save(this, cancellationToken);
-        await save;
+        if (_new)
+        {
+            await eventStore.Create(this, cancellationToken);
+        }
 
-        MarkChangesAsCommitted();
+        await eventStore.Save(this, cancellationToken);
     }
 
     /// <summary>

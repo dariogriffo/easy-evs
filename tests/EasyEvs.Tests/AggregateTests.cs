@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Aggregates;
 using Contracts;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -15,15 +16,22 @@ public class AggregateTests
     [Fact]
     public async Task Saved_Aggregate_Is_Correctly_Loaded()
     {
-        EasyEvsDependencyInjectionConfiguration configuration =
-            new() { DefaultStreamResolver = true, };
         ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
 
-        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+        services
+            .ConfigureEventStoreDb()
+            .AddEasyEvs(
+                sp =>
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetSection("EasyEvs")
+                        .Get<EventStoreSettings>()!,
+                c => c.UseAggregates = true
+            )
+            .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
-        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IAggregateStore eventStore = provider.GetRequiredService<IAggregateStore>();
         Guid userId = Guid.NewGuid();
         User user = new();
         user.Create(userId);
@@ -37,15 +45,22 @@ public class AggregateTests
     [Fact]
     public async Task Create_Fails_On_Existing_Stream()
     {
-        EasyEvsDependencyInjectionConfiguration configuration =
-            new() { DefaultStreamResolver = true, };
         ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
 
-        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+        services
+            .ConfigureEventStoreDb()
+            .AddEasyEvs(
+                sp =>
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetSection("EasyEvs")
+                        .Get<EventStoreSettings>()!,
+                c => c.UseAggregates = true
+            )
+            .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
-        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IAggregateStore eventStore = provider.GetRequiredService<IAggregateStore>();
         Guid userId = Guid.NewGuid();
 
         User user = new();
@@ -60,15 +75,22 @@ public class AggregateTests
     [Fact]
     public async Task Save_And_Load_WorkAsExpected()
     {
-        EasyEvsDependencyInjectionConfiguration configuration =
-            new() { DefaultStreamResolver = true, };
         ServiceCollection services = new();
         ICounter counter = Mock.Of<ICounter>();
 
-        services.ConfigureEventStoreDb().AddEasyEvs(configuration).AddSingleton(counter);
+        services
+            .ConfigureEventStoreDb()
+            .AddEasyEvs(
+                sp =>
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetSection("EasyEvs")
+                        .Get<EventStoreSettings>()!,
+                c => c.UseAggregates = true
+            )
+            .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
-        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IAggregateStore eventStore = provider.GetRequiredService<IAggregateStore>();
         Guid userId = Guid.NewGuid();
         User user = new();
         user.Create(userId);
@@ -77,6 +99,6 @@ public class AggregateTests
         await user.Save(eventStore, CancellationToken.None);
         User user1 = new(user.Id);
         await user1.Load(eventStore, CancellationToken.None);
-        user1.Should().BeEquivalentTo(user);
+        user1.Should().BeEquivalentTo(user, c => c.Excluding(u => u.UncommittedChanges));
     }
 }

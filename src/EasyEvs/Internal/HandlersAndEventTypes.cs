@@ -6,7 +6,7 @@ using System.Linq;
 using Contracts.Internal;
 using Microsoft.Extensions.DependencyInjection;
 
-internal class HandlersAndEventTypes
+internal sealed class HandlersAndEventTypes
 {
     private Lazy<IReadOnlyDictionary<Type, Type>> _handlers = null!;
     private Lazy<IReadOnlyDictionary<Type, Type>> _pre = null!;

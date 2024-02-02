@@ -3,7 +3,7 @@
         <!-- General -->
         <AssemblyName>EasyEvs</AssemblyName>
         <Description>An application framework to start quickly with EventStore</Description>
-        <Copyright>Copyright 2022 Dario Griffo</Copyright>
+        <Copyright>Copyright 2024 Dario Griffo</Copyright>
         <Authors>Dario Griffo</Authors>
         <Company>https://github.com/dariogriffo</Company>
         <NeutralLanguage>en-GB</NeutralLanguage>

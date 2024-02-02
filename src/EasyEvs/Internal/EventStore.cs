@@ -12,15 +12,16 @@ using Contracts;
 using global::EventStore.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
-internal class EventStore : IEventStore, IAsyncDisposable
+internal sealed class EventStore : IEventStore, IAsyncDisposable
 {
     private readonly ISerializer _serializer;
-    private readonly IStreamResolver _streamResolver;
+    private readonly IEventsStreamResolver _eventsStreamResolver;
     private readonly IHandlesFactory _handlesFactory;
     private readonly ConcurrentBag<IDisposable> _disposables = new();
     private readonly ILogger<EventStore> _logger;
-    private readonly IConnectionRetry _retry;
+    private readonly IRetryStrategy _retryStrategy;
     private readonly EventStoreSettings _settings;
     private Lazy<EventStorePersistentSubscriptionsClient> _persistent;
     private Lazy<EventStoreClient> _write;
@@ -28,17 +29,17 @@ internal class EventStore : IEventStore, IAsyncDisposable
 
     public EventStore(
         ISerializer serializer,
-        IStreamResolver streamResolver,
+        IEventsStreamResolver eventsStreamResolver,
         IHandlesFactory handlesFactory,
         ILogger<EventStore> logger,
-        IConnectionRetry retry,
+        IRetryStrategy retryStrategy,
         EventStoreSettings settings
     )
     {
         _serializer = serializer;
-        _streamResolver = streamResolver;
+        _eventsStreamResolver = eventsStreamResolver;
         _logger = logger;
-        _retry = retry;
+        _retryStrategy = retryStrategy;
         _settings = settings;
         _handlesFactory = handlesFactory;
 
@@ -50,9 +51,8 @@ internal class EventStore : IEventStore, IAsyncDisposable
     }
 
     public async Task Append<T>(
-        [NotNull] string aggregateId,
+        string stream,
         [NotNull] T @event,
-        [NotNull] string stream,
         CancellationToken cancellationToken = default
     )
         where T : IEvent
@@ -65,237 +65,97 @@ internal class EventStore : IEventStore, IAsyncDisposable
         );
 
         EventData data = _serializer.Serialize(@event);
+        StreamState expectedState = StreamState.Any;
+        await SaveInEventStore(stream, data, expectedState, cancellationToken);
 
-        EventStoreClient client = _write.Value;
-        await _retry.Write(
-            async () =>
-            {
-                await client.AppendToStreamAsync(
-                    stream,
-                    StreamState.Any,
-                    new[] { data },
-                    cancellationToken: cancellationToken
-                );
-
-                _logger.LogDebug("Event with Id {EventId} sent to Event Store", @event.Id);
-            },
-            ReconnectWrite
-        );
+        _logger.LogDebug("Event with Id {EventId} appended", @event.Id);
     }
 
-    public async Task Append<T>(
-        [NotNull] string aggregateId,
+    public async Task Store<T>(
+        string stream,
         [NotNull] T @event,
         CancellationToken cancellationToken = default
     )
         where T : IEvent
     {
-        string stream = _streamResolver.StreamForEvent<T>(aggregateId);
         _logger.LogDebug(
-            "Appending event with id {EventId} of type {EventType} to stream {Stream}",
+            "Saving event with id {EventId} of type {EventType} to stream {Stream}",
             @event.Id,
             @event.GetType(),
             stream
         );
 
         EventData data = _serializer.Serialize(@event);
-        await _retry.Write(
-            async () =>
-            {
-                EventStoreClient client = _write.Value;
-                await client.AppendToStreamAsync(
-                    stream,
-                    StreamState.Any,
-                    new[] { data },
-                    cancellationToken: cancellationToken
-                );
 
-                _logger.LogDebug("Event with Id {EventId} sent to Event Store", @event.Id);
-            },
-            ReconnectWrite
-        );
+        StreamState expectedState = StreamState.Any;
+        await SaveInEventStore(stream, data, expectedState, cancellationToken);
+
+        _logger.LogDebug("Event with Id {EventId} saved", @event.Id);
     }
 
-    public async Task Append<T>(
-        [NotNull] string aggregateId,
-        [NotNull] T @event,
-        long position,
-        CancellationToken cancellationToken = default
-    )
+    public Task Store<T>(string stream, T[] events, CancellationToken cancellationToken = default)
         where T : IEvent
     {
-        if (position <= 0)
-        {
-            throw new ArgumentException("position MUST be greater than 0", nameof(position));
-        }
-
-        string stream = _streamResolver.StreamForEvent<T>(aggregateId);
-        _logger.LogDebug(
-            "Appending event with id {EventId} of type {EventType} to stream {Stream} at position {Position}",
-            @event.Id,
-            @event.GetType(),
-            stream,
-            position
-        );
-
-        EventData data = _serializer.Serialize(@event);
-        await _retry.Write(
-            async () =>
-            {
-                EventStoreClient client = _write.Value;
-                await client.AppendToStreamAsync(
-                    stream,
-                    StreamRevision.FromInt64(position),
-                    new[] { data },
-                    cancellationToken: cancellationToken
-                );
-
-                _logger.LogDebug("Event with Id {EventId} sent to Event Store", @event.Id);
-            },
-            ReconnectWrite
-        );
+        _logger.LogDebug("Adding {Count} events to new stream {Stream}", events.Length, stream);
+        EventData[] data = events.Select(_serializer.Serialize).ToArray();
+        StreamState expectedState = StreamState.NoStream;
+        return SaveInEventStore(stream, data, expectedState, cancellationToken);
     }
 
-    public async Task Create<T>(
-        [NotNull] T aggregate,
-        CancellationToken cancellationToken = default
-    )
-        where T : Aggregate
+    public Task Append<T>(string stream, T[] events, CancellationToken cancellationToken = default)
+        where T : IEvent
     {
-        IReadOnlyCollection<IEvent> changes = aggregate.UncommittedChanges;
-        string stream = _streamResolver.StreamForAggregateRootId(aggregate);
-        EventData[] data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
-
-        _logger.LogDebug(
-            "Saving {EventsCount} events to stream {Stream} for aggregate {AggregateId}",
-            data.Count(),
-            stream,
-            aggregate.Id
-        );
-
-        await _retry.Write(
-            async () =>
-            {
-                try
-                {
-                    EventStoreClient client = _write.Value;
-                    await client.AppendToStreamAsync(
-                        stream,
-                        StreamState.NoStream,
-                        data,
-                        cancellationToken: cancellationToken
-                    );
-                }
-                catch (WrongExpectedVersionException ex)
-                    when (ex.ExpectedStreamRevision == StreamRevision.None)
-                {
-                    throw new StreamAlreadyExists(aggregate, stream);
-                }
-
-                _logger.LogDebug("Aggregate with Id {AggregateId} created.", aggregate.Id);
-            },
-            ReconnectWrite
-        );
+        _logger.LogDebug("Appending {Count} events to stream {Stream}", events.Length, stream);
+        EventData[] data = events.Select(_serializer.Serialize).ToArray();
+        StreamState expectedState = StreamState.Any;
+        return SaveInEventStore(stream, data, expectedState, cancellationToken);
     }
 
-    public async Task Save<T>([NotNull] T aggregate, CancellationToken cancellationToken = default)
-        where T : Aggregate
+    public Task Append<T>([NotNull] T @event, CancellationToken cancellationToken = default)
+        where T : IEvent
     {
-        IReadOnlyCollection<IEvent> changes = aggregate.UncommittedChanges;
-        string stream = _streamResolver.StreamForAggregateRootId(aggregate);
-        EventData[] data = changes.Select(@event => _serializer.Serialize(@event)).ToArray();
-
-        _logger.LogDebug(
-            "Saving {EventsCount} events to stream {Stream} for aggregate {AggregateId}",
-            data.Count(),
-            stream,
-            aggregate.Id
-        );
-
-        await _retry.Write(
-            async () =>
-            {
-                EventStoreClient client = _write.Value;
-                await client.AppendToStreamAsync(
-                    stream,
-                    StreamState.Any,
-                    data,
-                    cancellationToken: cancellationToken
-                );
-
-                _logger.LogDebug("Aggregate with Id {AggregateId} saved.", aggregate.Id);
-            },
-            ReconnectWrite
-        );
+        string stream = _eventsStreamResolver.StreamForEvent(@event);
+        return Append(stream, @event, cancellationToken);
     }
 
     public async Task<List<IEvent>> ReadStream(
-        [NotNull] string stream,
-        long? position = null,
+        string stream,
         CancellationToken cancellationToken = default
     )
     {
-        StreamPosition streamPosition = position is > 0
-            ? StreamPosition.FromInt64(position.Value)
-            : StreamPosition.Start;
+        StreamPosition streamPosition = StreamPosition.Start;
 
-        _logger.LogDebug(
-            "Reading events on stream {Stream} from position {StreamPosition}",
-            stream,
-            streamPosition
-        );
+        _logger.LogDebug("Reading events on stream {Stream}", stream);
 
         List<IEvent> result = new();
-        await _retry.Read(
-            async () =>
+        await _retryStrategy.Read(async () =>
+        {
+            EventStoreClient client = _read.Value;
+            EventStoreClient.ReadStreamResult events = client.ReadStreamAsync(
+                Direction.Forwards,
+                stream,
+                streamPosition,
+                cancellationToken: cancellationToken
+            );
+
+            await foreach (ResolvedEvent @event in events)
             {
-                EventStoreClient client = _read.Value;
-                EventStoreClient.ReadStreamResult events = client.ReadStreamAsync(
-                    Direction.Forwards,
-                    stream,
-                    streamPosition,
-                    cancellationToken: cancellationToken
-                );
-
-                await foreach (ResolvedEvent @event in events)
+                if (@event.IsResolved && !_settings.ResolveEvents)
                 {
-                    result.Add(_serializer.Deserialize(@event));
+                    continue;
                 }
+                
+                result.Add(_serializer.Deserialize(@event.OriginalEvent));
+            }
 
-                _logger.LogDebug("{Count} events found on stream {Stream}", result.Count, stream);
-            },
-            ReconnectRead
-        );
+            _logger.LogDebug("{Count} events found on stream {Stream}", result.Count, stream);
+        });
         return result;
     }
 
-    public Task SubscribeToStream([NotNull] string stream, CancellationToken cancellationToken)
+    public Task SubscribeToStream(string stream, CancellationToken cancellationToken)
     {
         return InnerSubscribe(stream, _settings.TreatMissingHandlersAsErrors, cancellationToken);
-    }
-
-    public async Task<T> Load<T>(T aggregate, CancellationToken cancellationToken = default)
-        where T : Aggregate
-    {
-        string id = aggregate.Id;
-        string streamName = _streamResolver.StreamForAggregateRootId(aggregate);
-        _logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamName);
-        List<IEvent> data = await ReadStream(streamName, null, cancellationToken);
-        aggregate.LoadFromHistory(data);
-        _logger.LogDebug("Aggregate with id {Id} loaded", id);
-        return aggregate;
-    }
-
-    public async Task<T> Get<T>(string id, CancellationToken cancellationToken = default)
-        where T : Aggregate, new()
-    {
-        string streamName = _streamResolver.StreamForAggregateRoot<T>(id);
-        _logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamName);
-        List<IEvent> data = await ReadStream(streamName, null, cancellationToken);
-        T result = new();
-        result.LoadFromHistory(data);
-        _logger.LogDebug("Aggregate with id {Id} loaded", id);
-        return result;
     }
 
     public Task SubscribeToStream(SubscribeCommand command, CancellationToken cancellationToken)
@@ -335,75 +195,68 @@ internal class EventStore : IEventStore, IAsyncDisposable
         CancellationToken cancellationToken
     )
     {
-        await _retry.Subscribe(
-            async () =>
+        await _retryStrategy.Subscribe(async () =>
+        {
+            string group = _settings.SubscriptionGroup!;
+            EventStorePersistentSubscriptionsClient connection = _persistent.Value;
+            try
             {
-                string group = _settings.SubscriptionGroup;
-                EventStorePersistentSubscriptionsClient connection = _persistent.Value;
-                try
-                {
-                    PersistentSubscriptionSettings settings = new(true);
+                PersistentSubscriptionSettings settings = new(_settings.ResolveEvents);
 
-                    await connection.CreateAsync(
-                        stream,
-                        @group,
-                        settings,
-                        cancellationToken: cancellationToken
-                    );
-
-                    _logger.LogDebug(
-                        "Created subscription for stream {Stream} with group {Group}",
-                        stream,
-                        group
-                    );
-                }
-                catch (InvalidOperationException ex) when (ex.Message.Contains("AlreadyExists"))
-                {
-                    // Nothing to do here
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Error while creating subscription to stream {Stream} with group {Group}",
-                        stream,
-                        group
-                    );
-                    _logger.LogInformation(
-                        "Not subscribed to {Stream} with group: {Group}",
-                        stream,
-                        group
-                    );
-                    throw;
-                }
-
-                _logger.LogDebug(
-                    "Subscribing to stream {Stream} with group {Group}",
+                await connection.CreateAsync(
                     stream,
-                    group
-                );
-
-                PersistentSubscription sub = await connection.SubscribeAsync(
-                    stream,
-                    group,
-                    OnEventAppeared(treatMissingHandlersAsErrors),
-                    OnSubscriptionDropped(stream),
-                    bufferSize: _settings.SubscriptionBufferSize,
-                    autoAck: false,
+                    @group,
+                    settings,
                     cancellationToken: cancellationToken
                 );
 
                 _logger.LogDebug(
-                    "Subscribed to stream {Stream} with group {Group} id {SubscriptionId}",
+                    "Created subscription for stream {Stream} with group {Group}",
                     stream,
-                    group,
-                    sub.SubscriptionId
+                    group
                 );
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("AlreadyExists"))
+            {
+                // Nothing to do here
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error while creating subscription to stream {Stream} with group {Group}",
+                    stream,
+                    group
+                );
+                _logger.LogInformation(
+                    "Not subscribed to {Stream} with group: {Group}",
+                    stream,
+                    group
+                );
+                throw;
+            }
 
-                _disposables.Add(sub);
-            },
-            ReconnectSubscription
-        );
+            _logger.LogDebug("Subscribing to stream {Stream} with group {Group}", stream, group);
+
+            PersistentSubscription sub = await connection.SubscribeAsync(
+                stream,
+                group,
+                OnEventAppeared(treatMissingHandlersAsErrors),
+                OnSubscriptionDropped(stream),
+                bufferSize: _settings.SubscriptionBufferSize,
+                autoAck: false,
+                cancellationToken: cancellationToken
+            );
+
+            _logger.LogDebug(
+                "Subscribed to stream {Stream} with group {Group} id {SubscriptionId}",
+                stream,
+                group,
+                sub.SubscriptionId
+            );
+
+            _disposables.Add(sub);
+        });
     }
 
     private Func<
@@ -416,9 +269,15 @@ internal class EventStore : IEventStore, IAsyncDisposable
     {
         return async (subscription, resolvedEvent, retryCount, c) =>
         {
+            
+            if (@resolvedEvent.IsResolved && !_settings.ResolveEvents)
+            {
+                await subscription.Ack(resolvedEvent);
+            }
+            
             try
             {
-                IEvent @event = _serializer.Deserialize(resolvedEvent);
+                IEvent @event = _serializer.Deserialize(resolvedEvent.OriginalEvent);
                 _logger.LogDebug("Event with id {EventId} arrived", @event.Id);
 
                 if (!_handlesFactory.TryGetScopeFor(@event, out IServiceScope? scope))
@@ -567,7 +426,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
         PersistentSubscription,
         SubscriptionDroppedReason,
         Exception?
-    > OnSubscriptionDropped([NotNull] string stream)
+    > OnSubscriptionDropped(string stream)
     {
         return (subscription, reason, exception) =>
         {
@@ -612,7 +471,7 @@ internal class EventStore : IEventStore, IAsyncDisposable
         return new EventStoreClient(EventStoreClientSettings.Create(_settings.ConnectionString));
     }
 
-    private async Task ReconnectWrite(Exception ex)
+    private async Task ReconnectWrite(Exception _)
     {
         try
         {
@@ -654,5 +513,57 @@ internal class EventStore : IEventStore, IAsyncDisposable
         }
 
         _read = new Lazy<EventStoreClient>(ClientFactory);
+    }
+
+    private async Task SaveInEventStore(
+        string stream,
+        EventData data,
+        StreamState expectedState,
+        CancellationToken cancellationToken
+    )
+    {
+        await _retryStrategy.Write(async () =>
+        {
+            try
+            {
+                await _write.Value.AppendToStreamAsync(
+                    stream,
+                    expectedState,
+                    new[] { data },
+                    cancellationToken: cancellationToken
+                );
+            }
+            catch (WrongExpectedVersionException ex)
+                when (ex.ExpectedStreamRevision == StreamRevision.None)
+            {
+                throw new StreamAlreadyExists(stream);
+            }
+        });
+    }
+
+    private async Task SaveInEventStore(
+        string stream,
+        EventData[] data,
+        StreamState expectedState,
+        CancellationToken cancellationToken
+    )
+    {
+        await _retryStrategy.Write(async () =>
+        {
+            try
+            {
+                await _write.Value.AppendToStreamAsync(
+                    stream,
+                    expectedState,
+                    data,
+                    cancellationToken: cancellationToken
+                );
+            }
+            catch (WrongExpectedVersionException ex)
+                when (ex.ExpectedStreamRevision == StreamRevision.None)
+            {
+                throw new StreamAlreadyExists(stream);
+            }
+        });
     }
 }

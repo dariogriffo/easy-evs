@@ -3,11 +3,11 @@
     using EasyEvs.Contracts;
     using Events;
 
-    public class User : AggregateRoot
+    public class User : Aggregate
     {
         private void Apply(UserRegistered @event)
         {
-            Id = @event.UserId;
+            Id = @event.UserId.ToString();
             Status = UserStatus.Registered;
         }
 

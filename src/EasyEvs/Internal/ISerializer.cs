@@ -5,7 +5,7 @@ using global::EventStore.Client;
 
 internal interface ISerializer
 {
-    IEvent Deserialize(ResolvedEvent resolvedEvent);
+    IEvent Deserialize(EventRecord record);
 
     EventData Serialize<T>(T @event)
         where T : IEvent;

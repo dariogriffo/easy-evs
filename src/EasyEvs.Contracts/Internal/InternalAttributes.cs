@@ -3,13 +3,13 @@ namespace EasyEvs.Contracts.Internal;
 using System;
 
 [AttributeUsage(AttributeTargets.Interface)]
-internal class HandlesEventAttribute : Attribute;
+internal sealed class HandlesEventAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Interface)]
-internal class PreActionEventAttribute : Attribute;
+internal sealed class PreActionEventAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Interface)]
-internal class PostHandlerEventAttribute : Attribute;
+internal sealed class PostHandlerEventAttribute : Attribute;
 
 [AttributeUsage(AttributeTargets.Interface)]
-internal class PipelineHandlerAttribute : Attribute;
+internal sealed class PipelineHandlerAttribute : Attribute;
