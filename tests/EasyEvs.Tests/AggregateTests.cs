@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Aggregates;
 using Contracts;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -22,10 +21,7 @@ public class AggregateTests
         services
             .ConfigureEventStoreDb()
             .AddEasyEvs(
-                sp =>
-                    sp.GetRequiredService<IConfiguration>()
-                        .GetSection("EasyEvs")
-                        .Get<EventStoreSettings>()!,
+                sp => sp.GetEventStoreSettings(),
                 c => c.UseAggregates = true
             )
             .AddSingleton(counter);
@@ -51,10 +47,7 @@ public class AggregateTests
         services
             .ConfigureEventStoreDb()
             .AddEasyEvs(
-                sp =>
-                    sp.GetRequiredService<IConfiguration>()
-                        .GetSection("EasyEvs")
-                        .Get<EventStoreSettings>()!,
+                sp => sp.GetEventStoreSettings(),
                 c => c.UseAggregates = true
             )
             .AddSingleton(counter);
@@ -81,10 +74,7 @@ public class AggregateTests
         services
             .ConfigureEventStoreDb()
             .AddEasyEvs(
-                sp =>
-                    sp.GetRequiredService<IConfiguration>()
-                        .GetSection("EasyEvs")
-                        .Get<EventStoreSettings>()!,
+                sp => sp.GetEventStoreSettings(),
                 c => c.UseAggregates = true
             )
             .AddSingleton(counter);

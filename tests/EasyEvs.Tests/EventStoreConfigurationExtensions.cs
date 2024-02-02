@@ -1,9 +1,11 @@
 namespace EasyEvs.Tests;
 
+using Contracts;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
 
 internal static class EventStoreConfigurationExtensions
 {
@@ -27,4 +29,7 @@ internal static class EventStoreConfigurationExtensions
 
         return services;
     }
+
+    internal static EventStoreSettings GetEventStoreSettings(this IServiceProvider sp) =>
+        sp.GetRequiredService<IConfiguration>().GetSection("EasyEvs").Get<EventStoreSettings>()!;
 }

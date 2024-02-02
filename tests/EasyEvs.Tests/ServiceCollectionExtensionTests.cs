@@ -23,12 +23,7 @@ public class ServiceCollectionExtensionTests
 
         services
             .ConfigureEventStoreDb()
-            .AddEasyEvs(
-                sp =>
-                    sp.GetRequiredService<IConfiguration>()
-                        .GetSection("EasyEvs")
-                        .Get<EventStoreSettings>()!
-            )
+            .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();

@@ -21,10 +21,7 @@ public class PreActionsTests
         services
             .ConfigureEventStoreDb()
             .AddEasyEvs(
-                sp =>
-                    sp.GetRequiredService<IConfiguration>()
-                        .GetSection("EasyEvs")
-                        .Get<EventStoreSettings>()!,
+                sp => sp.GetEventStoreSettings(),
                 c =>
                 {
                     c.Assemblies = [typeof(OrderEventHandler).Assembly];
