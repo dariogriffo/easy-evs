@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Aggregates;
 using Contracts;
+using EasyEvs.Aggregates.Contracts;
 
 [Aggregate<User>]
 public class UserCreated : IEvent

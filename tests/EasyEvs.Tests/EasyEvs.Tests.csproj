@@ -23,6 +23,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\EasyEvs.Aggregates.Contracts\EasyEvs.Aggregates.Contracts.csproj" />
+        <ProjectReference Include="..\..\EasyEvs.Aggregates\EasyEvs.Aggregates.csproj" />
         <ProjectReference Include="..\..\src\EasyEvs\EasyEvs.csproj" />
     </ItemGroup>
 

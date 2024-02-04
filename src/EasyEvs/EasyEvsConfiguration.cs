@@ -19,21 +19,8 @@ public class EasyEvsConfiguration
     /// <summary>
     /// If set, the implementation to use for the <see cref="IEventsStreamResolver"/>
     /// Not required you don't plan to manually Append events via <see cref="IEventStore.Append{T}(string,T,System.Threading.CancellationToken)"/>
-    /// If you plan to <see cref="UseAggregates"/> you can skip this
     /// </summary>
     public Type? EventsStreamResolverType { get; set; }
-
-    /// <summary>
-    /// If set to true <see cref="IAggregateStreamResolver"/> must be set to allow <see cref="Aggregate"/>
-    /// subclasses to use the Aggregate Store
-    /// </summary>
-    public bool UseAggregates { get; set; }
-
-    /// <summary>
-    /// If set, the implementation to use for the <see cref="IAggregateStreamResolver"/>
-    /// Only used if <see cref="UseAggregates"/> is true
-    /// </summary>
-    public Type? AggregateStreamResolver { get; set; }
 
     /// <summary>
     /// If set, the implementation to use for the <see cref="IRetryStrategy"/>

@@ -1,11 +1,13 @@
-namespace EasyEvs.Contracts;
+namespace EasyEvs.Aggregates.Contracts;
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyEvs.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 using ReflectionMagic;
+using System;
 
 /// <summary>
 /// A base Aggregate NOT thread safe
@@ -47,7 +49,7 @@ public abstract class Aggregate
     }
 
     /// <summary>
-    /// Loads the Aggregate history from the <see cref="IEventStore"/>
+    /// Loads the Aggregate history from the <see cref="EasyEvs.Contracts.IEventStore"/>
     /// </summary>
     /// <param name="eventStore">The event store</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/></param>
@@ -60,7 +62,7 @@ public abstract class Aggregate
     }
 
     /// <summary>
-    /// Saves the Aggregate history into the <see cref="IEventStore"/>
+    /// Saves the Aggregate history into the <see cref="EasyEvs.Contracts.IEventStore"/>
     /// </summary>
     /// <param name="eventStore">The event store</param>
     /// <param name="cancellationToken">The <see cref="CancellationToken"/></param>

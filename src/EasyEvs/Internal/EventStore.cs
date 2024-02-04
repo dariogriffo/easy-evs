@@ -6,13 +6,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using global::EventStore.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 
 internal sealed class EventStore : IEventStore, IAsyncDisposable
 {
@@ -144,7 +144,7 @@ internal sealed class EventStore : IEventStore, IAsyncDisposable
                 {
                     continue;
                 }
-                
+
                 result.Add(_serializer.Deserialize(@event.OriginalEvent));
             }
 
@@ -269,12 +269,11 @@ internal sealed class EventStore : IEventStore, IAsyncDisposable
     {
         return async (subscription, resolvedEvent, retryCount, c) =>
         {
-            
             if (@resolvedEvent.IsResolved && !_settings.ResolveEvents)
             {
                 await subscription.Ack(resolvedEvent);
             }
-            
+
             try
             {
                 IEvent @event = _serializer.Deserialize(resolvedEvent.OriginalEvent);

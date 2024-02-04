@@ -1,4 +1,6 @@
-namespace EasyEvs.Contracts;
+namespace EasyEvs.Aggregates.Contracts;
+
+using EasyEvs.Contracts;
 
 /// <summary>
 /// An interface required to be implemented in order for EasyEvs to work
@@ -17,7 +19,7 @@ public interface IAggregateStreamResolver
     /// <summary>
     /// The name of the stream for this aggregate.
     /// </summary>
-    /// <typeparam name="T"><see cref="Aggregate"/>.</typeparam>
+    /// <typeparam name="T"><see cref="EasyEvs.Aggregates.Contracts.Aggregate"/>.</typeparam>
     /// <param name="aggregate">The aggregate root.</param>
     /// <returns>The name of the stream.</returns>
     string StreamForAggregate<T>(T aggregate)

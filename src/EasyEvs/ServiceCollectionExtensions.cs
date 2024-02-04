@@ -95,25 +95,15 @@ public static class ServiceCollectionExtensions
             typeof(NoEventsStreamResolver)
         );
 
-        if (configuration is { UseAggregates: true })
-        {
-            services.AddSingleton<IAggregateStore, AggregatesStore>();
-
-            RegisterProvidedTypeOrFallback(
-                services,
-                typeof(IAggregateStreamResolver),
-                configuration.AggregateStreamResolver,
-                typeof(AggregateAttributeResolver)
-            );
-        }
-
         services.AddSingleton(sp =>
         {
             EventStoreSettings eventStoreSettings = eventStoreSettingsProvider!.Invoke(sp);
-            _ = eventStoreSettings.ConnectionString ??
-                throw new ArgumentNullException(nameof(eventStoreSettings.ConnectionString));
-            _ = eventStoreSettings.SubscriptionGroup ??
-                throw new ArgumentNullException(nameof(eventStoreSettings.SubscriptionGroup));
+            _ =
+                eventStoreSettings.ConnectionString
+                ?? throw new ArgumentNullException(nameof(eventStoreSettings.ConnectionString));
+            _ =
+                eventStoreSettings.SubscriptionGroup
+                ?? throw new ArgumentNullException(nameof(eventStoreSettings.SubscriptionGroup));
             return eventStoreSettings;
         });
 
@@ -144,14 +134,14 @@ public static class ServiceCollectionExtensions
             services,
             assemblies,
             typeof(PostHandlerEventAttribute),
-            configuration.DefaultHandlesLifetime
+            configuration.DefaultPostActionsLifetime
         );
 
         RegisterTargetWithAttribute(
             services,
             assemblies,
             typeof(PreActionEventAttribute),
-            configuration.DefaultHandlesLifetime
+            configuration.DefaultPreActionsLifetime
         );
 
         _handlersAndTypes = handlersAndTypes = new HandlersAndEventTypes(services);

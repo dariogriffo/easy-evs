@@ -2,6 +2,7 @@ namespace EasyEvs.Tests.Aggregates;
 
 using System;
 using Contracts;
+using EasyEvs.Aggregates.Contracts;
 using Events.Users;
 
 public class User : Aggregate
