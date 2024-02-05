@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -35,9 +34,9 @@ public class ReadStreamTests
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         provider.GetRequiredService<IEventsStreamResolver>();
         Guid orderId = Guid.NewGuid();
-        OrderCreated e1 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        OrderCancelled e2 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        OrderCancelled e3 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderCreated e1 = new(orderId);
+        OrderCancelled e2 = new(orderId);
+        OrderCancelled e3 = new(orderId);
         string stream = $"orders-{orderId.ToString()}";
 
         await eventStore.Append(stream, e1, cancellationToken: CancellationToken.None);

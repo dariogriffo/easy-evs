@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using Events.Orders.v2;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Pipelines;
@@ -36,7 +35,7 @@ public class PipelineActionsTests
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid orderId = Guid.NewGuid();
         string stream = $"orders-{orderId}";
-        OrderEventCancelled @event = new(Guid.NewGuid(), DateTime.UtcNow, orderId, "No reason");
+        OrderEventCancelled @event = new(orderId, "No reason");
         await eventStore.SubscribeToStream(stream, CancellationToken.None);
         await eventStore.Append(stream, @event, cancellationToken: CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));

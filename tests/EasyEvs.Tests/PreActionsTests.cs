@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -32,7 +31,7 @@ public class PreActionsTests
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
 
         Guid orderId = Guid.NewGuid();
-        OrderAbandoned @event = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderAbandoned @event = new(orderId);
         string stream = orderId.ToString();
         await eventStore.SubscribeToStream(stream, CancellationToken.None);
         await eventStore.Append(stream, @event, cancellationToken: CancellationToken.None);

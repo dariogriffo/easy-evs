@@ -1,7 +1,6 @@
 namespace EasyEvs.Tests.Aggregates;
 
 using System;
-using Contracts;
 using EasyEvs.Aggregates.Contracts;
 using Events.Users;
 
@@ -34,16 +33,16 @@ public class User : Aggregate
 
     public void Create(Guid id)
     {
-        ApplyChange(new UserCreated(Guid.NewGuid(), DateTime.UtcNow, id.ToString()));
+        ApplyChange(new UserCreated(id.ToString()));
     }
 
     public void Update()
     {
-        ApplyChange(new UserUpdated(Guid.NewGuid(), DateTime.UtcNow, Id));
+        ApplyChange(new UserUpdated(Id));
     }
 
     public void Deactivate()
     {
-        ApplyChange(new UserDeactivated(Guid.NewGuid(), DateTime.UtcNow, Id));
+        ApplyChange(new UserDeactivated(Id));
     }
 }

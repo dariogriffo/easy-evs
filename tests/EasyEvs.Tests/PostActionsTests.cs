@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -33,7 +32,7 @@ public class PostActionsTests
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
 
         Guid orderId = Guid.NewGuid();
-        OrderDelivered @event = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderDelivered @event = new(orderId);
         string stream = $"orders-{orderId.ToString()}";
         CancellationToken cancellationToken = CancellationToken.None;
         await eventStore.SubscribeToStream(stream, cancellationToken);

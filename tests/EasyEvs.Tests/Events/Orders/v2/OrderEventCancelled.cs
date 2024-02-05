@@ -8,20 +8,36 @@ using Contracts;
 using EasyEvs.Aggregates.Contracts;
 
 [Aggregate<Order>]
-[method: JsonConstructor]
-public class OrderEventCancelled(
-    Guid id,
-    DateTime timestamp,
-    Guid orderId,
-    string? reason = default
-) : IEvent
+public class OrderEventCancelled : IEvent
 {
-    public Guid Id { get; } = id;
+    [method: JsonConstructor]
+    private OrderEventCancelled(Guid id,
+        DateTime timestamp,
+        Guid orderId,
+        string? reason = default)
+    {
+        Id = id;
+        OrderId = orderId;
+        Reason = reason;
+        Timestamp = timestamp;
+    }
 
-    public Guid OrderId { get; } = orderId;
-    public string? Reason { get; } = reason;
+    public OrderEventCancelled(
+        Guid orderId,
+        string? reason = default)
+    {
+        Id = Guid.NewGuid();
+        OrderId = orderId;
+        Reason = reason;
+        Timestamp = DateTime.UtcNow;
+    }
 
-    public DateTime Timestamp { get; } = timestamp;
+    public Guid Id { get; }
+
+    public Guid OrderId { get; }
+    public string? Reason { get; }
+
+    public DateTime Timestamp { get; }
 
     public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
         new Dictionary<string, string>();

@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
 using Events.Orders;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
@@ -34,9 +33,9 @@ public class SubscribeTests
         ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid orderId = Guid.NewGuid();
-        OrderCreated e1 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        OrderCancelled e2 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
-        OrderRefundRequested e3 = new(Guid.NewGuid(), DateTime.UtcNow, orderId);
+        OrderCreated e1 = new(orderId);
+        OrderCancelled e2 = new(orderId);
+        OrderRefundRequested e3 = new(orderId);
         string stream = $"orders-{orderId.ToString()}";
 
         await eventStore.SubscribeToStream(stream, cancellationToken);
