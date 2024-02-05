@@ -8,7 +8,7 @@
     using Events.Orders.v2;
     using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
-    public class OrderEventHandler
+    public class OrderEventHandler(ICounter counter)
         : IHandlesEvent<OrderCreated>,
             IHandlesEvent<OrderCancelled>,
             IHandlesEvent<Events.Orders.OrderRefundRequested>,
@@ -17,20 +17,13 @@
             IHandlesEvent<OrderDelivered>,
             IHandlesEvent<OrderAbandoned>
     {
-        private readonly ICounter _counter;
-
-        public OrderEventHandler(ICounter counter)
-        {
-            _counter = counter;
-        }
-
         public Task<OperationResult> Handle(
             OrderCreated @event,
             IConsumerContext context,
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
@@ -40,7 +33,7 @@
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
@@ -50,7 +43,7 @@
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
@@ -60,7 +53,7 @@
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
@@ -70,7 +63,7 @@
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
@@ -80,7 +73,7 @@
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
 
@@ -90,7 +83,7 @@
             CancellationToken cancellationToken
         )
         {
-            _counter.Touch();
+            counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
     }

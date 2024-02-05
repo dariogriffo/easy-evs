@@ -8,21 +8,14 @@ using Contracts;
 using EasyEvs.Aggregates.Contracts;
 
 [Aggregate<Order>]
-public class OrderRefundRequested : IEvent
+[method: JsonConstructor]
+public class OrderRefundRequested(Guid id, DateTime timestamp, Guid orderId) : IEvent
 {
-    [JsonConstructor]
-    public OrderRefundRequested(Guid id, DateTime timestamp, Guid orderId)
-    {
-        Id = id;
-        Timestamp = timestamp;
-        OrderId = orderId;
-    }
+    public Guid Id { get; } = id;
 
-    public Guid Id { get; }
+    public Guid OrderId { get; } = orderId;
 
-    public Guid OrderId { get; }
-
-    public DateTime Timestamp { get; }
+    public DateTime Timestamp { get; } = timestamp;
 
     public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
         new Dictionary<string, string>();

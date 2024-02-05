@@ -6,15 +6,9 @@ using System.Threading.Tasks;
 using Contracts;
 using Events.Orders.v2;
 
-public class OrderEventPipelineAction2 : IPipelineHandlesEventAction<OrderEventCancelled>
+public class OrderEventPipelineAction2(ICounter counter)
+    : IPipelineHandlesEventAction<OrderEventCancelled>
 {
-    private readonly ICounter _counter;
-
-    public OrderEventPipelineAction2(ICounter counter)
-    {
-        _counter = counter;
-    }
-
     public async Task<OperationResult> Execute(
         OrderEventCancelled @event,
         IConsumerContext context,
@@ -22,9 +16,9 @@ public class OrderEventPipelineAction2 : IPipelineHandlesEventAction<OrderEventC
         CancellationToken cancellationToken
     )
     {
-        _counter.Touch();
+        counter.Touch();
         OperationResult result = await next();
-        _counter.Touch();
+        counter.Touch();
         return result;
     }
 }

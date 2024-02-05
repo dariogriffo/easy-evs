@@ -8,21 +8,14 @@ using Contracts;
 using EasyEvs.Aggregates.Contracts;
 
 [Aggregate<User>]
-public class UserDeactivated : IEvent
+[method: JsonConstructor]
+public class UserDeactivated(Guid id, DateTime timestamp, string userId) : IEvent
 {
-    [JsonConstructor]
-    public UserDeactivated(Guid id, DateTime timestamp, string userId)
-    {
-        Id = id;
-        Timestamp = timestamp;
-        UserId = userId;
-    }
+    public Guid Id { get; } = id;
 
-    public Guid Id { get; }
+    public string UserId { get; } = userId;
 
-    public string UserId { get; }
-
-    public DateTime Timestamp { get; }
+    public DateTime Timestamp { get; } = timestamp;
 
     public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
         new Dictionary<string, string>();

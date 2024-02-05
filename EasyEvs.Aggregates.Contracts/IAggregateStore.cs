@@ -30,7 +30,8 @@ public interface IAggregateStore
         where T : Aggregate;
 
     /// <summary>
-    /// Gets the aggregate root from the Event Store
+    /// Gets the aggregate root from the Event Store.
+    /// The Aggregate must have a parameterless constructor
     /// </summary>
     /// <param name="id">The aggregate root's id.</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>

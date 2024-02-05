@@ -11,15 +11,10 @@ using System.Text.Json;
 using Contracts;
 using global::EventStore.Client;
 
-internal sealed class Serializer : ISerializer
+internal sealed class Serializer(IJsonSerializerOptionsProvider provider) : ISerializer
 {
     private readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
-    private readonly JsonSerializerOptions _options;
-
-    public Serializer(IJsonSerializerOptionsProvider provider)
-    {
-        _options = provider.Options;
-    }
+    private readonly JsonSerializerOptions _options = provider.Options;
 
     public IEvent Deserialize(EventRecord record)
     {

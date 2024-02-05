@@ -1,5 +1,6 @@
 namespace EasyEvs.Aggregates.Contracts;
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
@@ -7,7 +8,6 @@ using System.Threading.Tasks;
 using EasyEvs.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 using ReflectionMagic;
-using System;
 
 /// <summary>
 /// A base Aggregate NOT thread safe
