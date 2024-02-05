@@ -1,16 +1,28 @@
 namespace EasyEvs.Tests.Aggregates;
 
-using System;
 using EasyEvs.Aggregates.Contracts;
 using Events.Users;
 
 public class User : Aggregate
 {
+    public enum UserStatus
+    {
+        Active,
+        Inactive,
+        Deleted,
+        Created,
+        Updated
+    }
+    
     public User() { }
 
-    public User(string id)
+    
+    public static User Create(string id)
     {
-        Id = id;
+        User user = new();
+        var @event = new UserCreated(id);
+        user.ApplyChange(@event);
+        return user;
     }
 
     public int Sum { get; private set; }
@@ -19,22 +31,22 @@ public class User : Aggregate
     {
         Id = e.UserId;
         Sum = 1;
+        Status = UserStatus.Created;
     }
 
     private void Apply(UserUpdated e)
     {
         Sum += 10;
+        Status = UserStatus.Updated;
     }
 
     private void Apply(UserDeactivated e)
     {
-        Sum += 100;
+        Status = UserStatus.Inactive;
     }
 
-    public void Create(Guid id)
-    {
-        ApplyChange(new UserCreated(id.ToString()));
-    }
+    public UserStatus Status { get; private set; }
+
 
     public void Update()
     {

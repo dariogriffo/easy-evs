@@ -27,15 +27,15 @@ public class AggregateTests
             .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
-        IAggregateStore eventStore = provider.GetRequiredService<IAggregateStore>();
-        Guid userId = Guid.NewGuid();
-        User user = new();
-        user.Create(userId);
+        IAggregateStore aggregateStore = provider.GetRequiredService<IAggregateStore>();
+        string userId = Guid.NewGuid().ToString();
+        User user = User.Create(userId);
         user.Update();
         user.Deactivate();
-        await eventStore.Save(user, CancellationToken.None);
-        User user1 = await eventStore.Get<User>(user.Id, CancellationToken.None);
-        user1.Sum.Should().Be(111);
+        await aggregateStore.Save(user, CancellationToken.None);
+        User user1 = await aggregateStore.Get<User>(user.Id, CancellationToken.None);
+        user1.Sum.Should().Be(11);
+        user1.Status.Should().Be(User.UserStatus.Inactive);
     }
 
     [Fact]
@@ -51,15 +51,13 @@ public class AggregateTests
             .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
-        IAggregateStore eventStore = provider.GetRequiredService<IAggregateStore>();
-        Guid userId = Guid.NewGuid();
-
-        User user = new();
-        user.Create(userId);
-        User user1 = new();
-        user1.Create(userId);
-        await eventStore.Create(user, CancellationToken.None);
-        Func<Task> act = async () => await eventStore.Create(user1, CancellationToken.None);
+        IAggregateStore aggregateStore = provider.GetRequiredService<IAggregateStore>();
+        string userId = Guid.NewGuid().ToString();
+        
+        User user = User.Create(userId);
+        User user1 = User.Create(userId);
+        await aggregateStore.Create(user, CancellationToken.None);
+        Func<Task> act = async () => await aggregateStore.Create(user1, CancellationToken.None);
         await act.Should().ThrowAsync<StreamAlreadyExists>();
     }
 
@@ -76,15 +74,15 @@ public class AggregateTests
             .AddSingleton(counter);
 
         ServiceProvider provider = services.BuildServiceProvider();
-        IAggregateStore eventStore = provider.GetRequiredService<IAggregateStore>();
-        Guid userId = Guid.NewGuid();
-        User user = new();
-        user.Create(userId);
+        IAggregateStore aggregateStore = provider.GetRequiredService<IAggregateStore>();
+        string userId = Guid.NewGuid().ToString();
+        User user = User.Create(userId);
         user.Update();
         user.Deactivate();
-        await user.Save(eventStore, CancellationToken.None);
-        User user1 = new(user.Id);
-        await user1.Load(eventStore, CancellationToken.None);
+        await user.Save(aggregateStore, CancellationToken.None);
+        
+        User user1 = User.Create(userId);
+        await user1.Load(aggregateStore, CancellationToken.None);
         user1.Should().BeEquivalentTo(user, c => c.Excluding(u => u.UncommittedChanges));
     }
 }
