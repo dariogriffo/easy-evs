@@ -17,7 +17,7 @@ public class UserDeactivated : IEvent
         UserId = userId;
         Timestamp = timestamp;
     }
-    
+
     public UserDeactivated(string userId)
     {
         Id = Guid.NewGuid();

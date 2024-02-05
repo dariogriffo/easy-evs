@@ -17,15 +17,13 @@ public class OrderRefundRequested : IEvent
         OrderId = orderId;
         Timestamp = timestamp;
     }
-    
+
     public OrderRefundRequested(Guid orderId)
     {
         Id = Guid.NewGuid();
         OrderId = orderId;
         Timestamp = DateTime.UtcNow;
     }
-    
-    
 
     public Guid Id { get; }
 

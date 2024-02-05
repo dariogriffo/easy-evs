@@ -25,7 +25,6 @@ public class OrderCreated : IEvent
         Timestamp = DateTime.UtcNow;
     }
 
-    
     public Guid Id { get; }
 
     public Guid OrderId { get; }

@@ -17,7 +17,7 @@ public class UserCreated : IEvent
         UserId = userId;
         Timestamp = timestamp;
     }
-    
+
     public UserCreated(string userId)
     {
         Id = Guid.NewGuid();

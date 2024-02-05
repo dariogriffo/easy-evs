@@ -17,7 +17,7 @@ public class OrderCancelled : IEvent
         OrderId = orderId;
         Timestamp = timestamp;
     }
-    
+
     public OrderCancelled(Guid orderId)
     {
         Id = Guid.NewGuid();

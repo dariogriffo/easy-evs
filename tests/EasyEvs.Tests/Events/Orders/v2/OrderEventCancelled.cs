@@ -11,10 +11,7 @@ using EasyEvs.Aggregates.Contracts;
 public class OrderEventCancelled : IEvent
 {
     [method: JsonConstructor]
-    private OrderEventCancelled(Guid id,
-        DateTime timestamp,
-        Guid orderId,
-        string? reason = default)
+    private OrderEventCancelled(Guid id, DateTime timestamp, Guid orderId, string? reason = default)
     {
         Id = id;
         OrderId = orderId;
@@ -22,9 +19,7 @@ public class OrderEventCancelled : IEvent
         Timestamp = timestamp;
     }
 
-    public OrderEventCancelled(
-        Guid orderId,
-        string? reason = default)
+    public OrderEventCancelled(Guid orderId, string? reason = default)
     {
         Id = Guid.NewGuid();
         OrderId = orderId;
