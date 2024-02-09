@@ -1,7 +1,7 @@
-namespace EasyEvs.Aggregates;
+namespace EasyEvs;
 
 using System;
-using EasyEvs.Aggregates.Contracts;
+using Contracts;
 
 /// <summary>
 /// Configuration for the <see cref="ServiceCollectionExtensions.AddEasyEvsAggregates"/>

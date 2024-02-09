@@ -10,10 +10,6 @@ internal sealed class DefaultJsonSerializerOptionsProvider : IJsonSerializerOpti
         new()
         {
             Converters = { new JsonStringEnumConverter() },
-#if NET5_0
-            IgnoreNullValues = true,
-#else
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-#endif
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         };
 }

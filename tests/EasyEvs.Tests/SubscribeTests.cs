@@ -30,18 +30,18 @@ public class SubscribeTests
             )
             .AddSingleton(counter);
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid orderId = Guid.NewGuid();
         OrderCreated e1 = new(orderId);
         OrderCancelled e2 = new(orderId);
         OrderRefundRequested e3 = new(orderId);
-        string stream = $"orders-{orderId.ToString()}";
+        string streamName = $"order-{orderId.ToString()}";
 
-        await eventStore.SubscribeToStream(stream, cancellationToken);
-        await eventStore.Append(stream, e1, cancellationToken: cancellationToken);
-        await eventStore.Append(stream, e2, cancellationToken: cancellationToken);
-        await eventStore.Append(stream, e3, cancellationToken: cancellationToken);
+        await eventStore.SubscribeToStream(streamName, cancellationToken);
+        await eventStore.Append(streamName, e1, cancellationToken: cancellationToken);
+        await eventStore.Append(streamName, e2, cancellationToken: cancellationToken);
+        await eventStore.Append(streamName, e3, cancellationToken: cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
         Mock<ICounter> mock = Mock.Get(counter);

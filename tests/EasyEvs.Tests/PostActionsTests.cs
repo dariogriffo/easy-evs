@@ -28,15 +28,15 @@ public class PostActionsTests
             )
             .AddSingleton(counter);
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
 
         Guid orderId = Guid.NewGuid();
         OrderDelivered @event = new(orderId);
-        string stream = $"orders-{orderId.ToString()}";
+        string streamName = $"order-{orderId.ToString()}";
         CancellationToken cancellationToken = CancellationToken.None;
-        await eventStore.SubscribeToStream(stream, cancellationToken);
-        await eventStore.Append(stream, @event, cancellationToken: cancellationToken);
+        await eventStore.SubscribeToStream(streamName, cancellationToken);
+        await eventStore.Append(streamName, @event, cancellationToken: cancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
         Mock<ICounter> mock = Mock.Get(counter);
         mock.Verify(x => x.Touch(), Times.Exactly(3));

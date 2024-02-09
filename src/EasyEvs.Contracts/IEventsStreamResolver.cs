@@ -6,11 +6,11 @@ namespace EasyEvs.Contracts;
 public interface IEventsStreamResolver
 {
     /// <summary>
-    /// The name of the stream this specific event is stored in.
+    /// The name of the streamName this specific event is stored in.
     /// </summary>
     /// <typeparam name="T"><see cref="IEvent"/>.</typeparam>
     /// <param name="event"> </param>
-    /// <returns>The name of the stream.</returns>
+    /// <returns>The name of the streamName.</returns>
     string StreamForEvent<T>(T @event)
         where T : IEvent;
 }

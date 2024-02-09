@@ -23,7 +23,7 @@ public class EasyEvsConfiguration
     public Type? EventsStreamResolverType { get; set; }
 
     /// <summary>
-    /// If set, the implementation to use for the <see cref="IRetryStrategy"/>
+    /// If set, the implementation to use for the <see cref="IReconnectionStrategy"/>
     /// </summary>
     public Type? ConnectionRetryStrategyType { get; set; }
 

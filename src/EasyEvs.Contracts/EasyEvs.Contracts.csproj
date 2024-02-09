@@ -9,7 +9,7 @@
         <NeutralLanguage>en-GB</NeutralLanguage>
 
         <!-- Build settings -->
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <DebugType>portable</DebugType>
         <OutputType>Library</OutputType>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

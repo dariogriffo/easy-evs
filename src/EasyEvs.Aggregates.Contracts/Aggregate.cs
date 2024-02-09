@@ -1,10 +1,9 @@
-namespace EasyEvs.Aggregates.Contracts;
+namespace EasyEvs.Contracts;
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
-using EasyEvs.Contracts;
 using ReflectionMagic;
 
 /// <summary>

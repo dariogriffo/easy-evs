@@ -30,20 +30,21 @@ public class ReadStreamTests
                 }
             );
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IReadEventStore readEventStore = provider.GetRequiredService<IReadEventStore>();
         provider.GetRequiredService<IEventsStreamResolver>();
         Guid orderId = Guid.NewGuid();
         OrderCreated e1 = new(orderId);
         OrderCancelled e2 = new(orderId);
         OrderCancelled e3 = new(orderId);
-        string stream = $"orders-{orderId.ToString()}";
+        string streamName = $"order-{orderId.ToString()}";
 
-        await eventStore.Append(stream, e1, cancellationToken: CancellationToken.None);
-        await eventStore.Append(stream, e2, cancellationToken: CancellationToken.None);
-        await eventStore.Append(stream, e3, cancellationToken: CancellationToken.None);
-        List<IEvent> events = await eventStore.ReadStream(
-            stream,
+        await eventStore.Append(streamName, e1, cancellationToken: CancellationToken.None);
+        await eventStore.Append(streamName, e2, cancellationToken: CancellationToken.None);
+        await eventStore.Append(streamName, e3, cancellationToken: CancellationToken.None);
+        List<IEvent> events = await readEventStore.ReadStream(
+            streamName,
             cancellationToken: CancellationToken.None
         );
         events.Count.Should().Be(3);

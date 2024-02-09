@@ -1,8 +1,8 @@
-namespace EasyEvs.Aggregates;
+namespace EasyEvs;
 
 using System;
-using EasyEvs.Aggregates.Contracts;
-using EasyEvs.Aggregates.Internal;
+using Contracts;
+using Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>

@@ -69,16 +69,16 @@ public static class ServiceCollectionExtensions
         message = string.Format(messageTemplate, providedType, expectedInterfaceType);
         ValidateProvidedType(providedType, expectedInterfaceType, message);
 
-        expectedInterfaceType = typeof(IRetryStrategy);
+        expectedInterfaceType = typeof(IReconnectionStrategy);
         providedType = retryStrategyType;
         message = string.Format(messageTemplate, providedType, expectedInterfaceType);
         ValidateProvidedType(providedType, expectedInterfaceType, message);
 
         RegisterProvidedTypeOrFallback(
             services,
-            typeof(IRetryStrategy),
+            typeof(IReconnectionStrategy),
             retryStrategyType,
-            typeof(NoRetryStrategy)
+            typeof(NoReconnectionStrategy)
         );
 
         RegisterProvidedTypeOrFallback(
@@ -110,6 +110,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISerializer, Serializer>();
         services.AddSingleton<IHandlesFactory, HandlesFactory>();
         services.AddSingleton<IEventStore, EventStore>();
+        services.AddSingleton<IReadEventStore, ReadEventStore>();
+        services.AddSingleton<IWriteEventStore, WriteEventStore>();
+        services.AddSingleton<IEventStore, EventStore>();
+        services.AddSingleton<IPersistentSubscriber, PersistentSubscriber>();
+        services.AddSingleton<IInternalPersistentSubscriber, InternalPersistentSubscriber>();
+        services.AddSingleton<IConnectionProvider, ConnectionProvider>();
         services.TryAddSingleton(services);
 
         HandlersAndEventTypes handlersAndTypes;

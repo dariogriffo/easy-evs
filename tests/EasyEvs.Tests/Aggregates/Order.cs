@@ -1,5 +1,5 @@
 namespace EasyEvs.Tests.Aggregates;
 
-using EasyEvs.Aggregates.Contracts;
+using Contracts;
 
 public class Order : Aggregate { }

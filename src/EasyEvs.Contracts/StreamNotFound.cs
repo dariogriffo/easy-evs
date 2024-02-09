@@ -3,16 +3,16 @@ namespace EasyEvs.Contracts;
 using System;
 
 /// <summary>
-/// An exception representing a failure to create a streamName with a duplicate id
+/// An exception representing that the streamName was not found
 /// </summary>
-public class StreamAlreadyExists : Exception
+public class StreamNotFound : Exception
 {
     /// <summary>
     /// The constructor
     /// </summary>
     /// <param name="streamName"></param>
-    internal StreamAlreadyExists(string streamName)
-        : base($"Trying to create stream {streamName} but already exists")
+    internal StreamNotFound(string streamName)
+        : base($"Stream {streamName} was not found")
     {
         Stream = streamName;
     }

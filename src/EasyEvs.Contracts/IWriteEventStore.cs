@@ -1,14 +1,13 @@
 namespace EasyEvs.Contracts;
 
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
-/// The interface that gives access to https://github.com/EventStore/EventStore
+/// The interface that gives access to write to https://github.com/EventStore/EventStore
 /// </summary>
-public interface IEventStore
+public interface IWriteEventStore
 {
     /// <summary>
     /// Appends the event asynchronously.
@@ -73,22 +72,4 @@ public interface IEventStore
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
     Task Append<T>([NotNull] T @event, CancellationToken cancellationToken = default)
         where T : IEvent;
-
-    /// <summary>
-    /// Reads all the events from the streamName
-    /// </summary>
-    /// <param name="streamName">The streamName name</param>
-    /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
-    /// <returns>A list of tuples containing the events with their associated (optional) metadata</returns>
-    Task<List<IEvent>> ReadStream(string streamName, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Subscribes asynchronously to a streamName.
-    /// Will use <see cref="EventStoreSettings.TreatMissingHandlersAsErrors"/> as value to deal with missing handlers
-    /// </summary>
-    /// <param name="streamName">The streamName name</param>
-    /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
-    /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-    /// /// <exception cref="SubscriptionFailed"></exception>
-    Task SubscribeToStream(string streamName, CancellationToken cancellationToken = default);
 }

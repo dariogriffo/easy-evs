@@ -31,13 +31,13 @@ public class PipelineActionsTests
             .WithPipeline<OrderEventPipelineAction1>()
             .WithPipeline<OrderEventPipelineAction2>();
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
         Guid orderId = Guid.NewGuid();
-        string stream = $"orders-{orderId}";
+        string streamName = $"order-{orderId}";
         OrderEventCancelled @event = new(orderId, "No reason");
-        await eventStore.SubscribeToStream(stream, CancellationToken.None);
-        await eventStore.Append(stream, @event, cancellationToken: CancellationToken.None);
+        await eventStore.SubscribeToStream(streamName, CancellationToken.None);
+        await eventStore.Append(streamName, @event, cancellationToken: CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(2));
         Mock<ICounter> mock = Mock.Get(counter);
         mock.Verify(x => x.Touch(), Times.Exactly(5));

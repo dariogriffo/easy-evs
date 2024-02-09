@@ -7,9 +7,10 @@
         <Authors>Dario Griffo</Authors>
         <Company>https://github.com/dariogriffo</Company>
         <NeutralLanguage>en-GB</NeutralLanguage>
+        <RootNamespace>EasyEvs.Contracts</RootNamespace>
 
         <!-- Build settings -->
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <DebugType>portable</DebugType>
         <OutputType>Library</OutputType>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -44,7 +45,7 @@
 
     <ItemGroup>
         <PackageReference Include="ReflectionMagic" Version="[4.1.0,)" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[5.0.0,)" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[8.0.0,)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -61,7 +62,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\src\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
+      <ProjectReference Include="..\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
+    </ItemGroup>
+
 
 </Project>

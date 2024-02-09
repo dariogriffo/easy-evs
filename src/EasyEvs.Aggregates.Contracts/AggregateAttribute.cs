@@ -1,4 +1,4 @@
-namespace EasyEvs.Aggregates.Contracts;
+namespace EasyEvs.Contracts;
 
 using System;
 

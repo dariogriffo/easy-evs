@@ -1,4 +1,4 @@
-namespace EasyEvs.Aggregates.Internal;
+namespace EasyEvs.Internal;
 
 using Contracts;
 

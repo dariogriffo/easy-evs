@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Aggregates;
 using Contracts;
-using EasyEvs.Aggregates.Contracts;
 
 [Aggregate<Order>]
 public class OrderDelivered : IEvent

@@ -4,7 +4,7 @@ using System;
 using System.Threading.Tasks;
 using Contracts;
 
-internal sealed class NoRetryStrategy : IRetryStrategy
+internal sealed class NoReconnectionStrategy : IReconnectionStrategy
 {
     public Task Subscribe(Func<Task> func)
     {

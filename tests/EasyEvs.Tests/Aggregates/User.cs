@@ -1,6 +1,6 @@
 namespace EasyEvs.Tests.Aggregates;
 
-using EasyEvs.Aggregates.Contracts;
+using Contracts;
 using Events.Users;
 
 public class User : Aggregate
@@ -13,10 +13,9 @@ public class User : Aggregate
         Created,
         Updated
     }
-    
+
     public User() { }
 
-    
     public static User Create(string id)
     {
         User user = new();
@@ -46,7 +45,6 @@ public class User : Aggregate
     }
 
     public UserStatus Status { get; private set; }
-
 
     public void Update()
     {

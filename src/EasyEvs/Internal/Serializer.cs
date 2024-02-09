@@ -75,7 +75,6 @@ internal sealed class Serializer(IJsonSerializerOptionsProvider provider) : ISer
                 { "easy.evs.event.full.name", eventType.FullName! },
                 { "easy.evs.event.assembly.name", eventType.Assembly.GetName().Name! },
                 { "easy.evs.assembly.qualified.name", eventType.AssemblyQualifiedName! },
-                { "easy.evs.timestamp", @event.Timestamp.ToUniversalTime().ToString("O") }
             };
 
         bool emptyMetadata = false;

@@ -1,4 +1,4 @@
-﻿namespace EasyEvs.Aggregates.Contracts;
+﻿namespace EasyEvs.Contracts;
 
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 public interface IAggregateStore
 {
     /// <summary>
-    /// Saves the aggregate root to the Event Store, might throw an exception if the stream for the aggregate root exists
+    /// Saves the aggregate root to the Event Store, might throw an exception if the streamName for the aggregate root exists
     /// </summary>
-    /// <typeparam name="T"><see cref="EasyEvs.Aggregates.Contracts.Aggregate"/></typeparam>
+    /// <typeparam name="T"><see cref="Aggregate"/></typeparam>
     /// <param name="aggregate">The aggregate root to be saved.</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
@@ -22,7 +22,7 @@ public interface IAggregateStore
     /// <summary>
     /// Saves the aggregate root to the Event Store
     /// </summary>
-    /// <typeparam name="T"><see cref="EasyEvs.Aggregates.Contracts.Aggregate"/></typeparam>
+    /// <typeparam name="T"><see cref="Aggregate"/></typeparam>
     /// <param name="aggregate">The aggregate root to be saved.</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>

@@ -5,8 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Aggregates;
 using Contracts;
-using EasyEvs.Aggregates;
-using EasyEvs.Aggregates.Contracts;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -26,7 +24,7 @@ public class AggregateTests
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IAggregateStore aggregateStore = provider.GetRequiredService<IAggregateStore>();
         string userId = Guid.NewGuid().ToString();
         User user = User.Create(userId);
@@ -50,10 +48,10 @@ public class AggregateTests
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IAggregateStore aggregateStore = provider.GetRequiredService<IAggregateStore>();
         string userId = Guid.NewGuid().ToString();
-        
+
         User user = User.Create(userId);
         User user1 = User.Create(userId);
         await aggregateStore.Create(user, CancellationToken.None);
@@ -73,14 +71,14 @@ public class AggregateTests
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IAggregateStore aggregateStore = provider.GetRequiredService<IAggregateStore>();
         string userId = Guid.NewGuid().ToString();
         User user = User.Create(userId);
         user.Update();
         user.Deactivate();
         await user.Save(aggregateStore, CancellationToken.None);
-        
+
         User user1 = User.Create(userId);
         await user1.Load(aggregateStore, CancellationToken.None);
         user1.Should().BeEquivalentTo(user, c => c.Excluding(u => u.UncommittedChanges));

@@ -27,14 +27,14 @@ public class PreActionsTests
                 }
             )
             .AddSingleton(counter);
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
 
         Guid orderId = Guid.NewGuid();
         OrderAbandoned @event = new(orderId);
-        string stream = orderId.ToString();
-        await eventStore.SubscribeToStream(stream, CancellationToken.None);
-        await eventStore.Append(stream, @event, cancellationToken: CancellationToken.None);
+        string streamName = $"order-{orderId.ToString()}";
+        await eventStore.SubscribeToStream(streamName, CancellationToken.None);
+        await eventStore.Append(streamName, @event, cancellationToken: CancellationToken.None);
         await Task.Delay(TimeSpan.FromSeconds(1));
         Mock<ICounter> mock = Mock.Get(counter);
         mock.Verify(x => x.Touch(), Times.Exactly(3));

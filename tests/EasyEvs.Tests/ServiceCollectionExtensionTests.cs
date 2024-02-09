@@ -25,19 +25,20 @@ public class ServiceCollectionExtensionTests
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddSingleton(counter);
 
-        ServiceProvider provider = services.BuildServiceProvider();
+        await using ServiceProvider provider = services.BuildServiceProvider();
         IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        IReadEventStore readEventStore = provider.GetRequiredService<IReadEventStore>();
         Guid orderId = Guid.NewGuid();
         OrderCreated e1 = new(orderId);
         OrderCancelled e2 = new(orderId);
         OrderRefundRequested e3 = new(orderId);
-        string stream = $"order-{orderId}";
-        await eventStore.SubscribeToStream(stream, cancellationToken);
-        await eventStore.Append(stream, e1, cancellationToken: cancellationToken);
-        await eventStore.Append(stream, e2, cancellationToken: cancellationToken);
-        await eventStore.Append(stream, e3, cancellationToken: cancellationToken);
-        List<IEvent> events = await eventStore.ReadStream(
-            stream,
+        string streamName = $"order-{orderId}";
+        await eventStore.SubscribeToStream(streamName, cancellationToken);
+        await eventStore.Append(streamName, e1, cancellationToken: cancellationToken);
+        await eventStore.Append(streamName, e2, cancellationToken: cancellationToken);
+        await eventStore.Append(streamName, e3, cancellationToken: cancellationToken);
+        List<IEvent> events = await readEventStore.ReadStream(
+            streamName,
             cancellationToken: cancellationToken
         );
         events.Count.Should().Be(3);
