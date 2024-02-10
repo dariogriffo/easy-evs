@@ -21,7 +21,7 @@ public class ServiceCollectionExtensionTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddSingleton(counter);
 

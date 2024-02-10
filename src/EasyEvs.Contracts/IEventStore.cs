@@ -1,5 +1,6 @@
 namespace EasyEvs.Contracts;
 
+using Exceptions;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
@@ -84,7 +85,6 @@ public interface IEventStore
 
     /// <summary>
     /// Subscribes asynchronously to a streamName.
-    /// Will use <see cref="EventStoreSettings.TreatMissingHandlersAsErrors"/> as value to deal with missing handlers
     /// </summary>
     /// <param name="streamName">The streamName name</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>

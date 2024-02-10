@@ -1,18 +1,16 @@
-namespace EasyEvs;
+namespace EasyEvs.Contracts;
 
 using System;
 using System.Reflection;
-using Contracts;
-using Internal;
 using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
-/// Configuration for the <see cref="ServiceCollectionExtensions.AddEasyEvs"/>
+/// Configuration for EasyEvs
 /// </summary>
 public class EasyEvsConfiguration
 {
     /// <summary>
-    /// If set, the implementation to use to provide the json configuration for the <see cref="ISerializer"/>
+    /// If set, the implementation to use to provide the json configuration for the <see cref="IJsonSerializerOptionsProvider"/>
     /// </summary>
     public Type? JsonSerializerOptionsProviderType { get; set; }
 
@@ -25,7 +23,7 @@ public class EasyEvsConfiguration
     /// <summary>
     /// If set, the implementation to use for the <see cref="IReconnectionStrategy"/>
     /// </summary>
-    public Type? ConnectionRetryStrategyType { get; set; }
+    public Type? ReconnectionStrategyType { get; set; }
 
     /// <summary>
     /// The assemblies to scan for <see cref="IHandlesEvent{T}"/>
@@ -46,4 +44,9 @@ public class EasyEvsConfiguration
     /// The default life time for auto registered <see cref="IPreHandlesEventAction{T}"/>
     /// </summary>
     public ServiceLifetime DefaultPreActionsLifetime { get; set; } = ServiceLifetime.Scoped;
+
+    /// <summary>
+    /// Configure if the events don't have a registered handler to log a warning message and Park them
+    /// </summary>
+    public bool TreatMissingHandlersAsErrors { get; set; } = false;
 }

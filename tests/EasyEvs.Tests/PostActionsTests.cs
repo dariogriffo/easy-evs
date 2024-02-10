@@ -18,7 +18,7 @@ public class PostActionsTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(
                 sp => sp.GetEventStoreSettings(),
                 c =>

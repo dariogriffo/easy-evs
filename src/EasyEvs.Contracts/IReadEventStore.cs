@@ -17,8 +17,3 @@ public interface IReadEventStore
     /// <returns>A list of tuples containing the events with their associated (optional) metadata</returns>
     Task<List<IEvent>> ReadStream(string streamName, CancellationToken cancellationToken = default);
 }
-
-/// <summary>
-///
-/// </summary>
-public interface IReconnectionStrategy { }

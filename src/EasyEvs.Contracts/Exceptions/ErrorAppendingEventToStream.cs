@@ -1,4 +1,4 @@
-namespace EasyEvs.Contracts;
+namespace EasyEvs.Contracts.Exceptions;
 
 using System;
 

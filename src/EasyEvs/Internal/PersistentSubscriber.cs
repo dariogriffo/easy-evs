@@ -9,6 +9,7 @@ using Contracts;
 using global::EventStore.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 internal class PersistentSubscriber : IPersistentSubscriber
 {
@@ -17,13 +18,15 @@ internal class PersistentSubscriber : IPersistentSubscriber
     private readonly ILogger<PersistentSubscriber> _logger;
     private readonly IInternalPersistentSubscriber _subscriber;
     private readonly EventStoreSettings _settings;
+    private readonly IOptions<EasyEvsConfiguration> _easyEvsConfiguration;
 
     public PersistentSubscriber(
         ILogger<PersistentSubscriber> logger,
         IInternalPersistentSubscriber subscriber,
-        EventStoreSettings settings,
         IHandlesFactory handlesFactory,
-        ISerializer serializer
+        ISerializer serializer,
+        IOptions<EasyEvsConfiguration> easyEvsConfiguration,
+        EventStoreSettings settings
     )
     {
         _logger = logger;
@@ -31,6 +34,7 @@ internal class PersistentSubscriber : IPersistentSubscriber
         _settings = settings;
         _handlesFactory = handlesFactory;
         _serializer = serializer;
+        _easyEvsConfiguration = easyEvsConfiguration;
     }
 
     private async Task OnEventAppeared(
@@ -52,7 +56,7 @@ internal class PersistentSubscriber : IPersistentSubscriber
 
             if (!_handlesFactory.TryGetScopeFor(@event, out IServiceScope? scope))
             {
-                if (_settings.TreatMissingHandlersAsErrors)
+                if (_easyEvsConfiguration.Value.TreatMissingHandlersAsErrors)
                 {
                     await ParkEventAndLogWarning(@event, subscription, resolvedEvent);
                 }
@@ -65,7 +69,8 @@ internal class PersistentSubscriber : IPersistentSubscriber
                 return;
             }
 
-            ConsumerContext context = new(Trace.CorrelationManager.ActivityId, retryCount);
+            
+            ConsumerContext context = new(resolvedEvent.OriginalStreamId, Trace.CorrelationManager.ActivityId, retryCount);
 
             dynamic dynamicEvent = @event;
 

@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyEvs", "..\src\EasyEvs\E
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyEvs.Contracts", "..\src\EasyEvs.Contracts\EasyEvs.Contracts.csproj", "{A5BC46E9-DA39-4C3F-88E1-F01B432D92F7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyEvs.Aggregates", "..\src\EasyEvs.Aggregates\EasyEvs.Aggregates.csproj", "{67358818-04A6-4D8B-997A-2DDB4FCED5B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyEvs.Aggregates.Contracts", "..\src\EasyEvs.Aggregates.Contracts\EasyEvs.Aggregates.Contracts.csproj", "{4B6E73C7-DB90-4A1A-BCCF-ACE3F6ECAB5E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{A5BC46E9-DA39-4C3F-88E1-F01B432D92F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5BC46E9-DA39-4C3F-88E1-F01B432D92F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5BC46E9-DA39-4C3F-88E1-F01B432D92F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67358818-04A6-4D8B-997A-2DDB4FCED5B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67358818-04A6-4D8B-997A-2DDB4FCED5B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67358818-04A6-4D8B-997A-2DDB4FCED5B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67358818-04A6-4D8B-997A-2DDB4FCED5B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B6E73C7-DB90-4A1A-BCCF-ACE3F6ECAB5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B6E73C7-DB90-4A1A-BCCF-ACE3F6ECAB5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B6E73C7-DB90-4A1A-BCCF-ACE3F6ECAB5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B6E73C7-DB90-4A1A-BCCF-ACE3F6ECAB5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

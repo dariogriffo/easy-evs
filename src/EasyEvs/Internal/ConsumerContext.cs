@@ -5,19 +5,20 @@ using Contracts;
 
 internal sealed class ConsumerContext : IConsumerContext
 {
-    internal ConsumerContext(Guid correlationId, int? retryCount = null)
+    internal ConsumerContext(string streamName, Guid correlationId, int? retryCount = null, string? aggregateId = null)
     {
+        StreamName = streamName;
         RetryCount = retryCount;
+        AggregateId = aggregateId;
         CorrelationId = correlationId;
     }
-
-    /// <summary>
-    /// The amount of times the event has been processed
-    /// </summary>
+    
     public int? RetryCount { get; }
 
-    /// <summary>
-    /// A unique correlation id. Useful to identify correlated operations across different contexts.
-    /// </summary>
+    public string? AggregateId { get; }
+
+
     public Guid CorrelationId { get; }
+
+    public string StreamName { get; }
 }

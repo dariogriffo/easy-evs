@@ -16,4 +16,14 @@ public interface IConsumerContext
     /// A unique correlation id. Useful to identify correlated operations across different contexts.
     /// </summary>
     Guid CorrelationId { get; }
+    
+    /// <summary>
+    /// The name of the stream where the event was saved
+    /// </summary>
+    string StreamName { get; }
+    
+    /// <summary>
+    /// The id of the aggregate the event was applied
+    /// </summary>
+    string? AggregateId { get; }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
+using Contracts.Exceptions;
 using global::EventStore.Client;
 using Microsoft.Extensions.Logging;
 
@@ -90,7 +91,7 @@ internal sealed class WriteEventStore : IWriteEventStore
         }
 
         StreamState expectedState = StreamState.NoStream;
-        EventData[] data = events.Select(_serializer.Serialize<T>).ToArray();
+        EventData[] data = events.Select(_serializer.Serialize).ToArray();
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
         foreach (T @event in events)
         {

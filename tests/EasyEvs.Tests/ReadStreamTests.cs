@@ -21,7 +21,7 @@ public class ReadStreamTests
 
         services
             .AddSingleton(counter)
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(
                 sp => sp.GetEventStoreSettings(),
                 c =>

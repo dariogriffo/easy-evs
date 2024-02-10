@@ -20,7 +20,7 @@ public class SubscribeTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(
                 sp => sp.GetEventStoreSettings(),
                 c =>

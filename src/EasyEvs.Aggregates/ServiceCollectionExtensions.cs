@@ -4,6 +4,7 @@ using System;
 using Contracts;
 using Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 /// <summary>
 /// The integration point with the <see cref="Microsoft.Extensions.DependencyInjection"/> framework
@@ -21,27 +22,31 @@ public static class ServiceCollectionExtensions
         Action<EasyEvsAggregatesConfiguration>? actionsConfigurator = default
     )
     {
-        static void RegisterProvidedTypeOrFallback(
-            IServiceCollection services,
-            Type serviceType,
-            Type? implementationType,
-            Type fallbackType
-        )
-        {
-            services.AddSingleton(serviceType, implementationType ?? fallbackType);
-        }
 
         EasyEvsAggregatesConfiguration configuration = new();
-        actionsConfigurator?.Invoke(configuration);
+        
+        Action<EasyEvsAggregatesConfiguration> decoratorConfigurator = (config) =>
+        {
+            actionsConfigurator?.Invoke(config);
+            config.AggregateStreamResolver ??= typeof(AggregateAttributeResolver);
+        };
+        
+        decoratorConfigurator.Invoke(configuration);
+        services.Configure(decoratorConfigurator);
 
-        services.AddSingleton<IAggregateStore, AggregatesStore>();
-
-        RegisterProvidedTypeOrFallback(
-            services,
-            typeof(IAggregateStreamResolver),
-            configuration.AggregateStreamResolver,
-            typeof(AggregateAttributeResolver)
+        services.AddSingleton(configuration.AggregateStreamResolver!);
+        
+        services.AddSingleton<IAggregateStreamResolver>(
+            sp =>
+                (IAggregateStreamResolver)
+                sp.GetRequiredService(
+                    sp.GetRequiredService<
+                        IOptions<EasyEvsAggregatesConfiguration>
+                    >().Value.AggregateStreamResolver!
+                )
         );
+        
+        services.AddSingleton<IAggregateStore, AggregatesStore>();
 
         return services;
     }

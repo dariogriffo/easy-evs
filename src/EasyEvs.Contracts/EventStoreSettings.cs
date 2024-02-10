@@ -28,11 +28,6 @@ public class EventStoreSettings
     public bool ReconnectOnSubscriptionDropped { get; set; } = true;
 
     /// <summary>
-    /// Configure if the events don't have a registered handler to log a warning message and Park them
-    /// </summary>
-    public bool TreatMissingHandlersAsErrors { get; set; } = false;
-
-    /// <summary>
     /// Configure is the subscription resolve events.
     /// https://developers.eventstore.com/clients/dotnet/5.0/reading.html#resolvedevent
     /// </summary>

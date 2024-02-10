@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Aggregates;
 using Contracts;
+using Contracts.Exceptions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -19,7 +20,7 @@ public class AggregateTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
@@ -43,7 +44,7 @@ public class AggregateTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
@@ -66,7 +67,7 @@ public class AggregateTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDb()
+            .ConfigureEventStoreDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddEasyEvsAggregates()
             .AddSingleton(counter);

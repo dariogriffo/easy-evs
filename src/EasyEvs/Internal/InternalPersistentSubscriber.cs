@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
+using Contracts.Exceptions;
 using global::EventStore.Client;
 using Microsoft.Extensions.Logging;
 

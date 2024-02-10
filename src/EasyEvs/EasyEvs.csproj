@@ -28,7 +28,7 @@
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/dariogriffo/easy-evs</RepositoryUrl>
-        <Version>5.0.1</Version>
+        <Version>6.0.0</Version>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <!-- SourceLink settings -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -48,13 +48,14 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup><PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[21.2.0,)" />
-        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[21.2.0,)" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[8.0.0,)" />
+    <ItemGroup>
+        <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[21.2.0,)"/>
+        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[21.2.0,)"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="[8.0.0,)"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
+        <ProjectReference Include="..\EasyEvs.Contracts\EasyEvs.Contracts.csproj"/>
     </ItemGroup>
 
 </Project>

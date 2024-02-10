@@ -1,18 +1,18 @@
-namespace EasyEvs.Contracts;
+namespace EasyEvs.Contracts.Exceptions;
 
 using System;
 
 /// <summary>
-/// An exception representing a failure to create a streamName with a duplicate id
+/// An exception representing that the subscription to the streamName failed
 /// </summary>
-public class StreamAlreadyExists : Exception
+public class SubscriptionFailed : Exception
 {
     /// <summary>
     /// The constructor
     /// </summary>
     /// <param name="streamName"></param>
-    internal StreamAlreadyExists(string streamName)
-        : base($"Trying to create stream {streamName} but already exists")
+    internal SubscriptionFailed(string streamName)
+        : base($"Subscription to stream {streamName} failed")
     {
         Stream = streamName;
     }

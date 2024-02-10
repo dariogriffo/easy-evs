@@ -1,15 +1,17 @@
-namespace EasyEvs.Tests;
+﻿namespace Subscriber;
 
 using System;
 using System.Collections.Generic;
-using Contracts;
+using EasyEvs.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 internal static class EventStoreConfigurationExtensions
 {
-    internal static IServiceCollection ConfigureEventStoreDbWithLogging(this IServiceCollection services)
+    internal static IServiceCollection ConfigureEventStoreDbWithLogging(
+        this IServiceCollection services
+    )
     {
         Dictionary<string, string> dict =
             new()
