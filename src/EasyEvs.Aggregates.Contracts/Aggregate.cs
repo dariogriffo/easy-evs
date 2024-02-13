@@ -55,7 +55,7 @@ public abstract class Aggregate
         CancellationToken cancellationToken = default
     )
     {
-        await eventStore.Load(this, cancellationToken);
+        await eventStore.Load(this, cancellationToken: cancellationToken);
     }
 
     /// <summary>

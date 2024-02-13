@@ -13,14 +13,18 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
     private readonly EventStoreSettings _settings;
     private IReconnectionStrategy _reconnectionStrategy;
 
-    public ConnectionProvider(IReconnectionStrategy reconnectionStrategy, EventStoreSettings settings)
+    public ConnectionProvider(
+        IReconnectionStrategy reconnectionStrategy,
+        EventStoreSettings settings
+    )
     {
         _settings = settings;
         _reconnectionStrategy = reconnectionStrategy;
         _read = new Lazy<EventStoreClient>(ClientFactory);
         _write = new Lazy<EventStoreClient>(ClientFactory);
-        _persistent =
-            new Lazy<EventStorePersistentSubscriptionsClient>(PersistentConnectionFactory);
+        _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(
+            PersistentConnectionFactory
+        );
     }
 
     public EventStorePersistentSubscriptionsClient PersistentSubscriptionClient =>
@@ -42,19 +46,24 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
 
     public void PersistentSubscriptionDisconnected(EventStorePersistentSubscriptionsClient client)
     {
-        _persistent =
-            new Lazy<EventStorePersistentSubscriptionsClient>(PersistentConnectionFactory);
+        _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(
+            PersistentConnectionFactory
+        );
     }
 
     private EventStoreClient ClientFactory()
     {
-        EventStoreClientSettings settings = EventStoreClientSettings.Create(_settings.ConnectionString);
+        EventStoreClientSettings settings = EventStoreClientSettings.Create(
+            _settings.ConnectionString
+        );
         return new EventStoreClient(settings);
     }
-    
+
     private EventStorePersistentSubscriptionsClient PersistentConnectionFactory()
     {
-        EventStoreClientSettings settings = EventStoreClientSettings.Create(_settings.ConnectionString);
+        EventStoreClientSettings settings = EventStoreClientSettings.Create(
+            _settings.ConnectionString
+        );
         return new EventStorePersistentSubscriptionsClient(settings);
     }
 

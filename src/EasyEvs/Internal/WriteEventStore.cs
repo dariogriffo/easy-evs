@@ -10,26 +10,13 @@ using Contracts.Exceptions;
 using global::EventStore.Client;
 using Microsoft.Extensions.Logging;
 
-internal sealed class WriteEventStore : IWriteEventStore
+internal sealed class WriteEventStore(
+    ISerializer serializer,
+    IEventsStreamResolver eventsStreamResolver,
+    ILogger<WriteEventStore> logger,
+    IConnectionProvider connectionProvider
+) : IWriteEventStore
 {
-    private readonly ISerializer _serializer;
-    private readonly IEventsStreamResolver _eventsStreamResolver;
-    private readonly ILogger<WriteEventStore> _logger;
-    private readonly IConnectionProvider _connectionProvider;
-
-    public WriteEventStore(
-        ISerializer serializer,
-        IEventsStreamResolver eventsStreamResolver,
-        ILogger<WriteEventStore> logger,
-        IConnectionProvider connectionProvider
-    )
-    {
-        _serializer = serializer;
-        _eventsStreamResolver = eventsStreamResolver;
-        _logger = logger;
-        _connectionProvider = connectionProvider;
-    }
-
     public async Task Append<T>(
         string streamName,
         [NotNull] T @event,
@@ -37,7 +24,7 @@ internal sealed class WriteEventStore : IWriteEventStore
     )
         where T : IEvent
     {
-        _logger.LogDebug(
+        logger.LogDebug(
             "Appending event with id {EventId} of type {EventType} to stream {Stream}",
             @event.Id,
             @event.GetType(),
@@ -62,7 +49,7 @@ internal sealed class WriteEventStore : IWriteEventStore
     )
         where T : IEvent
     {
-        _logger.LogDebug(
+        logger.LogDebug(
             "Appending event with id {EventId} of type {EventType} to stream {Stream}",
             @event.Id,
             @event.GetType(),
@@ -82,7 +69,7 @@ internal sealed class WriteEventStore : IWriteEventStore
     {
         foreach (T @event in events)
         {
-            _logger.LogDebug(
+            logger.LogDebug(
                 "Appending event with id {EventId} of type {EventType} to stream {Stream}",
                 @event.Id,
                 @event.GetType(),
@@ -91,11 +78,11 @@ internal sealed class WriteEventStore : IWriteEventStore
         }
 
         StreamState expectedState = StreamState.NoStream;
-        EventData[] data = events.Select(_serializer.Serialize).ToArray();
+        EventData[] data = events.Select(serializer.Serialize).ToArray();
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
         foreach (T @event in events)
         {
-            _logger.LogDebug("Event with Id {EventId} added", @event.Id);
+            logger.LogDebug("Event with Id {EventId} added", @event.Id);
         }
     }
 
@@ -106,20 +93,20 @@ internal sealed class WriteEventStore : IWriteEventStore
     )
         where T : IEvent
     {
-        _logger.LogDebug("Appending {Count} events to stream {Stream}", events.Length, streamName);
-        EventData[] data = events.Select(_serializer.Serialize).ToArray();
+        logger.LogDebug("Appending {Count} events to stream {Stream}", events.Length, streamName);
+        EventData[] data = events.Select(serializer.Serialize).ToArray();
         StreamState expectedState = StreamState.Any;
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
         foreach (T @event in events)
         {
-            _logger.LogDebug("Event with Id {EventId} added", @event.Id);
+            logger.LogDebug("Event with Id {EventId} added", @event.Id);
         }
     }
 
     public Task Append<T>([NotNull] T @event, CancellationToken cancellationToken = default)
         where T : IEvent
     {
-        string streamName = _eventsStreamResolver.StreamForEvent(@event);
+        string streamName = eventsStreamResolver.StreamForEvent(@event);
         return Append(streamName, @event, cancellationToken);
     }
 
@@ -130,9 +117,9 @@ internal sealed class WriteEventStore : IWriteEventStore
         CancellationToken cancellationToken
     )
     {
-        EventData[] data = [_serializer.Serialize(@event)];
+        EventData[] data = [serializer.Serialize(@event)];
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
-        _logger.LogDebug("Event with Id {EventId} appended", @event.Id);
+        logger.LogDebug("Event with Id {EventId} appended", @event.Id);
     }
 
     private async Task AppendWithRetryStrategy(
@@ -144,7 +131,7 @@ internal sealed class WriteEventStore : IWriteEventStore
     {
         try
         {
-            await _connectionProvider.WriteClient.AppendToStreamAsync(
+            await connectionProvider.WriteClient.AppendToStreamAsync(
                 streamName,
                 expectedState,
                 data,

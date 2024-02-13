@@ -7,7 +7,7 @@
     using Events.Orders.v2;
     using OrderRefundRequested = Events.Orders.v2.OrderRefundRequested;
 
-    public class OrderEventHandler(ICounter counter)
+    public class OrderEventHandler(ICounter counter, IStreamNames streamNames)
         : IHandlesEvent<OrderCreated>,
             IHandlesEvent<OrderCancelled>,
             IHandlesEvent<Events.Orders.OrderRefundRequested>,
@@ -22,6 +22,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
@@ -32,6 +33,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
@@ -42,6 +44,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
@@ -52,6 +55,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
@@ -62,6 +66,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
@@ -72,6 +77,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }
@@ -82,6 +88,7 @@
             CancellationToken cancellationToken
         )
         {
+            streamNames.Add(context.StreamName);
             counter.Touch();
             return Task.FromResult(OperationResult.Ok);
         }

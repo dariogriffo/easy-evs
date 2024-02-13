@@ -44,7 +44,8 @@ public static class ServiceCollectionExtensions
         Action<EasyEvsConfiguration> decoratorConfigurator = (config) =>
         {
             actionsConfigurator?.Invoke(config);
-            config.JsonSerializerOptionsProviderType ??= typeof(DefaultJsonSerializerOptionsProvider);
+            config.JsonSerializerOptionsProviderType ??=
+                typeof(DefaultJsonSerializerOptionsProvider);
             config.EventsStreamResolverType ??= typeof(NoEventsStreamResolver);
             config.ReconnectionStrategyType ??= typeof(NoReconnectionStrategy);
         };

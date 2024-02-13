@@ -20,7 +20,7 @@ public class AggregateTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDbWithLogging()
+            .ConfigureEventStoreTestsDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
@@ -32,7 +32,10 @@ public class AggregateTests
         user.Update();
         user.Deactivate();
         await aggregateStore.Save(user, CancellationToken.None);
-        User user1 = await aggregateStore.Get<User>(user.Id, CancellationToken.None);
+        User user1 = await aggregateStore.CreateAggregateById<User>(
+            user.Id,
+            cancellationToken: CancellationToken.None
+        );
         user1.Sum.Should().Be(11);
         user1.Status.Should().Be(User.UserStatus.Inactive);
     }
@@ -44,7 +47,7 @@ public class AggregateTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDbWithLogging()
+            .ConfigureEventStoreTestsDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddEasyEvsAggregates()
             .AddSingleton(counter);
@@ -67,7 +70,7 @@ public class AggregateTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDbWithLogging()
+            .ConfigureEventStoreTestsDbWithLogging()
             .AddEasyEvs(sp => sp.GetEventStoreSettings())
             .AddEasyEvsAggregates()
             .AddSingleton(counter);

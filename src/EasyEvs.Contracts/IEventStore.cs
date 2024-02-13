@@ -1,10 +1,10 @@
 namespace EasyEvs.Contracts;
 
-using Exceptions;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Exceptions;
 
 /// <summary>
 /// The interface that gives access to https://github.com/EventStore/EventStore
@@ -79,9 +79,14 @@ public interface IEventStore
     /// Reads all the events from the streamName
     /// </summary>
     /// <param name="streamName">The streamName name</param>
+    /// <param name="lastEventToLoad">The last event to load into the aggregate</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A list of tuples containing the events with their associated (optional) metadata</returns>
-    Task<List<IEvent>> ReadStream(string streamName, CancellationToken cancellationToken = default);
+    Task<List<IEvent>> ReadStream(
+        string streamName,
+        IEvent? lastEventToLoad = default,
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Subscribes asynchronously to a streamName.

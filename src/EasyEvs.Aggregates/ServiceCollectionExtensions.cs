@@ -22,30 +22,29 @@ public static class ServiceCollectionExtensions
         Action<EasyEvsAggregatesConfiguration>? actionsConfigurator = default
     )
     {
-
         EasyEvsAggregatesConfiguration configuration = new();
-        
+
         Action<EasyEvsAggregatesConfiguration> decoratorConfigurator = (config) =>
         {
             actionsConfigurator?.Invoke(config);
             config.AggregateStreamResolver ??= typeof(AggregateAttributeResolver);
         };
-        
+
         decoratorConfigurator.Invoke(configuration);
         services.Configure(decoratorConfigurator);
 
         services.AddSingleton(configuration.AggregateStreamResolver!);
-        
+
         services.AddSingleton<IAggregateStreamResolver>(
             sp =>
                 (IAggregateStreamResolver)
-                sp.GetRequiredService(
-                    sp.GetRequiredService<
-                        IOptions<EasyEvsAggregatesConfiguration>
-                    >().Value.AggregateStreamResolver!
-                )
+                    sp.GetRequiredService(
+                        sp.GetRequiredService<
+                            IOptions<EasyEvsAggregatesConfiguration>
+                        >().Value.AggregateStreamResolver!
+                    )
         );
-        
+
         services.AddSingleton<IAggregateStore, AggregatesStore>();
 
         return services;

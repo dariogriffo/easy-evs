@@ -20,7 +20,7 @@ public class PipelineActionsTests
 
         services
             .AddSingleton(counter)
-            .ConfigureEventStoreDbWithLogging()
+            .ConfigureEventStoreTestsDbWithLogging()
             .AddEasyEvs(
                 sp => sp.GetEventStoreSettings(),
                 c =>

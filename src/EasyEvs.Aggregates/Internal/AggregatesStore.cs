@@ -42,21 +42,82 @@ internal sealed class AggregatesStore(
         string id = aggregate.Id;
         string streamNameName = streamNameResolver.StreamForAggregate(aggregate);
         logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamNameName);
-        List<IEvent> data = await eventStore.ReadStream(streamNameName, cancellationToken);
+        List<IEvent> data = await eventStore.ReadStream(
+            streamNameName,
+            cancellationToken: cancellationToken
+        );
         aggregate.LoadFromHistory(data);
         logger.LogDebug("Aggregate with id {Id} loaded", id);
         return aggregate;
     }
 
-    public async Task<T> Get<T>(string id, CancellationToken cancellationToken = default)
+    public async Task<T> Load<T>(
+        T aggregate,
+        IEvent? lastEventToLoad = default,
+        CancellationToken cancellationToken = default
+    )
+        where T : Aggregate
+    {
+        string id = aggregate.Id;
+        string streamNameName = streamNameResolver.StreamForAggregate(aggregate);
+        logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamNameName);
+        List<IEvent> data = await eventStore.ReadStream(
+            streamNameName,
+            cancellationToken: cancellationToken
+        );
+        aggregate.LoadFromHistory(data);
+        logger.LogDebug("Aggregate with id {Id} loaded", id);
+        return aggregate;
+    }
+
+    public async Task<T> CreateAggregateById<T>(
+        string id,
+        IEvent? lastEventToLoad = default,
+        CancellationToken cancellationToken = default
+    )
         where T : Aggregate, new()
     {
         string streamNameName = streamNameResolver.StreamForAggregate<T>(id);
         logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamNameName);
-        List<IEvent> data = await eventStore.ReadStream(streamNameName, cancellationToken);
-        T result = new();
-        result.LoadFromHistory(data);
+        List<IEvent> data = await eventStore.ReadStream(
+            streamNameName,
+            cancellationToken: cancellationToken
+        );
+        T aggregate = new();
+        IEnumerable<IEvent> history =
+            lastEventToLoad == default
+                ? data
+                : data.TakeWhile(
+                    x => x.Timestamp < lastEventToLoad.Timestamp || x.Id == lastEventToLoad.Id
+                );
+        aggregate.LoadFromHistory(history);
         logger.LogDebug("Aggregate with id {Id} loaded", id);
-        return result;
+        return aggregate;
+    }
+
+    public async Task<T> CreateAggregateByStreamId<T>(
+        string streamName,
+        IEvent? lastEventToLoad = default,
+        CancellationToken cancellationToken = default
+    )
+        where T : Aggregate, new()
+    {
+        string id = streamNameResolver.AggregateIdForStream(streamName);
+        logger.LogDebug("Loading aggregate with id {Id} from stream {Stream}", id, streamName);
+        List<IEvent> data = await eventStore.ReadStream(
+            streamName,
+            cancellationToken: cancellationToken
+        );
+        T aggregate = new();
+        IEnumerable<IEvent> history =
+            lastEventToLoad == default
+                ? data
+                : data.TakeWhile(
+                    x => x.Timestamp < lastEventToLoad.Timestamp || x.Id == lastEventToLoad.Id
+                );
+
+        aggregate.LoadFromHistory(history);
+        logger.LogDebug("Aggregate with id {Id} loaded", streamName);
+        return aggregate;
     }
 }

@@ -18,7 +18,7 @@ public class PreActionsTests
         ICounter counter = Mock.Of<ICounter>();
 
         services
-            .ConfigureEventStoreDbWithLogging()
+            .ConfigureEventStoreTestsDbWithLogging()
             .AddEasyEvs(
                 sp => sp.GetEventStoreSettings(),
                 c =>

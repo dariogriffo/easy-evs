@@ -62,4 +62,10 @@
         <ProjectReference Include="..\EasyEvs.Aggregates.Contracts\EasyEvs.Aggregates.Contracts.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>EasyEvs.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
 </Project>

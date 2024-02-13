@@ -1,9 +1,9 @@
 namespace EasyEvs.Contracts;
 
-using Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Exceptions;
 
 /// <summary>
 /// The interface to have access to Persistent Subscriptions

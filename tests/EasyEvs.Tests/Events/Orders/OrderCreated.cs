@@ -30,6 +30,5 @@ public class OrderCreated : IEvent
 
     public DateTime Timestamp { get; }
 
-    public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
-        new Dictionary<string, string>();
+    public IReadOnlyDictionary<string, string>? Metadata { get; set; }
 }

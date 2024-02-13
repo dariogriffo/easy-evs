@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 public interface IReconnectionStrategy
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="func"></param>
     /// <returns></returns>

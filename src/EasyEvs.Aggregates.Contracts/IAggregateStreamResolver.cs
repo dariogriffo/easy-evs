@@ -6,7 +6,7 @@ namespace EasyEvs.Contracts;
 public interface IAggregateStreamResolver
 {
     /// <summary>
-    /// The name of the streamName for the aggregate
+    /// Returns the name of the streamName for the aggregate
     /// </summary>
     /// <typeparam name="T"><see cref="IEvent"/>.</typeparam>
     /// <param name="aggregateId"></param>
@@ -15,11 +15,18 @@ public interface IAggregateStreamResolver
         where T : Aggregate;
 
     /// <summary>
-    /// The name of the streamName for this aggregate.
+    /// Returns the name of the streamName for this aggregate.
     /// </summary>
     /// <typeparam name="T"><see cref="Aggregate"/>.</typeparam>
-    /// <param name="aggregate">The aggregate root.</param>
+    /// <param name="aggregate">The aggregate.</param>
     /// <returns>The name of the streamName.</returns>
     string StreamForAggregate<T>(T aggregate)
         where T : Aggregate;
+
+    /// <summary>
+    /// Returns the id for a given stream name
+    /// </summary>
+    /// <param name="streamName"></param>
+    /// <returns></returns>
+    string AggregateIdForStream(string streamName);
 }

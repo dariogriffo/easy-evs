@@ -8,37 +8,25 @@ using Contracts.Exceptions;
 using global::EventStore.Client;
 using Microsoft.Extensions.Logging;
 
-internal sealed class ReadEventStore : IReadEventStore
+internal sealed class ReadEventStore(
+    ISerializer serializer,
+    ILogger<ReadEventStore> logger,
+    IConnectionProvider connectionProvider,
+    EventStoreSettings settings
+) : IReadEventStore
 {
-    private readonly ISerializer _serializer;
-    private readonly ILogger<ReadEventStore> _logger;
-    private readonly IConnectionProvider _connectionProvider;
-    private readonly EventStoreSettings _settings;
-
-    public ReadEventStore(
-        ISerializer serializer,
-        ILogger<ReadEventStore> logger,
-        IConnectionProvider connectionProvider,
-        EventStoreSettings settings
-    )
-    {
-        _serializer = serializer;
-        _logger = logger;
-        _connectionProvider = connectionProvider;
-        _settings = settings;
-    }
-
     public async Task<List<IEvent>> ReadStream(
         string streamName,
+        IEvent? lastEventToRead = default,
         CancellationToken cancellationToken = default
     )
     {
         StreamPosition streamNamePosition = StreamPosition.Start;
 
-        _logger.LogDebug("Reading events on stream {Stream}", streamName);
+        logger.LogDebug("Reading events on stream {Stream}", streamName);
 
         List<IEvent> result = new();
-        EventStoreClient client = _connectionProvider.ReadClient;
+        EventStoreClient client = connectionProvider.ReadClient;
         try
         {
             EventStoreClient.ReadStreamResult events = client.ReadStreamAsync(
@@ -50,15 +38,26 @@ internal sealed class ReadEventStore : IReadEventStore
 
             await foreach (ResolvedEvent @event in events)
             {
-                if (@event.IsResolved && !_settings.ResolveEvents)
+                if (@event.IsResolved && !settings.ResolveEvents)
                 {
                     continue;
                 }
 
-                result.Add(_serializer.Deserialize(@event.OriginalEvent));
+                IEvent item = serializer.Deserialize(@event.OriginalEvent);
+                if (
+                    lastEventToRead is null
+                    || (item.Timestamp < lastEventToRead.Timestamp || item.Id == lastEventToRead.Id)
+                )
+                {
+                    result.Add(item);
+                    if (lastEventToRead is not null && item.Id == lastEventToRead.Id)
+                    {
+                        break;
+                    }
+                }
             }
 
-            _logger.LogDebug("{Count} events found on stream {Stream}", result.Count, streamName);
+            logger.LogDebug("{Count} events found on stream {Stream}", result.Count, streamName);
         }
         catch (StreamNotFoundException)
         {

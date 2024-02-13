@@ -9,7 +9,9 @@ using Microsoft.Extensions.Logging;
 
 internal static class EventStoreConfigurationExtensions
 {
-    internal static IServiceCollection ConfigureEventStoreDbWithLogging(this IServiceCollection services)
+    internal static IServiceCollection ConfigureEventStoreTestsDbWithLogging(
+        this IServiceCollection services
+    )
     {
         Dictionary<string, string> dict =
             new()
@@ -25,6 +27,7 @@ internal static class EventStoreConfigurationExtensions
                 configure.SetMinimumLevel(LogLevel.Trace);
                 configure.AddConsole();
             })
+            .AddSingleton<IStreamNames, StreamNames>()
             .AddSingleton(conf);
 
         return services;
