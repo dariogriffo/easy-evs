@@ -8,6 +8,8 @@ using Contracts.Exceptions;
 using global::EventStore.Client;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 internal sealed class ReadEventStore : IReadEventStore
 {
@@ -93,9 +95,9 @@ internal sealed class ReadEventStore : IReadEventStore
         }
     }
 
-    public async Task<List<IEvent>> ReadStream(
+    public async Task<List<IEvent>> ReadStreamUntilEvent(
         string streamName,
-        IEvent? lastEventToRead = default,
+        IEvent lastEventToRead,
         CancellationToken cancellationToken = default
     )
     {
@@ -120,36 +122,97 @@ internal sealed class ReadEventStore : IReadEventStore
                         cancellationToken: c
                     );
 
+                var i = 0;
+
                 await foreach (ResolvedEvent @event in events)
                 {
                     if (@event.IsResolved && !_settings.ResolveEvents)
                     {
                         continue;
                     }
+                    if (i != result.Count)
+                    {
+                        continue;
+                    }
+
+                    ++i;
 
                     IEvent item = _serializer.Deserialize(@event.OriginalEvent);
-                    if (
-                        lastEventToRead is null
-                        || (
-                            item.Timestamp < lastEventToRead.Timestamp
-                            || item.Id == lastEventToRead.Id
-                        )
-                    )
+                    result.Add(item);
+                    if (item.Id == lastEventToRead.Id)
                     {
-                        var i = 0;
-                        if (i != result.Count)
-                        {
-                            continue;
-                        }
-
-                        result.Add(item);
-                        ++i;
-
-                        if (lastEventToRead is not null && item.Id == lastEventToRead.Id)
-                        {
-                            break;
-                        }
+                        break;
                     }
+                }
+
+                _logger.LogDebug(
+                    "{Count} events found on stream {Stream}",
+                    result.Count,
+                    streamName
+                );
+            }
+            catch (StreamNotFoundException)
+            {
+                throw new StreamNotFound(streamName);
+            }
+            catch (RpcException ex) when (ex.StatusCode == StatusCode.Unavailable)
+            {
+                await _connectionProvider.WriteClientDisconnected(_connectionProvider.WriteClient);
+                throw new ConnectionFailureException();
+            }
+        }
+
+    }
+
+    public async Task<List<IEvent>> ReadStreamUntilTimestamp(
+        string streamName,
+        DateTime timestamp,
+        CancellationToken cancellationToken = default
+    )
+    {
+        StreamPosition streamNamePosition = StreamPosition.Start;
+
+        _logger.LogDebug("Reading events on stream {Stream}", streamName);
+
+        List<IEvent> result = new();
+        await _connectionStrategy.Execute(DoRead, cancellationToken);
+
+        return result;
+
+        async Task DoRead(CancellationToken c)
+        {
+            try
+            {
+                EventStoreClient.ReadStreamResult events =
+                    _connectionProvider.ReadClient.ReadStreamAsync(
+                        Direction.Forwards,
+                        streamName,
+                        streamNamePosition,
+                        cancellationToken: c
+                    );
+
+                var i = 0;
+
+                await foreach (ResolvedEvent @event in events)
+                {
+                    if (@event.IsResolved && !_settings.ResolveEvents)
+                    {
+                        continue;
+                    }
+                    
+                    if (i != result.Count)
+                    {
+                        continue;
+                    }
+                    
+                    IEvent item = _serializer.Deserialize(@event.OriginalEvent);
+                    if (item.Timestamp > timestamp)
+                    {
+                        break;
+                    }
+                    
+                    ++i;
+                    result.Add(item);
                 }
 
                 _logger.LogDebug(

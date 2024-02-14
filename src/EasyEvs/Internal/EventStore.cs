@@ -58,7 +58,7 @@ internal sealed class EventStore : IEventStore
         string streamName,
         IEvent lastEventToLoad,
         CancellationToken cancellationToken = default
-    ) => _read.ReadStream(streamName, lastEventToLoad, cancellationToken);
+    ) => _read.ReadStreamUntilEvent(streamName, lastEventToLoad, cancellationToken);
 
     public Task<List<IEvent>> ReadStream(
         string streamName,
