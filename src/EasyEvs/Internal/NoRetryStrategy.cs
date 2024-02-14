@@ -32,6 +32,7 @@ internal sealed class BasicReconnectionStrategy : IConnectionStrategy
             try
             {
                 await func(cancellationToken);
+                _retry = 0;
                 return;
             }
             catch (ConnectionFailureException ex)
