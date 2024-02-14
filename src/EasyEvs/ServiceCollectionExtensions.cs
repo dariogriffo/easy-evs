@@ -47,7 +47,7 @@ public static class ServiceCollectionExtensions
             config.JsonSerializerOptionsProviderType ??=
                 typeof(DefaultJsonSerializerOptionsProvider);
             config.EventsStreamResolverType ??= typeof(NoEventsStreamResolver);
-            config.ReconnectionStrategyType ??= typeof(BasicReconnectionStrategy);
+            config.ReconnectionStrategyType ??= typeof(NoReconnectionStrategy);
         };
 
         EasyEvsConfiguration configuration = new();
