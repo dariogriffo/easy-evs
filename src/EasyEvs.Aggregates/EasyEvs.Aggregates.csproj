@@ -1,0 +1,71 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <!-- General -->
+        <AssemblyName>EasyEvs.Aggregates</AssemblyName>
+        <Description>An application framework to start quickly with EventStore</Description>
+        <Copyright>Copyright 2024 Dario Griffo</Copyright>
+        <Authors>Dario Griffo</Authors>
+        <Company>https://github.com/dariogriffo</Company>
+        <NeutralLanguage>en-GB</NeutralLanguage>
+        <RootNamespace>EasyEvs</RootNamespace>
+
+        <!-- Build settings -->
+        <TargetFramework>net8.0</TargetFramework>
+        <DebugType>portable</DebugType>
+        <OutputType>Library</OutputType>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeSymbols>true</IncludeSymbols>
+        <LangVersion>latest</LangVersion>
+        <Nullable>enable</Nullable>
+
+        <!-- NuGet settings -->
+        <PackageId>EasyEvs.Aggregates</PackageId>
+        <PackageTags>eventstore, publisher, consumer, pub/sub, event-sourcing, event-store</PackageTags>
+        <PackageReleaseNotes>https://github.com/dariogriffo/easy-evs/blob/main/RELEASE_NOTES.md</PackageReleaseNotes>
+        <PackageProjectUrl>https://github.com/dariogriffo/easy-evs</PackageProjectUrl>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageIcon>images\icon.png</PackageIcon>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/dariogriffo/easy-evs</RepositoryUrl>
+        <Version>1.0.0</Version>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <!-- SourceLink settings -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+        <NoWarn>FS2003;FS0044</NoWarn>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <None Update="license\license.txt">
+            <Pack>true</Pack>
+            <PackagePath>license</PackagePath>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="images\icon.png">
+            <Pack>true</Pack>
+            <PackagePath>images</PackagePath>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="[8.0.0,)"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="[8.0.0,)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\EasyEvs.Aggregates.Contracts\EasyEvs.Aggregates.Contracts.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>EasyEvs.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+</Project>

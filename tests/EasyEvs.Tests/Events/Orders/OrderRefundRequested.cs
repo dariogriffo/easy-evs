@@ -1,30 +1,35 @@
-﻿namespace EasyEvs.Tests.Events.Orders
+﻿namespace EasyEvs.Tests.Events.Orders;
+
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Aggregates;
+using Contracts;
+
+[Aggregate<Order>]
+public class OrderRefundRequested : IEvent
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text.Json.Serialization;
-    using Contracts;
-
-    public class OrderRefundRequested : IEvent
+    [method: JsonConstructor]
+    private OrderRefundRequested(Guid id, DateTime timestamp, Guid orderId)
     {
-        [JsonConstructor]
-        public OrderRefundRequested(Guid id, DateTime timestamp, Guid orderId)
-        {
-            Id = id;
-            Timestamp = timestamp;
-            OrderId = orderId;
-        }
-
-        
-        public Guid Id { get; }
-
-        
-        public Guid OrderId { get; }
-        
-        public DateTime Timestamp { get; }
-
-        public string Version => "v1";
-
-        public IReadOnlyDictionary<string, string> Metadata { get; set; }
+        Id = id;
+        OrderId = orderId;
+        Timestamp = timestamp;
     }
+
+    public OrderRefundRequested(Guid orderId)
+    {
+        Id = Guid.NewGuid();
+        OrderId = orderId;
+        Timestamp = DateTime.UtcNow;
+    }
+
+    public Guid Id { get; }
+
+    public Guid OrderId { get; }
+
+    public DateTime Timestamp { get; }
+
+    public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
+        new Dictionary<string, string>();
 }

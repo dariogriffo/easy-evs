@@ -1,9 +1,8 @@
-namespace EasyEvs.Internal
-{
-    using System;
+namespace EasyEvs.Internal;
 
-    internal interface IEventDataProvider
-    {
-        Type EventTypeFrom(global::EventStore.Client.ResolvedEvent @event);
-    }
+using System;
+
+internal interface IEventDataProvider
+{
+    Type EventTypeFrom(global::EventStore.Client.ResolvedEvent @event);
 }

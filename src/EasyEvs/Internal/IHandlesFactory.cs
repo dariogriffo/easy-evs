@@ -1,34 +1,18 @@
-namespace EasyEvs.Internal
+namespace EasyEvs.Internal;
+
+using System.Collections.Generic;
+using Contracts;
+using Microsoft.Extensions.DependencyInjection;
+
+internal interface IHandlesFactory
 {
-    using System;
-    using System.Collections.Generic;
-    using Contracts;
-    using Microsoft.Extensions.DependencyInjection;
+    bool TryGetScopeFor(IEvent @event, out IServiceScope? scope);
 
-    internal interface IHandlesFactory
-    {
-        bool TryGetScopeFor(
-            IEvent @event,
-            out IServiceScope? scope);
+    bool TryGetHandlerFor(IEvent @event, IServiceScope scope, out dynamic? handler);
 
-        bool TryGetHandlerFor(
-            IEvent @event,
-            IServiceScope scope,
-            out IHandlesEvent? handler);
+    bool TryGetPipelinesFor(IEvent @event, IServiceScope scope, out List<dynamic>? pipelines);
 
-        bool TryGetPipelinesFor(
-            IEvent @event,
-            IServiceScope scope,
-            out List<IPipelineHandlesEventAction>? pipelines);
+    bool TryGetPreActionsFor(IEvent @event, IServiceScope scope, out List<dynamic>? preActions);
 
-        bool TryGetPreActionsFor(
-            IEvent @event,
-            IServiceScope scope,
-            out List<IPreHandlesEventAction>? preActions);
-
-        bool TryGetPostActionsFor(
-            IEvent @event,
-            IServiceScope scope,
-            out List<IPostHandlesEventAction>? postActions);
-    }
+    bool TryGetPostActionsFor(IEvent @event, IServiceScope scope, out List<dynamic>? postActions);
 }

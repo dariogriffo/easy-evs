@@ -1,95 +1,238 @@
-namespace EasyEvs
+namespace EasyEvs;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Contracts;
+using Contracts.Internal;
+using Internal;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
+
+/// <summary>
+/// The integration point with the <see cref="Microsoft.Extensions.DependencyInjection"/> framework
+/// </summary>
+public static class ServiceCollectionExtensions
 {
-    using System;
-    using System.Linq;
-    using Contracts;
-    using Internal;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.DependencyInjection.Extensions;
+    private static HandlersAndEventTypes? _handlersAndTypes;
 
     /// <summary>
-    /// The integration point with the <see cref="Microsoft.Extensions.DependencyInjection"/> framework
+    /// Adds EasyEvs to your app allowing to configuring options
     /// </summary>
-    public static class ServiceCollectionExtensions
+    /// <param name="services">The <see cref="IServiceCollection"/> where the registration happens.</param>
+    /// <param name="actionsConfigurator">The configuration for the Dependency Injection.</param>
+    /// <param name="eventStoreSettingsProvider">A function to resolve the <see cref="EventStoreSettings"/></param>
+    /// <exception cref="ArgumentException">The <see cref="IJsonSerializerOptionsProvider"/> type provided does not implement the <see cref="IJsonSerializerOptionsProvider"/> interface.</exception>
+    /// <exception cref="ArgumentException">The <see cref="IEventsStreamResolver"/> type provided does not implement the <see cref="IEventsStreamResolver"/> interface.</exception>
+    /// <returns></returns>
+    public static IServiceCollection AddEasyEvs(
+        this IServiceCollection services,
+        Func<IServiceProvider, EventStoreSettings>? eventStoreSettingsProvider,
+        Action<EasyEvsConfiguration>? actionsConfigurator = default
+    )
     {
-        /// <summary>
-        /// Add the EventStore to your app.
-        /// This is the scenario for event readers.
-        /// </summary>
-        /// <param name="services">The <see cref="IServiceCollection"/> where the registration happens.</param>
-        /// <param name="configuration">The configuration for the Dependency Injection.</param>
-        /// <returns></returns>
-        public static IServiceCollection AddEasyEvs(
-            this IServiceCollection services,
-            EasyEvsDependencyInjectionConfiguration? configuration = default)
+        static void ValidateProvidedType(Type type, Type expectedInterfaceType, string s)
         {
-            var jsonSerializerOptionsProvider = configuration?.JsonSerializerOptionsProvider;
-            var streamResolver = configuration?.StreamResolver;
-            var assemblies = configuration?.Assemblies;
-
-            if (jsonSerializerOptionsProvider != null &&
-                jsonSerializerOptionsProvider!.GetInterfaces().All(x => x != typeof(IJsonSerializerOptionsProvider)))
+            if (type.GetInterfaces().All(x => x != expectedInterfaceType))
             {
-                throw new ArgumentException(
-                    "The jsonSerializerOptionsProvider doesn't implement IJsonSerializerOptionsProvider.",
-                    nameof(jsonSerializerOptionsProvider));
+                throw new ArgumentException(s, nameof(type));
             }
+        }
 
-            if (streamResolver != null &&
-                streamResolver!.GetInterfaces().All(x => x != typeof(IStreamResolver)))
-            {
-                throw new ArgumentException(
-                    "The streamResolver doesn't implement IStreamResolver.",
-                    nameof(streamResolver));
-            }
+        Action<EasyEvsConfiguration> decoratorConfigurator = (config) =>
+        {
+            actionsConfigurator?.Invoke(config);
+            config.JsonSerializerOptionsProviderType ??=
+                typeof(DefaultJsonSerializerOptionsProvider);
+            config.EventsStreamResolverType ??= typeof(NoEventsStreamResolver);
+            config.ReconnectionStrategyType ??= typeof(NoReconnectionStrategy);
+        };
 
-            services.AddSingleton(typeof(IJsonSerializerOptionsProvider), jsonSerializerOptionsProvider ?? typeof(JsonSerializerOptionsProvider));
-            services.AddSingleton(typeof(IStreamResolver), streamResolver ?? typeof(NoOpStreamResolver));
-            services.AddSingleton<EventStoreSettings>();
-            services.AddSingleton<IConnectionRetry, BasicConnectionRetry>();
-            services.AddSingleton<ISerializer, Serializer>();
-            services.AddSingleton<IHandlesFactory, HandlesFactory>();
-            services.AddSingleton<IEventStore, EventStore>();
-            services.TryAddSingleton(services);
-            HandlersAndEventTypes handlersAndTypes;
-            if (assemblies == null || assemblies.Length == 0)
-            {
-                handlersAndTypes = new HandlersAndEventTypes(services);
-                services.AddSingleton(handlersAndTypes);
-                return services;
-            }
+        EasyEvsConfiguration configuration = new();
+        decoratorConfigurator.Invoke(configuration);
 
-            var eventType = typeof(IEvent);
-            var handlerType = typeof(IHandlesEvent);
+        Type jsonSerializerOptionsProviderType = configuration.JsonSerializerOptionsProviderType!;
+        Type eventsStreamResolverType = configuration.EventsStreamResolverType!;
+        Type reconnectionStrategyType = configuration.ReconnectionStrategyType!;
 
-            bool ImplementsHandler(Type i)
-            {
-                return
-                    i.GetInterfaces().Any(gi => gi == handlerType) &&
-                    i.GenericTypeArguments.Any(g => g.GetInterfaces().Any(gi => gi == eventType));
-            }
+        const string messageTemplate = "The {0} type doesn't implement the interface: {1}.";
 
-            var handlers =
-                assemblies
-                    .Distinct()
-                    .SelectMany(x =>
-                        x.GetExportedTypes()
-                            .Where(y => !y.IsAbstract)
-                            .Where(y => y.GetInterfaces().Any(ImplementsHandler))
-                            .ToList());
+        Type expectedInterfaceType = typeof(IJsonSerializerOptionsProvider);
+        Type providedType = jsonSerializerOptionsProviderType;
+        string message = string.Format(messageTemplate, providedType, expectedInterfaceType);
+        ValidateProvidedType(providedType, expectedInterfaceType, message);
 
-            foreach (var handler in handlers)
-            {
-                foreach (var target in handler.GetInterfaces().Where(ImplementsHandler))
-                {
-                    services.TryAddScoped(target, handler);
-                }
-            }
+        expectedInterfaceType = typeof(IEventsStreamResolver);
+        providedType = eventsStreamResolverType;
+        message = string.Format(messageTemplate, providedType, expectedInterfaceType);
+        ValidateProvidedType(providedType, expectedInterfaceType, message);
 
-            handlersAndTypes = new HandlersAndEventTypes(services);
+        expectedInterfaceType = typeof(IConnectionStrategy);
+        providedType = reconnectionStrategyType;
+        message = string.Format(messageTemplate, providedType, expectedInterfaceType);
+        ValidateProvidedType(providedType, expectedInterfaceType, message);
+
+        services.AddSingleton(configuration.JsonSerializerOptionsProviderType!);
+        services.AddSingleton(configuration.ReconnectionStrategyType!);
+        services.AddSingleton(configuration.EventsStreamResolverType!);
+
+        services.AddTransient<IConnectionStrategy>(
+            sp =>
+                (IConnectionStrategy)
+                    sp.GetRequiredService(
+                        sp.GetRequiredService<
+                            IOptions<EasyEvsConfiguration>
+                        >().Value.ReconnectionStrategyType!
+                    )
+        );
+
+        services.AddSingleton<IJsonSerializerOptionsProvider>(sp =>
+        {
+            EasyEvsConfiguration easyEvsConfiguration = sp.GetRequiredService<
+                IOptions<EasyEvsConfiguration>
+            >().Value;
+            return (IJsonSerializerOptionsProvider)
+                sp.GetRequiredService(easyEvsConfiguration.JsonSerializerOptionsProviderType!);
+        });
+
+        services.AddSingleton<IEventsStreamResolver>(
+            sp =>
+                (IEventsStreamResolver)
+                    sp.GetRequiredService(
+                        sp.GetRequiredService<
+                            IOptions<EasyEvsConfiguration>
+                        >().Value.EventsStreamResolverType!
+                    )
+        );
+
+        services.AddSingleton(sp =>
+        {
+            EventStoreSettings eventStoreSettings = eventStoreSettingsProvider!.Invoke(sp);
+            _ =
+                eventStoreSettings.ConnectionString
+                ?? throw new ArgumentNullException(nameof(eventStoreSettings.ConnectionString));
+            return eventStoreSettings;
+        });
+
+        services.AddSingleton<ISerializer, Serializer>();
+        services.AddSingleton<IHandlesFactory, HandlesFactory>();
+        services.AddSingleton<IEventStore, EventStore>();
+        services.AddSingleton<IReadEventStore, ReadEventStore>();
+        services.AddSingleton<IWriteEventStore, WriteEventStore>();
+        services.AddSingleton<IEventStore, EventStore>();
+        services.AddSingleton<IPersistentSubscriber, PersistentSubscriber>();
+        services.AddSingleton<IInternalPersistentSubscriber, InternalPersistentSubscriber>();
+        services.AddSingleton<IConnectionProvider, ConnectionProvider>();
+        services.TryAddSingleton(services);
+        services.Configure(decoratorConfigurator);
+
+        HandlersAndEventTypes handlersAndTypes;
+
+        Assembly[]? assemblies = configuration.AssembliesToScanForHandlers;
+
+        if (assemblies is null || assemblies.Length == 0)
+        {
+            _handlersAndTypes = handlersAndTypes = new HandlersAndEventTypes(services);
             services.AddSingleton(handlersAndTypes);
-
             return services;
+        }
+
+        RegisterTargetWithAttribute(
+            services,
+            assemblies,
+            typeof(HandlesEventAttribute),
+            configuration.DefaultHandlesLifetime
+        );
+
+        RegisterTargetWithAttribute(
+            services,
+            assemblies,
+            typeof(PostHandlerEventAttribute),
+            configuration.DefaultPostActionsLifetime
+        );
+
+        RegisterTargetWithAttribute(
+            services,
+            assemblies,
+            typeof(PreActionEventAttribute),
+            configuration.DefaultPreActionsLifetime
+        );
+
+        _handlersAndTypes = handlersAndTypes = new HandlersAndEventTypes(services);
+        services.AddSingleton(handlersAndTypes);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers a class as <see cref="IPipelineHandlesEventAction{T}"/>
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="lifetime"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static IServiceCollection WithPipeline<T>(
+        this IServiceCollection services,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped
+    )
+    {
+        Type pipeline = typeof(T);
+        Type attributeType = typeof(PipelineHandlerAttribute);
+        foreach (
+            Type target in pipeline
+                .GetInterfaces()
+                .Where(i => i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType))
+        )
+        {
+            ServiceDescriptor descriptor = new(target, pipeline, lifetime);
+            services.Add(descriptor);
+        }
+
+        _handlersAndTypes!.ScanPipelines(services);
+        return services;
+    }
+
+    private static void RegisterTargetWithAttribute(
+        IServiceCollection services,
+        Assembly[] assemblies,
+        Type attributeType,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped
+    )
+    {
+        IEnumerable<Type> handlers = assemblies
+            .Distinct()
+            .SelectMany(
+                assembly =>
+                    GetNonAbstractClasses(assembly)
+                        .Where(c => ImplementsAnInterfaceDecoratedWithAttribute(c, attributeType))
+            );
+
+        foreach (Type handler in handlers)
+        {
+            foreach (
+                Type target in handler
+                    .GetInterfaces()
+                    .Where(i => i.GetCustomAttributes(true).Any(a => a.GetType() == attributeType))
+            )
+            {
+                ServiceDescriptor descriptor = new(target, handler, lifetime);
+                services.Add(descriptor);
+            }
+        }
+
+        return;
+
+        static IEnumerable<Type> GetNonAbstractClasses(Assembly assembly)
+        {
+            return assembly.GetExportedTypes().Where(y => !y.IsAbstract);
+        }
+
+        static bool ImplementsAnInterfaceDecoratedWithAttribute(Type type, Type attribute)
+        {
+            return type.GetInterfaces()
+                .Any(i => i.GetCustomAttributes(true).Any(a => a.GetType() == attribute));
         }
     }
 }

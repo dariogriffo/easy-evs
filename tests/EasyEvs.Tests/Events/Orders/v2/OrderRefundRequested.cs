@@ -1,36 +1,31 @@
-﻿namespace EasyEvs.Tests.Events.Orders.v2
+﻿namespace EasyEvs.Tests.Events.Orders.v2;
+
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Aggregates;
+using Contracts;
+
+[Aggregate<Order>]
+[method: JsonConstructor]
+public class OrderRefundRequested(
+    Guid id,
+    DateTime timestamp,
+    Guid orderId,
+    decimal amount,
+    bool isPartial
+) : IEvent
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text.Json.Serialization;
-    using Contracts;
+    public Guid Id { get; } = id;
 
-    public class OrderRefundRequested : IEvent
-    {
-        [JsonConstructor]
-        public OrderRefundRequested(Guid id, DateTime timestamp, Guid orderId, decimal amount, bool isPartial)
-        {
-            Id = id;
-            Timestamp = timestamp;
-            OrderId = orderId;
-            Amount = amount;
-            IsPartial = isPartial;
-        }
+    public Guid OrderId { get; } = orderId;
 
-        
-        public Guid Id { get; }
+    public decimal Amount { get; } = amount;
 
-        
-        public Guid OrderId { get; }
+    public bool IsPartial { get; } = isPartial;
 
-        public decimal Amount { get; }
-        
-        public bool IsPartial { get; }
+    public DateTime Timestamp { get; } = timestamp;
 
-        public DateTime Timestamp { get; }
-
-        public string Version => "v2";
-
-        public IReadOnlyDictionary<string, string> Metadata { get; set; }
-    }
+    public IReadOnlyDictionary<string, string>? Metadata { get; set; } =
+        new Dictionary<string, string>();
 }

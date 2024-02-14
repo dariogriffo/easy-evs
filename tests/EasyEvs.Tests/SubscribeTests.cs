@@ -1,57 +1,50 @@
-﻿namespace EasyEvs.Tests
+﻿namespace EasyEvs.Tests;
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Contracts;
+using Events.Orders;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using Xunit;
+
+public class SubscribeTests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Contracts;
-    using Events.Orders;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Moq;
-    using Xunit;
-
-    public class SubscribeTests
+    [Fact]
+    public async Task All_Events_Handled()
     {
-        [Fact]
-        public async Task All_Events_Handled()
-        {
-            var services = new ServiceCollection();
-            var dict =
-                new Dictionary<string, string>() {
+        CancellationToken cancellationToken = CancellationToken.None;
+
+        ServiceCollection services = new();
+        ICounter counter = Mock.Of<ICounter>();
+
+        services
+            .ConfigureEventStoreTestsDbWithLogging()
+            .AddEasyEvs(
+                sp => sp.GetEventStoreSettings(),
+                c =>
                 {
-                    "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false"
-                }};
+                    c.AssembliesToScanForHandlers = [typeof(OrderEventHandler).Assembly];
+                }
+            )
+            .AddSingleton(counter);
 
-            var conf = new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
-            services
-                .AddLogging(configure => configure.AddConsole())
-                .AddSingleton((IConfiguration)conf);
+        await using ServiceProvider provider = services.BuildServiceProvider();
+        IEventStore eventStore = provider.GetRequiredService<IEventStore>();
+        Guid orderId = Guid.NewGuid();
+        OrderCreated e1 = new(orderId);
+        OrderCancelled e2 = new(orderId);
+        OrderRefundRequested e3 = new(orderId);
+        string streamName = $"order-{orderId.ToString()}";
 
-            var configuration = new EasyEvsDependencyInjectionConfiguration()
-            {
-                StreamResolver = typeof(StreamResolver),
-                Assemblies = new[] { typeof(OrderEventHandler).Assembly }
-            };
+        await eventStore.SubscribeToStream(streamName, cancellationToken);
+        await eventStore.Append(streamName, e1, cancellationToken: cancellationToken);
+        await eventStore.Append(streamName, e2, cancellationToken: cancellationToken);
+        await eventStore.Append(streamName, e3, cancellationToken: cancellationToken);
+        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
 
-            services.AddEasyEvs(configuration);
-            var counter = Mock.Of<ICounter>();
-            services.AddSingleton(counter);
-            var provider = services.BuildServiceProvider();
-            var eventStore = provider.GetRequiredService<IEventStore>();
-            var streamProvider = provider.GetRequiredService<IStreamResolver>();
-            var orderId = Guid.NewGuid();
-            var e1 = new OrderCreated(Guid.NewGuid(), DateTime.UtcNow, orderId);
-            var e2 = new OrderCancelled(Guid.NewGuid(), DateTime.UtcNow, orderId);
-            var e3 = new OrderRefundRequested(Guid.NewGuid(), DateTime.UtcNow, orderId);
-            await eventStore.SubscribeToStream(streamProvider.StreamForEvent(e1), CancellationToken.None);
-            await eventStore.Append(e1, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e2, cancellationToken: CancellationToken.None);
-            await eventStore.Append(e3, cancellationToken: CancellationToken.None);
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            var mock = Mock.Get(counter);
-            mock.Verify(x => x.Touch(), Times.Exactly(3));
-        }
+        Mock<ICounter> mock = Mock.Get(counter);
+        mock.Verify(x => x.Touch(), Times.Exactly(3));
     }
 }

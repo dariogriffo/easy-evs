@@ -1,13 +1,12 @@
-﻿namespace EasyEvs.Internal
+﻿namespace EasyEvs.Internal;
+
+using Contracts;
+using global::EventStore.Client;
+
+internal interface ISerializer
 {
-    using System.Collections.Generic;
-    using Contracts;
-    using global::EventStore.Client;
+    IEvent Deserialize(EventRecord record);
 
-    internal interface ISerializer
-    {
-        IEvent Deserialize(ResolvedEvent resolvedEvent);
-
-        EventData Serialize<T>(T @event) where T : IEvent;
-    }
+    EventData Serialize<T>(T @event)
+        where T : IEvent;
 }

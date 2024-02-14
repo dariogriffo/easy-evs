@@ -1,7 +1,6 @@
-﻿namespace EasyEvs.Tests
+﻿namespace EasyEvs.Tests;
+
+public interface ICounter
 {
-    public interface ICounter
-    {
-        void Touch();
-    }
+    void Touch();
 }

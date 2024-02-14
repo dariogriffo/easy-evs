@@ -12,28 +12,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 8.0.x
     - name: Run EventStore
-      run: docker-compose up -d
+      run: docker compose up -d
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: run minver
-      id: version
-      uses: thefringeninja/action-minver@2.0.0-preview1
-      with:
-        build-metadata: ${{ github.sha }}
-        default-pre-release-phase: preview
-        verbosity: trace
-    - name: output
-      run: |
-        echo ${{ steps.version.outputs.version }}

@@ -3,13 +3,13 @@
         <!-- General -->
         <AssemblyName>EasyEvs</AssemblyName>
         <Description>An application framework to start quickly with EventStore</Description>
-        <Copyright>Copyright 2022 Dario Griffo</Copyright>
+        <Copyright>Copyright 2024 Dario Griffo</Copyright>
         <Authors>Dario Griffo</Authors>
         <Company>https://github.com/dariogriffo</Company>
         <NeutralLanguage>en-GB</NeutralLanguage>
 
         <!-- Build settings -->
-        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
+        <TargetFramework>net8.0</TargetFramework>
         <DebugType>portable</DebugType>
         <OutputType>Library</OutputType>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -28,7 +28,7 @@
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <RepositoryType>git</RepositoryType>
         <RepositoryUrl>https://github.com/dariogriffo/easy-evs</RepositoryUrl>
-        <Version>5.0.1</Version>
+        <Version>6.0.0</Version>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <!-- SourceLink settings -->
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -48,13 +48,20 @@
         </None>
     </ItemGroup>
 
-    <ItemGroup><PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[21.2.0,)" />
-        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[21.2.0,)" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="[5.0.0,)" />
+    <ItemGroup>
+        <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[23.1.0,)"/>
+        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[23.1.0,)"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="[8.0.0,)"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
+        <ProjectReference Include="..\EasyEvs.Contracts\EasyEvs.Contracts.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>EasyEvs.Tests</_Parameter1>
+        </AssemblyAttribute>
     </ItemGroup>
 
 </Project>
