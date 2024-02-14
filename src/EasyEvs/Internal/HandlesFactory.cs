@@ -6,19 +6,24 @@ using System.Linq;
 using Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
-internal sealed class HandlesFactory(
-    IServiceProvider serviceProvider,
-    HandlersAndEventTypes handlersAndEventTypes
-) : IHandlesFactory
+internal sealed class HandlesFactory : IHandlesFactory
 {
-    private readonly IReadOnlyDictionary<Type, Type> _handlers =
-        handlersAndEventTypes.RegisteredEventsAndHandlers;
-    private readonly IReadOnlyDictionary<Type, Type> _pre =
-        handlersAndEventTypes.RegisteredPreActions;
-    private readonly IReadOnlyDictionary<Type, Type> _post =
-        handlersAndEventTypes.RegisteredPostActions;
-    private readonly IReadOnlyDictionary<Type, Type> _pipelines =
-        handlersAndEventTypes.RegisteredPipelines;
+    private readonly IReadOnlyDictionary<Type, Type> _handlers;
+    private readonly IReadOnlyDictionary<Type, Type> _pre;
+    private readonly IReadOnlyDictionary<Type, Type> _post;
+    private readonly IReadOnlyDictionary<Type, Type> _pipelines;
+
+    private readonly IServiceProvider _serviceProvider;
+
+    public HandlesFactory(IServiceProvider serviceProvider,
+        HandlersAndEventTypes handlersAndEventTypes)
+    {
+        _serviceProvider = serviceProvider;
+        _handlers = handlersAndEventTypes.RegisteredEventsAndHandlers;
+        _pre = handlersAndEventTypes.RegisteredPreActions;
+        _post = handlersAndEventTypes.RegisteredPostActions;
+        _pipelines = handlersAndEventTypes.RegisteredPipelines;
+    }
 
     public bool TryGetScopeFor(IEvent @event, out IServiceScope? scope)
     {
@@ -28,7 +33,7 @@ internal sealed class HandlesFactory(
             return false;
         }
 
-        scope = serviceProvider.CreateScope();
+        scope = _serviceProvider.CreateScope();
         return true;
     }
 

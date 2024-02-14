@@ -1,6 +1,5 @@
 namespace EasyEvs.Internal;
 
-using System;
 using Contracts;
 
 internal sealed class ConsumerContext : IConsumerContext

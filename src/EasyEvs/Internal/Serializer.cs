@@ -11,13 +11,20 @@ using System.Text.Json;
 using Contracts;
 using global::EventStore.Client;
 
-internal sealed class Serializer(IJsonSerializerOptionsProvider provider) : ISerializer
+internal sealed class Serializer : ISerializer
 {
     private readonly ConcurrentDictionary<string, Type> _cachedTypes = new();
-    private readonly JsonSerializerOptions _options = provider.Options;
+    private readonly JsonSerializerOptions _options;
+
+    public Serializer(IJsonSerializerOptionsProvider provider)
+    {
+        _options = provider.Options;
+    }
 
     public IEvent Deserialize(EventRecord record)
     {
+        var str = Encoding.UTF8.GetString(record.Metadata.Span);
+        var d = Encoding.UTF8.GetString(record.Data.Span);
         ReadOnlyMemory<byte> eventData = record.Data;
         Dictionary<string, string>? metadata = JsonSerializer.Deserialize<
             Dictionary<string, string>

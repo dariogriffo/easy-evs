@@ -49,8 +49,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[21.2.0,)"/>
-        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[21.2.0,)"/>
+        <PackageReference Include="EventStore.Client.Grpc.PersistentSubscriptions" Version="[23.1.0,)"/>
+        <PackageReference Include="EventStore.Client.Grpc.Streams" Version="[23.1.0,)"/>
         <PackageReference Include="Microsoft.Extensions.Options" Version="[8.0.0,)"/>
     </ItemGroup>
 

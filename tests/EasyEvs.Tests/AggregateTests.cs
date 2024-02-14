@@ -32,7 +32,7 @@ public class AggregateTests
         user.Update();
         user.Deactivate();
         await aggregateStore.Save(user, CancellationToken.None);
-        User user1 = await aggregateStore.CreateAggregateById<User>(
+        User user1 = await aggregateStore.GetAggregateById<User>(
             user.Id,
             cancellationToken: CancellationToken.None
         );

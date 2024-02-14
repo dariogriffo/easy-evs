@@ -17,7 +17,9 @@ internal static class EventStoreConfigurationExtensions
             new()
             {
                 { "EasyEvs:ConnectionString", "esdb://localhost:2113?tls=false" },
-                { "EasyEvs:SubscriptionGroup", "easy-evs-tests" }
+                { "EasyEvs:SubscriptionGroup", "subscriber-example" },
+                { "EasyEvs:ResolveEvents", "true" },
+                { "EasyEvs:ReconnectOnSubscriptionDropped", "true" }
             };
 
         IConfiguration conf = new ConfigurationBuilder().AddInMemoryCollection(dict!).Build();

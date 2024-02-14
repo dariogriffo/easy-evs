@@ -8,22 +8,20 @@ using EasyEvs.Contracts;
 [Aggregate<User>]
 public class UserRegistered : IEvent
 {
-    [JsonConstructor]
-    public UserRegistered(
-        Guid id,
+    [method: JsonConstructor]
+    public UserRegistered(Guid id,
         DateTime timestamp,
         Guid userId,
         string firstName,
         string lastName,
-        string emailAddress
-    )
+        string emailAddress)
     {
         Id = id;
         Timestamp = timestamp;
+        UserId = userId;
         FirstName = firstName;
         LastName = lastName;
         EmailAddress = emailAddress;
-        UserId = userId;
     }
 
     public Guid Id { get; internal set; }

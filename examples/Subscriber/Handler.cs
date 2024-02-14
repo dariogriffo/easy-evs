@@ -6,36 +6,38 @@ using System.Threading.Tasks;
 using EasyEvs.Contracts;
 using Events;
 
-public class Handler
-    : IHandlesEvent<UserDeleted>,
-        IHandlesEvent<UserRegistered>,
-        IHandlesEvent<UserUpdated>
+public class Handler : IHandlesEvent<UserDeleted>,
+    IHandlesEvent<UserRegistered>,
+    IHandlesEvent<UserUpdated>
 {
-    private readonly IAggregateStore _eventStore;
+    private readonly IAggregateStore _aggregateStore;
 
-    public Handler(IAggregateStore eventStore)
+    public Handler(IAggregateStore aggregateStore)
     {
-        _eventStore = eventStore;
+        _aggregateStore = aggregateStore;
     }
 
-    public Task<OperationResult> Handle(
+    public async Task<OperationResult> Handle(
         UserDeleted @event,
         IConsumerContext _,
         CancellationToken cancellationToken
     )
     {
-        Console.WriteLine($"User Deleted {@event.UserId}");
-        return Task.FromResult(OperationResult.Ok);
+        var user = await _aggregateStore.GetAggregateFromStream<User>(_.StreamName, cancellationToken: cancellationToken);
+        Console.WriteLine($"User Deleted: {user}");
+        return OperationResult.Ok;
+        
     }
 
-    public Task<OperationResult> Handle(
+    public async Task<OperationResult> Handle(
         UserRegistered @event,
         IConsumerContext _,
         CancellationToken cancellationToken
     )
     {
-        Console.WriteLine($"User Registered {@event.UserId}");
-        return Task.FromResult(OperationResult.Ok);
+        var user = await _aggregateStore.GetAggregateFromStream<User>(_.StreamName, cancellationToken: cancellationToken);
+        Console.WriteLine($"User Registered: {user}");
+        return OperationResult.Ok;
     }
 
     public async Task<OperationResult> Handle(
@@ -44,8 +46,9 @@ public class Handler
         CancellationToken cancellationToken
     )
     {
-        var user = await _eventStore.Get<User>(_.StreamName, cancellationToken);
-        Console.WriteLine($"User with id {user.Id} status: {user.Status}");
+        var user = await _aggregateStore.GetAggregateFromStream<User>(_.StreamName, cancellationToken: cancellationToken);
+
+        Console.WriteLine($"User Updated: {user}");
         return OperationResult.Ok;
     }
 }

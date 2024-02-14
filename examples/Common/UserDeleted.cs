@@ -14,7 +14,7 @@ using EasyEvs.Contracts;
 [Aggregate<User>]
 public class UserDeleted : IEvent
 {
-    [JsonConstructor]
+    [method: JsonConstructor]
     public UserDeleted(Guid id, DateTime timestamp, Guid userId)
     {
         Id = id;

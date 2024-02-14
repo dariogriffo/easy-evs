@@ -8,6 +8,7 @@ using EasyEvs;
 using EasyEvs.Contracts;
 using Events;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
 
 static class Program
 {
@@ -43,7 +44,7 @@ static class Program
             event1.Timestamp = DateTime.UtcNow;
             event1.Metadata = new Dictionary<string, string>()
             {
-                { "updated-by", Guid.NewGuid().ToString() }
+                { "updated-by", Guid.NewGuid().ToString("") }
             };
 
             await eventStore.Append($"user-{aggregateId}", @event1);
@@ -54,6 +55,7 @@ static class Program
                 { "deleted-by", Guid.NewGuid().ToString() }
             };
             await eventStore.Append($"user-{aggregateId}", @event2);
+            Thread.Sleep(TimeSpan.FromSeconds(1));
         }
     }
 }

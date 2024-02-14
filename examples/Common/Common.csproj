@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>Events</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+        <InternalsVisibleTo Include="AutoFixture" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\EasyEvs.Aggregates.Contracts\EasyEvs.Aggregates.Contracts.csproj" />
+      <ProjectReference Include="..\..\src\EasyEvs.Contracts\EasyEvs.Contracts.csproj" />
+    </ItemGroup>
+</Project>

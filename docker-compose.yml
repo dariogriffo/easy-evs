@@ -1,5 +1,10 @@
 version: '3.5'
 
+volumes:
+  easy-evs-data:
+    name: easy-evs-data
+    driver: local
+    
 services:
   eventstore.db:
     image: eventstore/eventstore:21.6.0-buster-slim
@@ -11,3 +16,5 @@ services:
     ports:
       - "1113:1113"
       - "2113:2113"
+    volumes:
+      - easy-evs-data:/var/lib/eventstore

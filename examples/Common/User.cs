@@ -1,9 +1,12 @@
 ﻿namespace Events;
 
 using EasyEvs.Contracts;
+using System.Text.Json;
 
 public class User : Aggregate
 {
+    static readonly JsonSerializerOptions SerializationOptions = new() { WriteIndented = true };
+
     private void Apply(UserRegistered @event)
     {
         Id = @event.UserId.ToString();
@@ -21,4 +24,9 @@ public class User : Aggregate
     }
 
     public UserStatus Status { get; private set; }
+
+    public override string ToString()
+    {
+        return JsonSerializer.Serialize(this, SerializationOptions);
+    }
 }

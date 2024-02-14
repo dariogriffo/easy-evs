@@ -1,6 +1,5 @@
 namespace EasyEvs.Contracts;
 
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Exceptions;

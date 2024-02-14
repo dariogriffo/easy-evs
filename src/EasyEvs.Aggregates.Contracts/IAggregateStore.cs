@@ -37,9 +37,23 @@ public interface IAggregateStore
     /// <param name="lastEventToLoad">The last event to load into the aggregate</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-    Task<T> CreateAggregateById<T>(
+    Task<T> GetAggregateById<T>(
         string id,
-        IEvent? lastEventToLoad = default,
+        IEvent lastEventToLoad,
+        CancellationToken cancellationToken = default
+    )
+        where T : Aggregate, new();
+    
+    
+    /// <summary>
+    /// Gets the aggregate from the Store.
+    /// The Aggregate must have a parameterless constructor
+    /// </summary>
+    /// <param name="id">The aggregate id.</param>
+    /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
+    /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
+    Task<T> GetAggregateById<T>(
+        string id,
         CancellationToken cancellationToken = default
     )
         where T : Aggregate, new();
@@ -49,15 +63,40 @@ public interface IAggregateStore
     /// The Aggregate must have a parameterless constructor
     /// </summary>
     /// <param name="streamName">The stream id.</param>
-    /// <param name="lastEventToLoad">The last event to load into the aggregate</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-    Task<T> CreateAggregateByStreamId<T>(
+    Task<T> GetAggregateFromStream<T>(
         string streamName,
-        IEvent? lastEventToLoad = default,
         CancellationToken cancellationToken = default
     )
         where T : Aggregate, new();
+    
+    /// <summary>
+    /// Gets the aggregate from the Store.
+    /// The Aggregate must have a parameterless constructor
+    /// </summary>
+    /// <param name="streamName">The stream id.</param>
+    /// <param name="lastEventToLoad">The last event to load into the aggregate</param>
+    /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
+    /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
+    Task<T> GetAggregateFromStream<T>(
+        string streamName,
+        IEvent lastEventToLoad,
+        CancellationToken cancellationToken = default
+    )
+        where T : Aggregate, new();
+
+    /// <summary>
+    /// Hydrates the aggregate root from the Event Store
+    /// </summary>
+    /// <param name="aggregate">The aggregate.</param>
+    /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
+    /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
+    Task<T> Load<T>(
+        T aggregate,
+        CancellationToken cancellationToken = default
+    )
+        where T : Aggregate;
 
     /// <summary>
     /// Hydrates the aggregate root from the Event Store
@@ -68,7 +107,7 @@ public interface IAggregateStore
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
     Task<T> Load<T>(
         T aggregate,
-        IEvent? lastEventToLoad = default,
+        IEvent lastEventToLoad,
         CancellationToken cancellationToken = default
     )
         where T : Aggregate;

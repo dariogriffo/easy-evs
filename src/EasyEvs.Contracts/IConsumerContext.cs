@@ -1,7 +1,5 @@
 namespace EasyEvs.Contracts;
 
-using System;
-
 /// <summary>
 /// Context with all the information necessary besides the <see cref="IEvent"/> to be handled
 /// </summary>

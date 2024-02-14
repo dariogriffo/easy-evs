@@ -13,7 +13,7 @@ public class AggregateAttributeResolverTests
         var aggregate = User.Create("UserId");
         var sut = new AggregateAttributeResolver();
         var result = sut.StreamForAggregate(aggregate);
-        result.Should().Be("user_UserId");
+        result.Should().Be("user-UserId");
     }
 
     [Fact]
@@ -22,14 +22,14 @@ public class AggregateAttributeResolverTests
         var aggregate = User.Create("UserId");
         var sut = new AggregateAttributeResolver();
         var result = sut.StreamForAggregate<User>(aggregate.Id);
-        result.Should().Be("user_UserId");
+        result.Should().Be("user-UserId");
     }
 
     [Fact]
     public void AggregateIdForStream_WithValidStreamName_ReturnsTheAggregateId()
     {
         var sut = new AggregateAttributeResolver();
-        var result = sut.AggregateIdForStream("user_UserId");
+        var result = sut.AggregateIdForStream("user-UserId");
         result.Should().Be("UserId");
     }
 }

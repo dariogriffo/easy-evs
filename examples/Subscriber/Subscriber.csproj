@@ -15,7 +15,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\EasyEvs.Aggregates\EasyEvs.Aggregates.csproj" />
         <ProjectReference Include="..\..\src\EasyEvs\EasyEvs.csproj" />
-        <ProjectReference Include="..\Events\Events.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj" />
     </ItemGroup>
 
 </Project>

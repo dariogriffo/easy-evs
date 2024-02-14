@@ -11,15 +11,12 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
     private Lazy<EventStoreClient> _write;
     private Lazy<EventStorePersistentSubscriptionsClient> _persistent;
     private readonly EventStoreSettings _settings;
-    private IReconnectionStrategy _reconnectionStrategy;
 
     public ConnectionProvider(
-        IReconnectionStrategy reconnectionStrategy,
         EventStoreSettings settings
     )
     {
         _settings = settings;
-        _reconnectionStrategy = reconnectionStrategy;
         _read = new Lazy<EventStoreClient>(ClientFactory);
         _write = new Lazy<EventStoreClient>(ClientFactory);
         _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(
@@ -34,18 +31,44 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
 
     public EventStoreClient WriteClient => _write.Value;
 
-    public void ReadClientDisconnected(EventStoreClient client)
+    public async ValueTask ReadClientDisconnected(EventStoreClient client)
     {
+        try
+        {
+            await client.DisposeAsync();
+        }
+        catch
+        {
+            // ignored
+        }
+        
         _read = new Lazy<EventStoreClient>(ClientFactory);
     }
 
-    public void WriteClientDisconnected(EventStoreClient client)
+    public async ValueTask WriteClientDisconnected(EventStoreClient client)
     {
+        try
+        {
+            await client.DisposeAsync();
+        }
+        catch
+        {
+            // ignored
+        }
+
         _write = new Lazy<EventStoreClient>(ClientFactory);
     }
 
-    public void PersistentSubscriptionDisconnected(EventStorePersistentSubscriptionsClient client)
+    public async ValueTask PersistentSubscriptionDisconnected(EventStorePersistentSubscriptionsClient client)
     {
+        try
+        {
+            await client.DisposeAsync();
+        }
+        catch
+        {
+            // ignored
+        }
         _persistent = new Lazy<EventStorePersistentSubscriptionsClient>(
             PersistentConnectionFactory
         );

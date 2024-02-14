@@ -8,15 +8,31 @@ using System.Threading.Tasks;
 using Contracts;
 using Contracts.Exceptions;
 using global::EventStore.Client;
+using Grpc.Core;
 using Microsoft.Extensions.Logging;
 
-internal sealed class WriteEventStore(
-    ISerializer serializer,
-    IEventsStreamResolver eventsStreamResolver,
-    ILogger<WriteEventStore> logger,
-    IConnectionProvider connectionProvider
-) : IWriteEventStore
+internal sealed class WriteEventStore : IWriteEventStore
 {
+    private readonly ISerializer _serializer;
+    private readonly IEventsStreamResolver _eventsStreamResolver;
+    private readonly ILogger<WriteEventStore> _logger;
+    private readonly IConnectionProvider _connectionProvider;
+    private readonly IConnectionStrategy _connectionStrategy;
+
+    public WriteEventStore(
+        ISerializer serializer,
+        IEventsStreamResolver eventsStreamResolver,
+        ILogger<WriteEventStore> logger,
+        IConnectionProvider connectionProvider, 
+        IConnectionStrategy connectionStrategy)
+    {
+        _serializer = serializer;
+        _eventsStreamResolver = eventsStreamResolver;
+        _logger = logger;
+        _connectionProvider = connectionProvider;
+        _connectionStrategy = connectionStrategy;
+    }
+
     public async Task Append<T>(
         string streamName,
         [NotNull] T @event,
@@ -24,7 +40,7 @@ internal sealed class WriteEventStore(
     )
         where T : IEvent
     {
-        logger.LogDebug(
+        _logger.LogDebug(
             "Appending event with id {EventId} of type {EventType} to stream {Stream}",
             @event.Id,
             @event.GetType(),
@@ -49,7 +65,7 @@ internal sealed class WriteEventStore(
     )
         where T : IEvent
     {
-        logger.LogDebug(
+        _logger.LogDebug(
             "Appending event with id {EventId} of type {EventType} to stream {Stream}",
             @event.Id,
             @event.GetType(),
@@ -69,7 +85,7 @@ internal sealed class WriteEventStore(
     {
         foreach (T @event in events)
         {
-            logger.LogDebug(
+            _logger.LogDebug(
                 "Appending event with id {EventId} of type {EventType} to stream {Stream}",
                 @event.Id,
                 @event.GetType(),
@@ -78,11 +94,11 @@ internal sealed class WriteEventStore(
         }
 
         StreamState expectedState = StreamState.NoStream;
-        EventData[] data = events.Select(serializer.Serialize).ToArray();
+        EventData[] data = events.Select(_serializer.Serialize).ToArray();
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
         foreach (T @event in events)
         {
-            logger.LogDebug("Event with Id {EventId} added", @event.Id);
+            _logger.LogDebug("Event with Id {EventId} added", @event.Id);
         }
     }
 
@@ -93,20 +109,20 @@ internal sealed class WriteEventStore(
     )
         where T : IEvent
     {
-        logger.LogDebug("Appending {Count} events to stream {Stream}", events.Length, streamName);
-        EventData[] data = events.Select(serializer.Serialize).ToArray();
+        _logger.LogDebug("Appending {Count} events to stream {Stream}", events.Length, streamName);
+        EventData[] data = events.Select(_serializer.Serialize).ToArray();
         StreamState expectedState = StreamState.Any;
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
         foreach (T @event in events)
         {
-            logger.LogDebug("Event with Id {EventId} added", @event.Id);
+            _logger.LogDebug("Event with Id {EventId} added", @event.Id);
         }
     }
 
     public Task Append<T>([NotNull] T @event, CancellationToken cancellationToken = default)
         where T : IEvent
     {
-        string streamName = eventsStreamResolver.StreamForEvent(@event);
+        string streamName = _eventsStreamResolver.StreamForEvent(@event);
         return Append(streamName, @event, cancellationToken);
     }
 
@@ -117,33 +133,44 @@ internal sealed class WriteEventStore(
         CancellationToken cancellationToken
     )
     {
-        EventData[] data = [serializer.Serialize(@event)];
+        EventData[] data = [_serializer.Serialize(@event)];
         await AppendWithRetryStrategy(streamName, data, expectedState, cancellationToken);
-        logger.LogDebug("Event with Id {EventId} appended", @event.Id);
+        _logger.LogDebug("Event with Id {EventId} appended", @event.Id);
     }
 
-    private async Task AppendWithRetryStrategy(
+    private Task AppendWithRetryStrategy(
         string streamName,
         EventData[] data,
         StreamState expectedState,
         CancellationToken cancellationToken
     )
     {
-        try
+        return _connectionStrategy.Execute(DoAppend, cancellationToken);
+
+        async Task DoAppend(CancellationToken c)
         {
-            await connectionProvider.WriteClient.AppendToStreamAsync(
-                streamName,
-                expectedState,
-                data,
-                cancellationToken: cancellationToken
-            );
-        }
-        catch (WrongExpectedVersionException ex)
-            when (expectedState == StreamState.NoStream
-                && ex.ExpectedStreamRevision == StreamRevision.None
-            )
-        {
-            throw new StreamAlreadyExists(streamName);
+            try
+            {
+                _logger.LogDebug("Writing to stream {Stream}", streamName);
+                await _connectionProvider.WriteClient.AppendToStreamAsync(
+                    streamName,
+                    expectedState,
+                    data,
+                    cancellationToken: c
+                );
+            }
+            catch (WrongExpectedVersionException ex)
+                when (expectedState == StreamState.NoStream
+                      && ex.ExpectedStreamRevision == StreamRevision.None
+                     )
+            {
+                throw new StreamAlreadyExists(streamName);
+            }
+            catch (RpcException ex) when(ex.StatusCode == StatusCode.Unavailable)
+            {
+                await _connectionProvider.WriteClientDisconnected(_connectionProvider.WriteClient);
+                throw new ConnectionFailureException();
+            }
         }
     }
 }

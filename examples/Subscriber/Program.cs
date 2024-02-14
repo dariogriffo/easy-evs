@@ -14,13 +14,15 @@ static class Program
         var services = new ServiceCollection();
         services
             .ConfigureEventStoreDbWithLogging()
-            .AddEasyEvs(sp => sp.GetEventStoreSettings())
+            .AddEasyEvs(
+                sp => sp.GetEventStoreSettings(),
+                c => c.AssembliesToScanForHandlers = [typeof(Handler).Assembly]
+            )
             .WithPipeline<UserMetricsPipeline>()
             .AddEasyEvsAggregates();
 
         var provider = services.BuildServiceProvider();
         var eventStore = provider.GetRequiredService<IEventStore>();
-        //This assumes
         await eventStore.SubscribeToStream("$ce-user");
         Console.ReadKey();
     }

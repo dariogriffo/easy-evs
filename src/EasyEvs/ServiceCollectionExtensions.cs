@@ -47,7 +47,7 @@ public static class ServiceCollectionExtensions
             config.JsonSerializerOptionsProviderType ??=
                 typeof(DefaultJsonSerializerOptionsProvider);
             config.EventsStreamResolverType ??= typeof(NoEventsStreamResolver);
-            config.ReconnectionStrategyType ??= typeof(NoReconnectionStrategy);
+            config.ReconnectionStrategyType ??= typeof(BasicReconnectionStrategy);
         };
 
         EasyEvsConfiguration configuration = new();
@@ -69,7 +69,7 @@ public static class ServiceCollectionExtensions
         message = string.Format(messageTemplate, providedType, expectedInterfaceType);
         ValidateProvidedType(providedType, expectedInterfaceType, message);
 
-        expectedInterfaceType = typeof(IReconnectionStrategy);
+        expectedInterfaceType = typeof(IConnectionStrategy);
         providedType = reconnectionStrategyType;
         message = string.Format(messageTemplate, providedType, expectedInterfaceType);
         ValidateProvidedType(providedType, expectedInterfaceType, message);
@@ -78,9 +78,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(configuration.ReconnectionStrategyType!);
         services.AddSingleton(configuration.EventsStreamResolverType!);
 
-        services.AddSingleton<IReconnectionStrategy>(
+        services.AddTransient<IConnectionStrategy>(
             sp =>
-                (IReconnectionStrategy)
+                (IConnectionStrategy)
                     sp.GetRequiredService(
                         sp.GetRequiredService<
                             IOptions<EasyEvsConfiguration>
@@ -113,9 +113,6 @@ public static class ServiceCollectionExtensions
             _ =
                 eventStoreSettings.ConnectionString
                 ?? throw new ArgumentNullException(nameof(eventStoreSettings.ConnectionString));
-            _ =
-                eventStoreSettings.SubscriptionGroup
-                ?? throw new ArgumentNullException(nameof(eventStoreSettings.SubscriptionGroup));
             return eventStoreSettings;
         });
 

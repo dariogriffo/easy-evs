@@ -2,7 +2,6 @@ namespace EasyEvs.Internal;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts;
@@ -11,15 +10,30 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-internal class PersistentSubscriber(
-    ILogger<PersistentSubscriber> logger,
-    IInternalPersistentSubscriber subscriber,
-    IHandlesFactory handlesFactory,
-    ISerializer serializer,
-    IOptions<EasyEvsConfiguration> easyEvsConfiguration,
-    EventStoreSettings settings
-) : IPersistentSubscriber
+internal class PersistentSubscriber : IPersistentSubscriber
 {
+    private readonly ILogger<PersistentSubscriber> _logger;
+    private readonly IInternalPersistentSubscriber _subscriber;
+    private readonly IHandlesFactory _handlesFactory;
+    private readonly ISerializer _serializer;
+    private readonly IOptions<EasyEvsConfiguration> _easyEvsConfiguration;
+    private readonly EventStoreSettings _settings;
+
+    public PersistentSubscriber(ILogger<PersistentSubscriber> logger,
+        IInternalPersistentSubscriber subscriber,
+        IHandlesFactory handlesFactory,
+        ISerializer serializer,
+        IOptions<EasyEvsConfiguration> easyEvsConfiguration,
+        EventStoreSettings settings)
+    {
+        _logger = logger;
+        _subscriber = subscriber;
+        _handlesFactory = handlesFactory;
+        _serializer = serializer;
+        _easyEvsConfiguration = easyEvsConfiguration;
+        _settings = settings;
+    }
+
     private async Task OnEventAppeared(
         PersistentSubscription subscription,
         ResolvedEvent resolvedEvent,
@@ -27,39 +41,39 @@ internal class PersistentSubscriber(
         CancellationToken cancellationToken
     )
     {
-        if (resolvedEvent.IsResolved && !settings.ResolveEvents)
+        if (resolvedEvent.IsResolved && !_settings.ResolveEvents)
         {
             await subscription.Ack(resolvedEvent);
         }
 
         try
         {
-            IEvent @event = serializer.Deserialize(resolvedEvent.OriginalEvent);
-            logger.LogDebug("Event with id {EventId} arrived", @event.Id);
+            IEvent @event = _serializer.Deserialize(resolvedEvent.Event);
+            _logger.LogDebug("Event with id {EventId} arrived", @event.Id);
 
-            if (!handlesFactory.TryGetScopeFor(@event, out IServiceScope? scope))
+            if (!_handlesFactory.TryGetScopeFor(@event, out IServiceScope? scope))
             {
-                if (easyEvsConfiguration.Value.TreatMissingHandlersAsErrors)
+                if (_easyEvsConfiguration.Value.TreatMissingHandlersAsErrors)
                 {
                     await ParkEventAndLogWarning(@event, subscription, resolvedEvent);
                 }
                 else
                 {
-                    logger.LogDebug("Event with id {EventId} ACK with no handler", @event.Id);
+                    _logger.LogDebug("Event with id {EventId} ACK with no handler", @event.Id);
                     await subscription.Ack(resolvedEvent);
                 }
 
                 return;
             }
 
-            ConsumerContext context = new(resolvedEvent.OriginalStreamId, retryCount);
+            ConsumerContext context = new(resolvedEvent.Event.EventStreamId, retryCount);
 
             dynamic dynamicEvent = @event;
 
             async Task<OperationResult> ExecuteActionsAndHandler()
             {
                 if (
-                    handlesFactory.TryGetPreActionsFor(
+                    _handlesFactory.TryGetPreActionsFor(
                         @event,
                         scope!,
                         out List<dynamic>? preActions
@@ -73,7 +87,7 @@ internal class PersistentSubscriber(
                     }
                 }
 
-                handlesFactory.TryGetHandlerFor(@event, scope!, out dynamic? handler);
+                _handlesFactory.TryGetHandlerFor(@event, scope!, out dynamic? handler);
 
                 Task<OperationResult> task = (handler!).Handle(
                     dynamicEvent,
@@ -83,7 +97,7 @@ internal class PersistentSubscriber(
                 OperationResult operationResult = await task;
 
                 if (
-                    handlesFactory.TryGetPostActionsFor(
+                    _handlesFactory.TryGetPostActionsFor(
                         @event,
                         scope!,
                         out List<dynamic>? postActions
@@ -106,7 +120,7 @@ internal class PersistentSubscriber(
             }
 
             OperationResult result = OperationResult.Ok;
-            if (handlesFactory.TryGetPipelinesFor(@event, scope!, out List<dynamic>? pipelines))
+            if (_handlesFactory.TryGetPipelinesFor(@event, scope!, out List<dynamic>? pipelines))
             {
                 Func<Task<OperationResult>>[] reversed = new Func<Task<OperationResult>>[
                     pipelines!.Count + 1
@@ -133,7 +147,7 @@ internal class PersistentSubscriber(
             }
 
             scope!.Dispose();
-            logger.LogDebug(
+            _logger.LogDebug(
                 "Event with id: {EventId} handled with result {Result:G}",
                 @event.Id,
                 result
@@ -175,7 +189,7 @@ internal class PersistentSubscriber(
             ex.Message,
             resolvedEvent
         );
-        logger.LogError(
+        _logger.LogError(
             ex,
             "Error processing event {ResolvedEvent} retryCount {RetryCount}",
             resolvedEvent,
@@ -189,7 +203,7 @@ internal class PersistentSubscriber(
         ResolvedEvent resolvedEvent
     )
     {
-        logger.LogWarning("Handler for event of type {EventType} not found", @event.GetType());
+        _logger.LogWarning("Handler for event of type {EventType} not found", @event.GetType());
         await subscription.Nack(
             PersistentSubscriptionNakEventAction.Park,
             $"Handler for event of type {@event.GetType()} not found",
@@ -199,6 +213,6 @@ internal class PersistentSubscriber(
 
     public Task Subscribe(string streamName, CancellationToken cancellationToken)
     {
-        return subscriber.Subscribe(streamName, OnEventAppeared, cancellationToken);
+        return _subscriber.Subscribe(streamName, OnEventAppeared, cancellationToken);
     }
 }

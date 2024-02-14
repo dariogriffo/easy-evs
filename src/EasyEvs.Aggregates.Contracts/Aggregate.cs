@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using ReflectionMagic;
+using System.Text.Json.Serialization;
 
 /// <summary>
 /// A base Aggregate NOT thread safe
@@ -21,8 +22,9 @@ public abstract class Aggregate
     public string Id { get; protected set; } = string.Empty;
 
     /// <summary>
-    /// All the Events that haven't been stored
+    /// All the Common that haven't been stored
     /// </summary>
+    [JsonIgnore]
     public IImmutableList<IEvent> UncommittedChanges => _events.ToImmutableList();
 
     /// <summary>

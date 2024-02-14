@@ -19,25 +19,26 @@ internal sealed class AggregateAttributeResolver : IAggregateStreamResolver
                 return prefix;
             }
         );
-        return $"{prefix}_{aggregateId}";
+        return $"{prefix}-{aggregateId}";
     }
 
     public string StreamForAggregate<T>(T aggregate)
         where T : Aggregate
     {
+        Type type = aggregate.GetType();
         var prefix = _cachedTypes.GetOrAdd(
-            aggregate.GetType(),
+            type,
             (_) =>
             {
-                string prefix = typeof(T).Name.ToSnakeCase('-');
+                string prefix = type.Name.ToSnakeCase('-');
                 return prefix;
             }
         );
-        return $"{prefix}_{aggregate.Id}";
+        return $"{prefix}-{aggregate.Id}";
     }
 
     public string AggregateIdForStream(string streamName)
     {
-        return streamName.Split('_')[1];
+        return streamName.Replace($"{streamName.Split('-')[0]}-", string.Empty);
     }
 }

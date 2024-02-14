@@ -15,7 +15,7 @@ public class EventStoreSettings
     /// Required
     /// This can be dangerous, but also really useful.
     /// </summary>
-    public string SubscriptionGroup { get; set; } = null!;
+    public string? SubscriptionGroup { get; set; }
 
     /// <summary>
     /// The buffer size of the persistent subscription

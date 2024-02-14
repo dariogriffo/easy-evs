@@ -1,6 +1,7 @@
 namespace EasyEvs.Internal;
 
 using global::EventStore.Client;
+using System.Threading.Tasks;
 
 internal interface IConnectionProvider
 {
@@ -10,9 +11,9 @@ internal interface IConnectionProvider
 
     EventStoreClient WriteClient { get; }
 
-    void ReadClientDisconnected(EventStoreClient client);
+    ValueTask ReadClientDisconnected(EventStoreClient client);
 
-    void WriteClientDisconnected(EventStoreClient client);
+    ValueTask WriteClientDisconnected(EventStoreClient client);
 
-    void PersistentSubscriptionDisconnected(EventStorePersistentSubscriptionsClient client);
+    ValueTask PersistentSubscriptionDisconnected(EventStorePersistentSubscriptionsClient client);
 }
