@@ -12,9 +12,7 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
     private Lazy<EventStorePersistentSubscriptionsClient> _persistent;
     private readonly EventStoreSettings _settings;
 
-    public ConnectionProvider(
-        EventStoreSettings settings
-    )
+    public ConnectionProvider(EventStoreSettings settings)
     {
         _settings = settings;
         _read = new Lazy<EventStoreClient>(ClientFactory);
@@ -41,7 +39,7 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
         {
             // ignored
         }
-        
+
         _read = new Lazy<EventStoreClient>(ClientFactory);
     }
 
@@ -59,7 +57,9 @@ internal sealed class ConnectionProvider : IConnectionProvider, IAsyncDisposable
         _write = new Lazy<EventStoreClient>(ClientFactory);
     }
 
-    public async ValueTask PersistentSubscriptionDisconnected(EventStorePersistentSubscriptionsClient client)
+    public async ValueTask PersistentSubscriptionDisconnected(
+        EventStorePersistentSubscriptionsClient client
+    )
     {
         try
         {

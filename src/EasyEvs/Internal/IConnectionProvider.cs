@@ -1,7 +1,7 @@
 namespace EasyEvs.Internal;
 
-using global::EventStore.Client;
 using System.Threading.Tasks;
+using global::EventStore.Client;
 
 internal interface IConnectionProvider
 {

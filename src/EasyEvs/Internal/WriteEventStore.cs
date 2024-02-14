@@ -23,8 +23,9 @@ internal sealed class WriteEventStore : IWriteEventStore
         ISerializer serializer,
         IEventsStreamResolver eventsStreamResolver,
         ILogger<WriteEventStore> logger,
-        IConnectionProvider connectionProvider, 
-        IConnectionStrategy connectionStrategy)
+        IConnectionProvider connectionProvider,
+        IConnectionStrategy connectionStrategy
+    )
     {
         _serializer = serializer;
         _eventsStreamResolver = eventsStreamResolver;
@@ -161,12 +162,12 @@ internal sealed class WriteEventStore : IWriteEventStore
             }
             catch (WrongExpectedVersionException ex)
                 when (expectedState == StreamState.NoStream
-                      && ex.ExpectedStreamRevision == StreamRevision.None
-                     )
+                    && ex.ExpectedStreamRevision == StreamRevision.None
+                )
             {
                 throw new StreamAlreadyExists(streamName);
             }
-            catch (RpcException ex) when(ex.StatusCode == StatusCode.Unavailable)
+            catch (RpcException ex) when (ex.StatusCode == StatusCode.Unavailable)
             {
                 await _connectionProvider.WriteClientDisconnected(_connectionProvider.WriteClient);
                 throw new ConnectionFailureException();

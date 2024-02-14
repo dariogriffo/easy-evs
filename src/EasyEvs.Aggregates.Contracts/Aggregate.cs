@@ -2,10 +2,10 @@ namespace EasyEvs.Contracts;
 
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ReflectionMagic;
-using System.Text.Json.Serialization;
 
 /// <summary>
 /// A base Aggregate NOT thread safe

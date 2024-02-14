@@ -43,8 +43,7 @@ public interface IAggregateStore
         CancellationToken cancellationToken = default
     )
         where T : Aggregate, new();
-    
-    
+
     /// <summary>
     /// Gets the aggregate from the Store.
     /// The Aggregate must have a parameterless constructor
@@ -52,10 +51,7 @@ public interface IAggregateStore
     /// <param name="id">The aggregate id.</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-    Task<T> GetAggregateById<T>(
-        string id,
-        CancellationToken cancellationToken = default
-    )
+    Task<T> GetAggregateById<T>(string id, CancellationToken cancellationToken = default)
         where T : Aggregate, new();
 
     /// <summary>
@@ -70,7 +66,7 @@ public interface IAggregateStore
         CancellationToken cancellationToken = default
     )
         where T : Aggregate, new();
-    
+
     /// <summary>
     /// Gets the aggregate from the Store.
     /// The Aggregate must have a parameterless constructor
@@ -92,10 +88,7 @@ public interface IAggregateStore
     /// <param name="aggregate">The aggregate.</param>
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A <see cref="System.Threading.Tasks.Task"/> to be awaited.</returns>
-    Task<T> Load<T>(
-        T aggregate,
-        CancellationToken cancellationToken = default
-    )
+    Task<T> Load<T>(T aggregate, CancellationToken cancellationToken = default)
         where T : Aggregate;
 
     /// <summary>

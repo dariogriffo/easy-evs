@@ -2,13 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoFixture;
 using EasyEvs;
 using EasyEvs.Contracts;
 using Events;
 using Microsoft.Extensions.DependencyInjection;
-using System.Threading;
 
 static class Program
 {

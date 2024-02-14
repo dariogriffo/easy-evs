@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 using EasyEvs.Contracts;
 using Events;
 
-public class Handler : IHandlesEvent<UserDeleted>,
-    IHandlesEvent<UserRegistered>,
-    IHandlesEvent<UserUpdated>
+public class Handler
+    : IHandlesEvent<UserDeleted>,
+        IHandlesEvent<UserRegistered>,
+        IHandlesEvent<UserUpdated>
 {
     private readonly IAggregateStore _aggregateStore;
 
@@ -23,10 +24,12 @@ public class Handler : IHandlesEvent<UserDeleted>,
         CancellationToken cancellationToken
     )
     {
-        var user = await _aggregateStore.GetAggregateFromStream<User>(_.StreamName, cancellationToken: cancellationToken);
+        var user = await _aggregateStore.GetAggregateFromStream<User>(
+            _.StreamName,
+            cancellationToken: cancellationToken
+        );
         Console.WriteLine($"User Deleted: {user}");
         return OperationResult.Ok;
-        
     }
 
     public async Task<OperationResult> Handle(
@@ -35,7 +38,10 @@ public class Handler : IHandlesEvent<UserDeleted>,
         CancellationToken cancellationToken
     )
     {
-        var user = await _aggregateStore.GetAggregateFromStream<User>(_.StreamName, cancellationToken: cancellationToken);
+        var user = await _aggregateStore.GetAggregateFromStream<User>(
+            _.StreamName,
+            cancellationToken: cancellationToken
+        );
         Console.WriteLine($"User Registered: {user}");
         return OperationResult.Ok;
     }
@@ -46,7 +52,10 @@ public class Handler : IHandlesEvent<UserDeleted>,
         CancellationToken cancellationToken
     )
     {
-        var user = await _aggregateStore.GetAggregateFromStream<User>(_.StreamName, cancellationToken: cancellationToken);
+        var user = await _aggregateStore.GetAggregateFromStream<User>(
+            _.StreamName,
+            cancellationToken: cancellationToken
+        );
 
         Console.WriteLine($"User Updated: {user}");
         return OperationResult.Ok;

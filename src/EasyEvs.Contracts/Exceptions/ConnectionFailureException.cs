@@ -10,7 +10,5 @@ public class ConnectionFailureException : Exception
     /// <summary>
     /// The constructor
     /// </summary>
-    internal ConnectionFailureException()
-    {
-    }
+    internal ConnectionFailureException() { }
 }

@@ -7,12 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 /// <summary>
-/// The integration point with the <see cref="Microsoft.Extensions.DependencyInjection"/> framework
+/// The integration point with EasyEvs Aggregates with the <see cref="Microsoft.Extensions.DependencyInjection"/> framework
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds EasyEvs to your app allowing to configuring options
+    /// Adds Aggregates to EasyEvs allowing to configuring options
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> where the registration happens.</param>
     /// <param name="actionsConfigurator">The configuration for the Dependency Injection.</param>

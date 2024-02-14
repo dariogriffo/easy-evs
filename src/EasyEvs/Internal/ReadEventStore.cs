@@ -17,11 +17,13 @@ internal sealed class ReadEventStore : IReadEventStore
     private readonly IConnectionStrategy _connectionStrategy;
     private readonly EventStoreSettings _settings;
 
-    public ReadEventStore(ISerializer serializer,
+    public ReadEventStore(
+        ISerializer serializer,
         ILogger<ReadEventStore> logger,
         IConnectionProvider connectionProvider,
         IConnectionStrategy connectionStrategy,
-        EventStoreSettings settings)
+        EventStoreSettings settings
+    )
     {
         _serializer = serializer;
         _logger = logger;
@@ -30,7 +32,10 @@ internal sealed class ReadEventStore : IReadEventStore
         _connectionStrategy = connectionStrategy;
     }
 
-    public async Task<List<IEvent>> ReadStream(string streamName, CancellationToken cancellationToken = default)
+    public async Task<List<IEvent>> ReadStream(
+        string streamName,
+        CancellationToken cancellationToken = default
+    )
     {
         StreamPosition streamNamePosition = StreamPosition.Start;
 
@@ -38,17 +43,18 @@ internal sealed class ReadEventStore : IReadEventStore
         List<IEvent> result = new();
         await _connectionStrategy.Execute(DoRead, cancellationToken);
         return result;
-        
+
         async Task DoRead(CancellationToken c)
         {
             try
             {
-                EventStoreClient.ReadStreamResult events = _connectionProvider.ReadClient.ReadStreamAsync(
-                    Direction.Forwards,
-                    streamName,
-                    streamNamePosition,
-                    cancellationToken: c
-                );
+                EventStoreClient.ReadStreamResult events =
+                    _connectionProvider.ReadClient.ReadStreamAsync(
+                        Direction.Forwards,
+                        streamName,
+                        streamNamePosition,
+                        cancellationToken: c
+                    );
 
                 var i = 0;
 
@@ -63,19 +69,23 @@ internal sealed class ReadEventStore : IReadEventStore
                     {
                         continue;
                     }
-                    
+
                     IEvent item = _serializer.Deserialize(@event.OriginalEvent);
                     result.Add(item);
                     ++i;
                 }
 
-                _logger.LogDebug("{Count} events found on stream {Stream}", result.Count, streamName);
+                _logger.LogDebug(
+                    "{Count} events found on stream {Stream}",
+                    result.Count,
+                    streamName
+                );
             }
             catch (StreamNotFoundException)
             {
                 throw new StreamNotFound(streamName);
             }
-            catch (RpcException ex) when(ex.StatusCode == StatusCode.Unavailable)
+            catch (RpcException ex) when (ex.StatusCode == StatusCode.Unavailable)
             {
                 await _connectionProvider.WriteClientDisconnected(_connectionProvider.WriteClient);
                 throw new ConnectionFailureException();
@@ -102,12 +112,13 @@ internal sealed class ReadEventStore : IReadEventStore
         {
             try
             {
-                EventStoreClient.ReadStreamResult events = _connectionProvider.ReadClient.ReadStreamAsync(
-                    Direction.Forwards,
-                    streamName,
-                    streamNamePosition,
-                    cancellationToken: c
-                );
+                EventStoreClient.ReadStreamResult events =
+                    _connectionProvider.ReadClient.ReadStreamAsync(
+                        Direction.Forwards,
+                        streamName,
+                        streamNamePosition,
+                        cancellationToken: c
+                    );
 
                 await foreach (ResolvedEvent @event in events)
                 {
@@ -119,7 +130,10 @@ internal sealed class ReadEventStore : IReadEventStore
                     IEvent item = _serializer.Deserialize(@event.OriginalEvent);
                     if (
                         lastEventToRead is null
-                        || (item.Timestamp < lastEventToRead.Timestamp || item.Id == lastEventToRead.Id)
+                        || (
+                            item.Timestamp < lastEventToRead.Timestamp
+                            || item.Id == lastEventToRead.Id
+                        )
                     )
                     {
                         var i = 0;
@@ -127,10 +141,10 @@ internal sealed class ReadEventStore : IReadEventStore
                         {
                             continue;
                         }
-                    
+
                         result.Add(item);
                         ++i;
-                    
+
                         if (lastEventToRead is not null && item.Id == lastEventToRead.Id)
                         {
                             break;
@@ -138,13 +152,17 @@ internal sealed class ReadEventStore : IReadEventStore
                     }
                 }
 
-                _logger.LogDebug("{Count} events found on stream {Stream}", result.Count, streamName);
+                _logger.LogDebug(
+                    "{Count} events found on stream {Stream}",
+                    result.Count,
+                    streamName
+                );
             }
             catch (StreamNotFoundException)
             {
                 throw new StreamNotFound(streamName);
             }
-            catch (RpcException ex) when(ex.StatusCode == StatusCode.Unavailable)
+            catch (RpcException ex) when (ex.StatusCode == StatusCode.Unavailable)
             {
                 await _connectionProvider.WriteClientDisconnected(_connectionProvider.WriteClient);
                 throw new ConnectionFailureException();

@@ -31,7 +31,8 @@ internal sealed class InternalPersistentSubscriber : IInternalPersistentSubscrib
         ILogger<InternalPersistentSubscriber> logger,
         IConnectionProvider connectionProvider,
         IConnectionStrategy connectionStrategy,
-        EventStoreSettings settings)
+        EventStoreSettings settings
+    )
     {
         _logger = logger;
         _connectionProvider = connectionProvider;
@@ -46,7 +47,9 @@ internal sealed class InternalPersistentSubscriber : IInternalPersistentSubscrib
     )
     {
 #pragma warning disable CA2208
-        _ = _settings.SubscriptionGroup ?? throw new ArgumentNullException(nameof(_settings.SubscriptionGroup));
+        _ =
+            _settings.SubscriptionGroup
+            ?? throw new ArgumentNullException(nameof(_settings.SubscriptionGroup));
 #pragma warning restore CA2208
 
         _onEventAppeared ??= onEventAppeared;
@@ -54,10 +57,9 @@ internal sealed class InternalPersistentSubscriber : IInternalPersistentSubscrib
         {
             return;
         }
-        
+
         await _connectionStrategy.Execute(DoSubscribe, cancellationToken);
         return;
-
 
         async Task DoSubscribe(CancellationToken c)
         {

@@ -15,8 +15,10 @@ internal sealed class HandlesFactory : IHandlesFactory
 
     private readonly IServiceProvider _serviceProvider;
 
-    public HandlesFactory(IServiceProvider serviceProvider,
-        HandlersAndEventTypes handlersAndEventTypes)
+    public HandlesFactory(
+        IServiceProvider serviceProvider,
+        HandlersAndEventTypes handlersAndEventTypes
+    )
     {
         _serviceProvider = serviceProvider;
         _handlers = handlersAndEventTypes.RegisteredEventsAndHandlers;

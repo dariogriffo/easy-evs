@@ -19,12 +19,14 @@ internal class PersistentSubscriber : IPersistentSubscriber
     private readonly IOptions<EasyEvsConfiguration> _easyEvsConfiguration;
     private readonly EventStoreSettings _settings;
 
-    public PersistentSubscriber(ILogger<PersistentSubscriber> logger,
+    public PersistentSubscriber(
+        ILogger<PersistentSubscriber> logger,
         IInternalPersistentSubscriber subscriber,
         IHandlesFactory handlesFactory,
         ISerializer serializer,
         IOptions<EasyEvsConfiguration> easyEvsConfiguration,
-        EventStoreSettings settings)
+        EventStoreSettings settings
+    )
     {
         _logger = logger;
         _subscriber = subscriber;

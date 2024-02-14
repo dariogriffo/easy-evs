@@ -14,9 +14,11 @@ internal sealed class AggregatesStore : IAggregateStore
     private readonly IAggregateStreamResolver _streamNameResolver;
     private readonly ILogger<AggregatesStore> _logger;
 
-    public AggregatesStore(IEventStore eventStore,
+    public AggregatesStore(
+        IEventStore eventStore,
         IAggregateStreamResolver streamNameResolver,
-        ILogger<AggregatesStore> logger)
+        ILogger<AggregatesStore> logger
+    )
     {
         _eventStore = eventStore;
         _streamNameResolver = streamNameResolver;
@@ -79,7 +81,6 @@ internal sealed class AggregatesStore : IAggregateStore
         _logger.LogDebug("Aggregate with id {Id} loaded", id);
         return aggregate;
     }
-    
 
     public async Task<T> GetAggregateById<T>(
         string id,
@@ -98,7 +99,6 @@ internal sealed class AggregatesStore : IAggregateStore
         _logger.LogDebug("Aggregate with id {Id} loaded", id);
         return aggregate;
     }
-    
 
     public async Task<T> GetAggregateById<T>(
         string id,
@@ -154,8 +154,8 @@ internal sealed class AggregatesStore : IAggregateStore
         );
         T aggregate = new();
         IEnumerable<IEvent> history = data.TakeWhile(
-                x => x.Timestamp < lastEventToLoad.Timestamp || x.Id == lastEventToLoad.Id
-            );
+            x => x.Timestamp < lastEventToLoad.Timestamp || x.Id == lastEventToLoad.Id
+        );
 
         aggregate.LoadFromHistory(history);
         _logger.LogDebug("Aggregate with id {Id} loaded", streamName);

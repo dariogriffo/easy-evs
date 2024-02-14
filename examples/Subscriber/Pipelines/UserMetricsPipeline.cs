@@ -1,4 +1,4 @@
-﻿namespace Subscriber.Actions;
+﻿namespace Subscriber.Pipelines;
 
 using System;
 using System.Diagnostics;

@@ -1,7 +1,7 @@
 ﻿namespace Events;
 
-using EasyEvs.Contracts;
 using System.Text.Json;
+using EasyEvs.Contracts;
 
 public class User : Aggregate
 {

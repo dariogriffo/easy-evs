@@ -12,9 +12,11 @@ internal sealed class EventStore : IEventStore
     private readonly IReadEventStore _read;
     private readonly IPersistentSubscriber _subscriber;
 
-    public EventStore(IWriteEventStore write,
+    public EventStore(
+        IWriteEventStore write,
         IReadEventStore read,
-        IPersistentSubscriber subscriber)
+        IPersistentSubscriber subscriber
+    )
     {
         _write = write;
         _read = read;
@@ -57,10 +59,9 @@ internal sealed class EventStore : IEventStore
         IEvent lastEventToLoad,
         CancellationToken cancellationToken = default
     ) => _read.ReadStream(streamName, lastEventToLoad, cancellationToken);
-    
+
     public Task<List<IEvent>> ReadStream(
         string streamName,
-
         CancellationToken cancellationToken = default
     ) => _read.ReadStream(streamName, cancellationToken);
 

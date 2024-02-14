@@ -9,12 +9,14 @@ using EasyEvs.Contracts;
 public class UserRegistered : IEvent
 {
     [method: JsonConstructor]
-    public UserRegistered(Guid id,
+    public UserRegistered(
+        Guid id,
         DateTime timestamp,
         Guid userId,
         string firstName,
         string lastName,
-        string emailAddress)
+        string emailAddress
+    )
     {
         Id = id;
         Timestamp = timestamp;

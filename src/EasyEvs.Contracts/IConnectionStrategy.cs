@@ -1,9 +1,9 @@
 namespace EasyEvs.Contracts;
 
-using Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Exceptions;
 
 /// <summary>
 /// The interface that gives access to write to https://github.com/EventStore/EventStore

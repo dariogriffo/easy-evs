@@ -87,7 +87,7 @@ public interface IEventStore
         IEvent lastEventToLoad,
         CancellationToken cancellationToken = default
     );
-    
+
     /// <summary>
     /// Reads all the events from the streamName
     /// </summary>
@@ -95,10 +95,7 @@ public interface IEventStore
 
     /// <param name="cancellationToken">The optional <see cref="System.Threading.CancellationToken"/>.</param>
     /// <returns>A list of tuples containing the events with their associated (optional) metadata</returns>
-    Task<List<IEvent>> ReadStream(
-        string streamName,
-        CancellationToken cancellationToken = default
-    );
+    Task<List<IEvent>> ReadStream(string streamName, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Subscribes asynchronously to a streamName.
